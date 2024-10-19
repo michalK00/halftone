@@ -1,0 +1,100 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "An example template of a Golang backend API using Fiber and MongoDB",
+        "title": "Hello World Template",
+        "contact": {
+            "name": "Michał Klemens"
+        },
+        "version": "0.1"
+    },
+    "paths": {
+        "/collections": {
+            "get": {
+                "description": "gets all collections.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get all collections.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/collection.collectionDB"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "creates one collection.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Create one collection.",
+                "parameters": [
+                    {
+                        "description": "Collection to create",
+                        "name": "collection",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/collection.createCollectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/collection.createCollectionResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "collection.collectionDB": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "collection.createCollectionRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "collection.createCollectionResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

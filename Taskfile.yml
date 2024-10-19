@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  docs:
+    cmds:
+      - swag i -d ./cmd/http,./internal/collection
+  run:
+    cmds:
+      - go run ./cmd/http/main.go
+  install:
+    cmds:
+      - go install github.com/swaggo/swag/cmd/swag@latest
