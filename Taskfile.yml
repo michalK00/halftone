@@ -4,9 +4,14 @@ tasks:
   docs:
     cmds:
       - swag i -d ./cmd/http,./internal/collection
-  run:
+  grun:
     cmds:
       - go run ./cmd/http/main.go
-  install:
+  srun:
+    dir: "web"
+    cmds:
+      - npm run dev
+  ginstall:
     cmds:
       - go install github.com/swaggo/swag/cmd/swag@latest
+# TODO add dockerfiles, docker compose and add a task cmd to handle it all
