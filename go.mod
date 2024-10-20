@@ -8,7 +8,12 @@ require (
 	github.com/swaggo/swag v1.16.3
 )
 
-require gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
+require (
+	github.com/aws/aws-sdk-go v1.55.5 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
+	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
+)
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect

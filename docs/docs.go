@@ -178,6 +178,61 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/qr": {
+            "post": {
+                "description": "Generate a QR code from a given URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "QR"
+                ],
+                "summary": "Generate QR code",
+                "parameters": [
+                    {
+                        "description": "QR Generation Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/qr.QrGenerationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -250,6 +305,17 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "qr.QrGenerationRequest": {
+            "description": "Request body for generating a QR code",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "description": "URL to be encoded in the QR code",
+                    "type": "string",
+                    "example": "https://example.com"
                 }
             }
         }

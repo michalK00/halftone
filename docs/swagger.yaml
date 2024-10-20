@@ -46,6 +46,14 @@ definitions:
       id:
         type: string
     type: object
+  qr.QrGenerationRequest:
+    description: Request body for generating a QR code
+    properties:
+      url:
+        description: URL to be encoded in the QR code
+        example: https://example.com
+        type: string
+    type: object
 info:
   contact:
     name: Michał Klemens
@@ -160,4 +168,40 @@ paths:
       summary: Create one gallery
       tags:
       - collections
+  /qr:
+    post:
+      consumes:
+      - application/json
+      description: Generate a QR code from a given URL
+      parameters:
+      - description: QR Generation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/qr.QrGenerationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate QR code
+      tags:
+      - QR
 swagger: "2.0"

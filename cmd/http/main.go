@@ -13,6 +13,7 @@ import (
 	_ "github.com/michalK00/sg-qr/docs"
 	"github.com/michalK00/sg-qr/internal/collection"
 	"github.com/michalK00/sg-qr/internal/gallery"
+	"github.com/michalK00/sg-qr/internal/qr"
 	"github.com/michalK00/sg-qr/internal/storage"
 	"github.com/michalK00/sg-qr/pkg/shutdown"
 )
@@ -94,6 +95,10 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	galleryStore := gallery.NewGalleryStorage(db)
 	galleryController := gallery.NewGalleryController(galleryStore)
 	gallery.AddGalleryRoutes(app, galleryController, env)
+
+	qrService := qr.QrService{}
+	qrController := qr.NewQrController(&qrService)
+	qr.AddQrRoutes(app, qrController, env)
 
 	return app, func() {
 		storage.CloseMongo(db)
