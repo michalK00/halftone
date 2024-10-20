@@ -1,9 +1,11 @@
 package qr
 
 import (
-	"log"
+	"context"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/michalK00/sg-qr/internal/config/aws"
 )
 
 type QrController struct {
@@ -18,11 +20,10 @@ func NewQrController(service *QrService) *QrController {
 
 // @Description Request body for generating a QR code
 type QrGenerationRequest struct {
-    Url string `json:"url" example:"https://example.com"` // URL to be encoded in the QR code
+	Url string `json:"url" example:"https://example.com"` // URL to be encoded in the QR code
 }
 
 const qrSize int = 256
-
 
 // @Summary Generate QR code
 // @Description Generate a QR code from a given URL
@@ -42,14 +43,33 @@ func (c *QrController) generate(ctx *fiber.Ctx) error {
 		})
 	}
 
-	code, err := c.service.generateQr(simpleQrCode{Content: req.Url, Size: qrSize})
+	_, err := c.service.generateQr(simpleQrCode{Content: req.Url, Size: qrSize})
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to generate qr code",
 		})
 	}
-	log.Print(code)
+	// log.Print(code)
+
+	awsClient, err := aws.GetAWSClient()
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to connect to external resources",
+		})
+	}
+
+	output, err := awsClient.ListS3Buckets(context.Background())
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Fail on external resource fetch",
+		})
+	}
+
+	for i, bucket := range output.Buckets {
+		fmt.Printf("%v. Name: %v\n", i, *(bucket.Name))
+	}
+
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Created qr code",
+		"message": "GG",
 	})
 }

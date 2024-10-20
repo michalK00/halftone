@@ -8,21 +8,21 @@ import (
 )
 
 type EnvVars struct {
-	PORT string `mapstructure:"PORT"`
-	MONGODB_URI string `mapstructure:"MONGODB_URI"`
-	MONGODB_NAME string `mapstructure:"MONGODB_NAME"`
-	AUTH0_DOMAIN string `mapstructure:"AUTH0_DOMAIN"`
+	PORT           string `mapstructure:"PORT"`
+	MONGODB_URI    string `mapstructure:"MONGODB_URI"`
+	MONGODB_NAME   string `mapstructure:"MONGODB_NAME"`
+	AUTH0_DOMAIN   string `mapstructure:"AUTH0_DOMAIN"`
 	AUTH0_AUDIENCE string `mapstructure:"AUTH0_AUDIENCE"`
 }
 
-func LoadConfig() (config EnvVars, err error){
+func LoadConfig() (config EnvVars, err error) {
 	env := os.Getenv("GO_ENV")
 	if env == "production" {
 		return EnvVars{
-			PORT: os.Getenv("PORT"),
-			MONGODB_URI: os.Getenv("MONGODB_URI"),
-			MONGODB_NAME: os.Getenv("MONGODB_NAME"),
-			AUTH0_DOMAIN: os.Getenv("AUTH0_DOMAIN"),
+			PORT:           os.Getenv("PORT"),
+			MONGODB_URI:    os.Getenv("MONGODB_URI"),
+			MONGODB_NAME:   os.Getenv("MONGODB_NAME"),
+			AUTH0_DOMAIN:   os.Getenv("AUTH0_DOMAIN"),
 			AUTH0_AUDIENCE: os.Getenv("AUTH0_AUDIENCE"),
 		}, nil
 	}
@@ -35,7 +35,7 @@ func LoadConfig() (config EnvVars, err error){
 
 	err = viper.ReadInConfig()
 
-	if (err != nil) {
+	if err != nil {
 		return
 	}
 

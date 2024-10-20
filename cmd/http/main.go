@@ -12,9 +12,9 @@ import (
 	"github.com/michalK00/sg-qr/config"
 	_ "github.com/michalK00/sg-qr/docs"
 	"github.com/michalK00/sg-qr/internal/collection"
+	"github.com/michalK00/sg-qr/internal/config/storage"
 	"github.com/michalK00/sg-qr/internal/gallery"
 	"github.com/michalK00/sg-qr/internal/qr"
-	"github.com/michalK00/sg-qr/internal/storage"
 	"github.com/michalK00/sg-qr/pkg/shutdown"
 )
 
@@ -28,9 +28,8 @@ func main() {
 		os.Exit(exitCode)
 	}()
 
-
 	// load config
-	env, err := config.LoadConfig() 
+	env, err := config.LoadConfig()
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		exitCode = 1
@@ -56,7 +55,7 @@ func run(env config.EnvVars) (func(), error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	go func() {
 		app.Listen("0.0.0.0:" + env.PORT)
 	}()
@@ -69,13 +68,14 @@ func run(env config.EnvVars) (func(), error) {
 
 func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	db, err := storage.BootstrapMongo(env.MONGODB_URI, env.MONGODB_NAME, 10*time.Second)
+
 	if err != nil {
 		return nil, nil, err
 	}
 
 	app := fiber.New()
 
-	fmt.Println(env.PORT);
+	fmt.Println(env.PORT)
 
 	app.Use(cors.New())
 	app.Use(logger.New())
@@ -86,7 +86,7 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 		return c.SendString("Healthy!")
 	})
 
-	 // Create user domain 
+	// Create user domain
 
 	collectionStore := collection.NewCollectionStorage(db)
 	collectionController := collection.NewCollectionController(collectionStore)
