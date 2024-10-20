@@ -11,7 +11,8 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/michalK00/sg-qr/config"
 	_ "github.com/michalK00/sg-qr/docs"
-	"github.com/michalK00/sg-qr/internal/domain/collection"
+	"github.com/michalK00/sg-qr/internal/collection"
+	"github.com/michalK00/sg-qr/internal/gallery"
 	"github.com/michalK00/sg-qr/internal/storage"
 	"github.com/michalK00/sg-qr/pkg/shutdown"
 )
@@ -89,6 +90,10 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	collectionStore := collection.NewCollectionStorage(db)
 	collectionController := collection.NewCollectionController(collectionStore)
 	collection.AddCollectionRoutes(app, collectionController, env)
+
+	galleryStore := gallery.NewGalleryStorage(db)
+	galleryController := gallery.NewGalleryController(galleryStore)
+	gallery.AddGalleryRoutes(app, galleryController, env)
 
 	return app, func() {
 		storage.CloseMongo(db)

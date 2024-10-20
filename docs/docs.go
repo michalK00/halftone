@@ -19,7 +19,7 @@ const docTemplate = `{
     "paths": {
         "/collections": {
             "get": {
-                "description": "gets all collections.",
+                "description": "Gets all collections",
                 "consumes": [
                     "*/*"
                 ],
@@ -29,21 +29,27 @@ const docTemplate = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Get all collections.",
+                "summary": "Get all collections",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/collection.collectionDB"
+                                "$ref": "#/definitions/domain.CollectionDB"
                             }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
                         }
                     }
                 }
             },
             "post": {
-                "description": "creates one collection.",
+                "description": "Creates one collection",
                 "consumes": [
                     "application/json"
                 ],
@@ -53,7 +59,7 @@ const docTemplate = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Create one collection.",
+                "summary": "Create one collection",
                 "parameters": [
                     {
                         "description": "Collection to create",
@@ -66,10 +72,108 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/collection.createCollectionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{id}/galleries": {
+            "get": {
+                "description": "gets all galleries of a collection with id.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get all galleries of a collection.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/collection.createCollectionResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.GalleryDB"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates one gallery in collection with id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Create one gallery",
+                "parameters": [
+                    {
+                        "description": "Gallery to create",
+                        "name": "gallery",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gallery.createGalleryRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/gallery.createGalleryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
                         }
                     }
                 }
@@ -77,17 +181,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "collection.collectionDB": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "collection.createCollectionRequest": {
             "type": "object",
             "properties": {
@@ -97,6 +190,62 @@ const docTemplate = `{
             }
         },
         "collection.createCollectionResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CollectionDB": {
+            "type": "object",
+            "properties": {
+                "galleries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.GalleryDB"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GalleryDB": {
+            "type": "object",
+            "properties": {
+                "expiry_date": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "fiber.Map": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "gallery.createGalleryRequest": {
+            "type": "object",
+            "properties": {
+                "expiry_date": {
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Example Gallery"
+                }
+            }
+        },
+        "gallery.createGalleryResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -113,8 +262,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Hello World Template",
-	Description:      "An example template of a Golang backend API using Fiber and MongoDB",
+	Title:            "Studio Ginger - QR code generator",
+	Description:      "Image gallery that provides uploading images",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

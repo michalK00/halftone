@@ -23,13 +23,15 @@ type createCollectionResponse struct {
 }
 
 
-// @Summary Create one collection.
-// @Description creates one collection.
+// @Summary Create one collection
+// @Description Creates one collection
 // @Tags collections
-// @Accept application/json
+// @Accept json
 // @Produce json
 // @Param collection body createCollectionRequest true "Collection to create"
-// @Success 200 {object} createCollectionResponse
+// @Success 201 {object} createCollectionResponse
+// @Failure 400 {object} fiber.Map
+// @Failure 500 {object} fiber.Map
 // @Router /collections [post]
 func (c *CollectionController) createCollection(ctx *fiber.Ctx) error {
 
@@ -52,12 +54,13 @@ func (c *CollectionController) createCollection(ctx *fiber.Ctx) error {
 		ID: id,
 	})
 }
-// @Summary Get all collections.
-// @Description gets all collections.
+// @Summary Get all collections
+// @Description Gets all collections
 // @Tags collections
 // @Accept */*
 // @Produce json
-// @Success 200 {object} []collectionDB
+// @Success 200 {array} domain.CollectionDB
+// @Failure 500 {object} fiber.Map
 // @Router /collections [get]
 func (c *CollectionController) getAll(ctx *fiber.Ctx) error {
 	

@@ -3,11 +3,11 @@ version: "3"
 tasks:
   docs:
     cmds:
-      - swag i -d ./cmd/http,./internal/collection
+      - swag i -d ./cmd/http,./internal/collection,./internal/gallery,./internal/domain --parseDependency --parseInternal
   grun:
     cmds:
       - go run ./cmd/http/main.go
-  srun:
+  rrun:
     dir: "web"
     cmds:
       - npm run dev
