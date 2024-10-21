@@ -3,6 +3,8 @@ package gallery
 import (
 	"context"
 	"log"
+	"path"
+	"strings"
 
 	"github.com/michalK00/sg-qr/internal/config/aws"
 	"github.com/skip2/go-qrcode"
@@ -33,13 +35,25 @@ func (s *GalleryService) generateQr(qrParams simpleQrCode) ([]byte, error) {
 	return body, nil
 }
 
-func (s *GalleryService) uploadQr(qrName string, file *[]byte) (string, error) {
+func buildObjectKey(dirs []string, objectName, extension string) string {
+
+	fullPath := path.Join(append(dirs, objectName)...)
+
+	if extension != "" {
+		fullPath += "." + strings.TrimPrefix(extension, ".")
+	}
+
+	return fullPath
+}
+
+func (s *GalleryService) uploadQr(collectionId, galleryId string, file *[]byte) (string, error) {
 	client, err := aws.GetAWSClient()
 	if err != nil {
 		log.Printf("Failed GetAwsClient, %v \n", err)
 		return "", err
 	}
-	result, err := client.UploadObject(context.Background(), qrName, file)
+	path := buildObjectKey([]string{collectionId, galleryId}, "qr", ".png")
+	result, err := client.UploadObject(context.Background(), path, file)
 	if err != nil {
 		log.Printf("Failed UploadObject, %v \n", err)
 		return "", err
@@ -50,7 +64,7 @@ func (s *GalleryService) uploadQr(qrName string, file *[]byte) (string, error) {
 
 const lifeteimSecs int64 = 60
 
-func (s *GalleryService) getPresignedObjectUrl(key string) (string, error) {
+func (s *GalleryService) getQrUrl(key string) (string, error) {
 
 	client, err := aws.GetAWSClient()
 	if err != nil {

@@ -132,11 +132,11 @@ func (c *GalleryController) generateQr(ctx *fiber.Ctx) error {
 		return utils.ServerError(ctx, err, "Failed to generate qr code")
 	}
 
-	objectKey, err := c.service.uploadQr(galleryId.Hex(), &body)
+	objectKey, err := c.service.uploadQr(collectionId.Hex(), galleryId.Hex(), &body)
 	if err != nil {
 		return utils.ServerError(ctx, err, "Failed to upload qr code")
 	}
-	url, err := c.service.getPresignedObjectUrl(objectKey)
+	url, err := c.service.getQrUrl(objectKey)
 	if err != nil {
 		return utils.ServerError(ctx, err, "Failed to get presinged url")
 	}
