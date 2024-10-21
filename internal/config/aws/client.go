@@ -13,6 +13,7 @@ import (
 
 type AWSClient struct {
 	S3Client *s3.Client
+	env      *awsVars
 }
 
 var (
@@ -29,7 +30,7 @@ func GetAWSClient() (*AWSClient, error) {
 			return
 		}
 
-		awsClient = &AWSClient{}
+		awsClient = &AWSClient{env: &env}
 		awsClientErr = initAWSClient(context.Background(), awsClient, env)
 	})
 

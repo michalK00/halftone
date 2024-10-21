@@ -93,7 +93,8 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	collection.AddCollectionRoutes(app, collectionController, env)
 
 	galleryStore := gallery.NewGalleryStorage(db)
-	galleryController := gallery.NewGalleryController(galleryStore)
+	galleryService := gallery.NewGalleryService(galleryStore)
+	galleryController := gallery.NewGalleryController(galleryService)
 	gallery.AddGalleryRoutes(app, galleryController, env)
 
 	qrService := qr.QrService{}

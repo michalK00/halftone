@@ -46,6 +46,14 @@ definitions:
       id:
         type: string
     type: object
+  gallery.generateQrRequest:
+    description: Request body for generating a QR code
+    properties:
+      url:
+        description: URL to be encoded in the QR code
+        example: https://example.com
+        type: string
+    type: object
   qr.QrGenerationRequest:
     description: Request body for generating a QR code
     properties:
@@ -111,15 +119,15 @@ paths:
       summary: Create one collection
       tags:
       - collections
-  /collections/{id}/galleries:
+  /collections/{collectionId}/galleries:
     get:
       consumes:
       - '*/*'
-      description: gets all galleries of a collection with id.
+      description: gets all galleries of a collection with collectionId.
       parameters:
       - description: Collection ID
         in: path
-        name: id
+        name: collectionId
         required: true
         type: string
       produces:
@@ -137,7 +145,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates one gallery in collection with id
+      description: Creates one gallery in collection with collectionId
       parameters:
       - description: Gallery to create
         in: body
@@ -147,7 +155,7 @@ paths:
           $ref: '#/definitions/gallery.createGalleryRequest'
       - description: Collection ID
         in: path
-        name: id
+        name: collectionId
         required: true
         type: string
       produces:
@@ -168,6 +176,58 @@ paths:
       summary: Create one gallery
       tags:
       - collections
+  /collections/{collectionId}/galleries/{galleryId}/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate a QR code from a given URL
+      parameters:
+      - description: QR Generation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gallery.generateQrRequest'
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate QR code
+      tags:
+      - QR
   /qr:
     post:
       consumes:

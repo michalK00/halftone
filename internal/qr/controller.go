@@ -1,11 +1,7 @@
 package qr
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/config/aws"
 )
 
 type QrController struct {
@@ -50,24 +46,6 @@ func (c *QrController) generate(ctx *fiber.Ctx) error {
 		})
 	}
 	// log.Print(code)
-
-	awsClient, err := aws.GetAWSClient()
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to connect to external resources",
-		})
-	}
-
-	output, err := awsClient.ListS3Buckets(context.Background())
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Fail on external resource fetch",
-		})
-	}
-
-	for i, bucket := range output.Buckets {
-		fmt.Printf("%v. Name: %v\n", i, *(bucket.Name))
-	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "GG",

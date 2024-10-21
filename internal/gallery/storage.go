@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type GalleryStorage struct {
@@ -20,7 +21,7 @@ func NewGalleryStorage(db *mongo.Database) *GalleryStorage {
 	}
 }
 
-func (s* GalleryStorage) getAllGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]domain.GalleryDB, error) {
+func (s *GalleryStorage) getAllGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]domain.GalleryDB, error) {
 	mongoCollection := s.db.Collection("collections")
 
 	var result domain.CollectionDB
@@ -32,14 +33,14 @@ func (s* GalleryStorage) getAllGalleries(ctx context.Context, collectionId primi
 	return result.Galleries, nil
 }
 
-func (s* GalleryStorage) createGallery(ctx context.Context, collectionId primitive.ObjectID, name string, expiryDate time.Time) (string, error) {
-	
+func (s *GalleryStorage) createGallery(ctx context.Context, collectionId primitive.ObjectID, name string, expiryDate time.Time) (string, error) {
+
 	mongoCollection := s.db.Collection("collections")
 	galleryID := primitive.NewObjectID()
 
 	gallery := bson.M{
-		"_id": galleryID,
-		"name": name,
+		"_id":         galleryID,
+		"name":        name,
 		"expiry_date": primitive.NewDateTimeFromTime(expiryDate),
 	}
 
@@ -51,6 +52,36 @@ func (s* GalleryStorage) createGallery(ctx context.Context, collectionId primiti
 	if result.MatchedCount == 0 {
 		return "", err
 	}
-	
-	return galleryID.Hex(), nil;
+
+	return galleryID.Hex(), nil
+}
+
+func (s *GalleryStorage) checkGalleryExists(ctx context.Context, collectionId, galleryId primitive.ObjectID) (bool, error) {
+	collection := s.db.Collection("collections")
+
+	filter := bson.M{
+		"_id": collectionId,
+		"galleries": bson.M{
+			"$elemMatch": bson.M{
+				"_id": galleryId,
+			},
+		},
+	}
+
+	projection := bson.M{
+		"_id": 1,
+	}
+
+	opts := options.FindOne().SetProjection(projection)
+
+	var result bson.M
+	err := collection.FindOne(ctx, filter, opts).Decode(&result)
+
+	if err == mongo.ErrNoDocuments {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

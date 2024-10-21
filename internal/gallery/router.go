@@ -6,13 +6,14 @@ import (
 )
 
 func AddGalleryRoutes(app *fiber.App, controller *GalleryController, config config.EnvVars) {
-	gallery := app.Group("/collections/:id/galleries")
+	gallery := app.Group("/collections/:collectionId/galleries")
 
 	// middlewares
 	// authMiddleware := auth.NewAuthMiddleware(config)
-	
+
 	// routes
 
 	gallery.Get("/", controller.getAll)
 	gallery.Post("/", controller.createGallery)
+	gallery.Post("/:galleryId/generate", controller.generateQr)
 }
