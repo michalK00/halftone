@@ -16,4 +16,5 @@ func AddGalleryRoutes(app *fiber.App, controller *GalleryController, config conf
 	gallery.Get("/", controller.getAll)
 	gallery.Post("/", controller.createGallery)
 	gallery.Post("/:galleryId/generate", controller.generateQr)
+	gallery.Post("/upload", controller.uploadPhotos)
 }

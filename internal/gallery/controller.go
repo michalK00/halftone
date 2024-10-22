@@ -2,6 +2,7 @@ package gallery
 
 import (
 	"errors"
+	"path"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -127,16 +128,55 @@ func (c *GalleryController) generateQr(ctx *fiber.Ctx) error {
 		return utils.BadRequest(ctx, err)
 	}
 
-	body, err := c.service.generateQr(simpleQrCode{Content: req.Url, Size: qrSize})
+	body, err := c.service.generateQr(qrCode{Content: req.Url, Size: qrSize})
 	if err != nil {
 		return utils.ServerError(ctx, err, "Failed to generate qr code")
 	}
 
-	objectKey, err := c.service.uploadQr(collectionId.Hex(), galleryId.Hex(), &body)
+	objectKey, err := c.service.uploadQr(
+		collectionId.Hex(),
+		galleryId.Hex(),
+		&file{
+			Name: "qr",
+			Ext:  ".png",
+			Body: body,
+		},
+	)
+
 	if err != nil {
 		return utils.ServerError(ctx, err, "Failed to upload qr code")
 	}
-	url, err := c.service.getQrUrl(objectKey)
+	url, err := c.service.getObjectUrl(objectKey)
+	if err != nil {
+		return utils.ServerError(ctx, err, "Failed to get presinged url")
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"url": url,
+	})
+}
+
+func (c *GalleryController) uploadPhotos(ctx *fiber.Ctx) error {
+
+	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
+	if err != nil {
+		return utils.NotFound(ctx, err)
+	}
+	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
+	if err != nil {
+		return utils.NotFound(ctx, err)
+	}
+	exists, err := c.service.storage.checkGalleryExists(ctx.Context(), collectionId, galleryId)
+	if err != nil {
+		return utils.ServerError(ctx, err, "Server error")
+	}
+	if !exists {
+		return utils.NotFound(ctx, errors.New("gallery does not exist"))
+	}
+
+	path := path.Join(collectionId.Hex(), galleryId.Hex(), "photos")
+
+	url, err := c.service.putObjectUrl(path)
 	if err != nil {
 		return utils.ServerError(ctx, err, "Failed to get presinged url")
 	}

@@ -19,12 +19,18 @@ func NewGalleryService(storage *GalleryStorage) *GalleryService {
 	}
 }
 
-type simpleQrCode struct {
+type qrCode struct {
 	Content string
 	Size    int
 }
 
-func (s *GalleryService) generateQr(qrParams simpleQrCode) ([]byte, error) {
+type file struct {
+	Name string
+	Ext  string
+	Body []byte
+}
+
+func (s *GalleryService) generateQr(qrParams qrCode) ([]byte, error) {
 	body, err := qrcode.Encode(qrParams.Content, qrcode.Medium, qrParams.Size)
 	if err != nil {
 		log.Printf("Failed QR code encoding, %v \n", err)
@@ -34,14 +40,17 @@ func (s *GalleryService) generateQr(qrParams simpleQrCode) ([]byte, error) {
 	return body, nil
 }
 
-func (s *GalleryService) uploadQr(collectionId, galleryId string, file *[]byte) (string, error) {
+func (s *GalleryService) uploadQr(collectionId, galleryId string, file *file) (string, error) {
+
 	client, err := aws.GetAWSClient()
 	if err != nil {
 		log.Printf("Failed GetAwsClient, %v \n", err)
 		return "", err
 	}
-	path := utils.BuildObjectKey([]string{collectionId, galleryId}, "qr", ".png")
-	result, err := client.UploadObject(context.Background(), path, file)
+
+	path := utils.BuildObjectKey([]string{collectionId, galleryId}, file.Name, file.Ext)
+
+	result, err := client.UploadObject(context.Background(), &aws.S3Object{Key: path, Body: &file.Body})
 	if err != nil {
 		log.Printf("Failed UploadObject, %v \n", err)
 		return "", err
@@ -52,7 +61,7 @@ func (s *GalleryService) uploadQr(collectionId, galleryId string, file *[]byte) 
 
 const lifeteimSecs int64 = 60
 
-func (s *GalleryService) getQrUrl(key string) (string, error) {
+func (s *GalleryService) getObjectUrl(key string) (string, error) {
 
 	client, err := aws.GetAWSClient()
 	if err != nil {
@@ -60,9 +69,26 @@ func (s *GalleryService) getQrUrl(key string) (string, error) {
 		return "", err
 	}
 	presignerClient := aws.NewPresignClient(client)
-	request, err := presignerClient.GetObject(context.Background(), key, lifeteimSecs)
+	request, err := presignerClient.GetObjectUrl(context.Background(), key, lifeteimSecs)
 	if err != nil {
-		log.Printf("Failed UploadObject, %v \n", err)
+		log.Printf("Failed GetObjectUrl, %v \n", err)
+		return "", nil
+	}
+
+	return request.URL, nil
+}
+
+func (s *GalleryService) putObjectUrl(key string) (string, error) {
+
+	client, err := aws.GetAWSClient()
+	if err != nil {
+		log.Printf("Failed GetAWSClient, %v \n", err)
+		return "", err
+	}
+	presignerClient := aws.NewPresignClient(client)
+	request, err := presignerClient.PutObjectUrl(context.Background(), key, lifeteimSecs)
+	if err != nil {
+		log.Printf("Failed PutObjectUrl, %v \n", err)
 		return "", nil
 	}
 
