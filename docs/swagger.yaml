@@ -1,60 +1,66 @@
 definitions:
-  collection.createCollectionRequest:
+  collections.createCollectionRequest:
     properties:
       name:
         type: string
     type: object
-  collection.createCollectionResponse:
+  collections.createCollectionResponse:
     properties:
       id:
+        type: string
+    type: object
+  collections.updateCollectionRequest:
+    properties:
+      name:
         type: string
     type: object
   domain.CollectionDB:
     properties:
-      galleries:
-        items:
-          $ref: '#/definitions/domain.GalleryDB'
-        type: array
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  domain.GalleryDB:
-    properties:
-      expiry_date:
+      createdAt:
         type: integer
       id:
         type: string
       name:
         type: string
+      updatedAt:
+        type: integer
+    type: object
+  domain.GalleryDB:
+    properties:
+      collectionId:
+        type: string
+      createdAt:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      passwordAttempts:
+        type: integer
+      passwordHash:
+        type: string
+      sharingEnabled:
+        type: boolean
+      sharingExpiryDate:
+        type: integer
+      updatedAt:
+        type: integer
     type: object
   fiber.Map:
     additionalProperties: true
     type: object
-  gallery.createGalleryRequest:
+  galleries.createGalleryRequest:
     properties:
-      expiry_date:
-        example: "2023-12-31T23:59:59Z"
-        type: string
       name:
         example: Example Gallery
         type: string
     type: object
-  gallery.createGalleryResponse:
+  galleries.createGalleryResponse:
     properties:
       id:
         type: string
     type: object
-  gallery.generateQrRequest:
-    description: Request body for generating a QR code
-    properties:
-      url:
-        description: URL to be encoded in the QR code
-        example: https://example.com
-        type: string
-    type: object
-  qr.QrGenerationRequest:
+  galleries.generateQrRequest:
     description: Request body for generating a QR code
     properties:
       url:
@@ -65,11 +71,11 @@ definitions:
 info:
   contact:
     name: Michał Klemens
-  description: Image gallery that provides uploading images
+  description: Image galleries that provides uploading images
   title: Studio Ginger - QR code generator
   version: "0.1"
 paths:
-  /collections:
+  /api/v1/collections:
     get:
       consumes:
       - '*/*'
@@ -83,11 +89,15 @@ paths:
             items:
               $ref: '#/definitions/domain.CollectionDB'
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/fiber.Map'
-      summary: Get all collections
+      summary: Get collections
       tags:
       - collections
     post:
@@ -97,29 +107,134 @@ paths:
       parameters:
       - description: Collection to create
         in: body
-        name: collection
+        name: collections
         required: true
         schema:
-          $ref: '#/definitions/collection.createCollectionRequest'
+          $ref: '#/definitions/collections.createCollectionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/collection.createCollectionResponse'
+            $ref: '#/definitions/collections.createCollectionResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/fiber.Map'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/fiber.Map'
-      summary: Create one collection
+      summary: Create collection
       tags:
       - collections
-  /collections/{collectionId}/galleries:
+  /api/v1/collections/{collectionId}:
+    delete:
+      consumes:
+      - '*/*'
+      description: Deletes specific collection
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete collection
+      tags:
+      - collections
+    get:
+      consumes:
+      - '*/*'
+      description: Gets specific collection
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.CollectionDB'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get collection
+      tags:
+      - collections
+    put:
+      consumes:
+      - '*/*'
+      description: Updates specific collection
+      parameters:
+      - description: Collection update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/collections.updateCollectionRequest'
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.CollectionDB'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Update collection
+      tags:
+      - collections
+  /api/v1/collections/{collectionId}/galleries:
     get:
       consumes:
       - '*/*'
@@ -149,10 +264,10 @@ paths:
       parameters:
       - description: Gallery to create
         in: body
-        name: gallery
+        name: galleries
         required: true
         schema:
-          $ref: '#/definitions/gallery.createGalleryRequest'
+          $ref: '#/definitions/galleries.createGalleryRequest'
       - description: Collection ID
         in: path
         name: collectionId
@@ -164,7 +279,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/gallery.createGalleryResponse'
+            $ref: '#/definitions/galleries.createGalleryResponse'
         "400":
           description: Bad Request
           schema:
@@ -176,7 +291,7 @@ paths:
       summary: Create one gallery
       tags:
       - collections
-  /collections/{collectionId}/galleries/{galleryId}/generate:
+  /api/v1/galleries/{galleryId}/qr:
     post:
       consumes:
       - application/json
@@ -187,7 +302,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gallery.generateQrRequest'
+          $ref: '#/definitions/galleries.generateQrRequest'
       - description: Collection ID
         in: path
         name: collectionId
@@ -215,42 +330,6 @@ paths:
             type: object
         "404":
           description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Generate QR code
-      tags:
-      - QR
-  /qr:
-    post:
-      consumes:
-      - application/json
-      description: Generate a QR code from a given URL
-      parameters:
-      - description: QR Generation Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/qr.QrGenerationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
           schema:
             additionalProperties:
               type: string

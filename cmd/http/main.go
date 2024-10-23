@@ -2,25 +2,23 @@ package main
 
 import (
 	"fmt"
+	"github.com/gofiber/swagger"
+	collections "github.com/michalK00/sg-qr/app/collections"
+	galleries "github.com/michalK00/sg-qr/app/galleries"
+	"github.com/michalK00/sg-qr/internal/config"
+	"github.com/michalK00/sg-qr/internal/middleware"
+	"github.com/michalK00/sg-qr/platform/database/mongodb"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/swagger"
-	"github.com/michalK00/sg-qr/config"
 	_ "github.com/michalK00/sg-qr/docs"
-	"github.com/michalK00/sg-qr/internal/collection"
-	"github.com/michalK00/sg-qr/internal/config/storage"
-	"github.com/michalK00/sg-qr/internal/gallery"
-	"github.com/michalK00/sg-qr/internal/qr"
-	"github.com/michalK00/sg-qr/pkg/shutdown"
+	"github.com/michalK00/sg-qr/internal/shutdown"
 )
 
 // @title Studio Ginger - QR code generator
 // @version 0.1
-// @description Image gallery that provides uploading images
+// @description Image galleries that provides uploading images
 // @contact.name Michał Klemens
 func main() {
 	var exitCode int
@@ -67,41 +65,33 @@ func run(env config.EnvVars) (func(), error) {
 }
 
 func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
-	db, err := storage.BootstrapMongo(env.MONGODB_URI, env.MONGODB_NAME, 10*time.Second)
-
+	db, err := mongodb.BootstrapMongo(env.MONGODB_URI, env.MONGODB_NAME, 10*time.Second)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	app := fiber.New()
 
-	fmt.Println(env.PORT)
+	// middleware
+	middleware.FiberMiddleware(app)
 
-	app.Use(cors.New())
-	app.Use(logger.New())
+	// Create user domain
+	collectionStore := collections.NewCollectionStorage(db)
+	collectionController := collections.NewCollectionController(collectionStore)
+	galleryStore := galleries.NewGalleryStorage(db)
+	galleryService := galleries.NewGalleryService(galleryStore)
+	galleryController := galleries.NewGalleryController(galleryService)
 
+	// Add routes
 	app.Get("/swagger/*", swagger.HandlerDefault)
-
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("Healthy!")
 	})
 
-	// Create user domain
-
-	collectionStore := collection.NewCollectionStorage(db)
-	collectionController := collection.NewCollectionController(collectionStore)
-	collection.AddCollectionRoutes(app, collectionController, env)
-
-	galleryStore := gallery.NewGalleryStorage(db)
-	galleryService := gallery.NewGalleryService(galleryStore)
-	galleryController := gallery.NewGalleryController(galleryService)
-	gallery.AddGalleryRoutes(app, galleryController, env)
-
-	qrService := qr.QrService{}
-	qrController := qr.NewQrController(&qrService)
-	qr.AddQrRoutes(app, qrController, env)
+	collections.AddRoutes(app, collectionController, env)
+	galleries.AddRoutes(app, galleryController, env)
 
 	return app, func() {
-		storage.CloseMongo(db)
+		mongodb.CloseMongo(db)
 	}, nil
 }

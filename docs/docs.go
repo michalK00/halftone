@@ -17,7 +17,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/collections": {
+        "/api/v1/collections": {
             "get": {
                 "description": "Gets all collections",
                 "consumes": [
@@ -29,7 +29,7 @@ const docTemplate = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Get all collections",
+                "summary": "Get collections",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -38,6 +38,12 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/domain.CollectionDB"
                             }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
                         }
                     },
                     "500": {
@@ -59,15 +65,15 @@ const docTemplate = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Create one collection",
+                "summary": "Create collection",
                 "parameters": [
                     {
                         "description": "Collection to create",
-                        "name": "collection",
+                        "name": "collections",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/collection.createCollectionRequest"
+                            "$ref": "#/definitions/collections.createCollectionRequest"
                         }
                     }
                 ],
@@ -75,11 +81,17 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/collection.createCollectionResponse"
+                            "$ref": "#/definitions/collections.createCollectionResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/fiber.Map"
                         }
@@ -93,7 +105,159 @@ const docTemplate = `{
                 }
             }
         },
-        "/collections/{collectionId}/galleries": {
+        "/api/v1/collections/{collectionId}": {
+            "get": {
+                "description": "Gets specific collection",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.CollectionDB"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates specific collection",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Update collection",
+                "parameters": [
+                    {
+                        "description": "Collection update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/collections.updateCollectionRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.CollectionDB"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes specific collection",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Delete collection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection ID",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/collections/{collectionId}/galleries": {
             "get": {
                 "description": "gets all galleries of a collection with collectionId.",
                 "consumes": [
@@ -142,11 +306,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Gallery to create",
-                        "name": "gallery",
+                        "name": "galleries",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gallery.createGalleryRequest"
+                            "$ref": "#/definitions/galleries.createGalleryRequest"
                         }
                     },
                     {
@@ -161,7 +325,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/gallery.createGalleryResponse"
+                            "$ref": "#/definitions/galleries.createGalleryResponse"
                         }
                     },
                     "400": {
@@ -179,7 +343,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/collections/{collectionId}/galleries/{galleryId}/generate": {
+        "/api/v1/galleries/{galleryId}/qr": {
             "post": {
                 "description": "Generate a QR code from a given URL",
                 "consumes": [
@@ -199,7 +363,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gallery.generateQrRequest"
+                            "$ref": "#/definitions/galleries.generateQrRequest"
                         }
                     },
                     {
@@ -256,65 +420,10 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/qr": {
-            "post": {
-                "description": "Generate a QR code from a given URL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "QR"
-                ],
-                "summary": "Generate QR code",
-                "parameters": [
-                    {
-                        "description": "QR Generation Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/qr.QrGenerationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
-        "collection.createCollectionRequest": {
+        "collections.createCollectionRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -322,10 +431,18 @@ const docTemplate = `{
                 }
             }
         },
-        "collection.createCollectionResponse": {
+        "collections.createCollectionResponse": {
             "type": "object",
             "properties": {
                 "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "collections.updateCollectionRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }
@@ -333,24 +450,7 @@ const docTemplate = `{
         "domain.CollectionDB": {
             "type": "object",
             "properties": {
-                "galleries": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/domain.GalleryDB"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.GalleryDB": {
-            "type": "object",
-            "properties": {
-                "expiry_date": {
+                "createdAt": {
                     "type": "integer"
                 },
                 "id": {
@@ -358,6 +458,41 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "updatedAt": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.GalleryDB": {
+            "type": "object",
+            "properties": {
+                "collectionId": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "passwordAttempts": {
+                    "type": "integer"
+                },
+                "passwordHash": {
+                    "type": "string"
+                },
+                "sharingEnabled": {
+                    "type": "boolean"
+                },
+                "sharingExpiryDate": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "integer"
                 }
             }
         },
@@ -365,20 +500,16 @@ const docTemplate = `{
             "type": "object",
             "additionalProperties": true
         },
-        "gallery.createGalleryRequest": {
+        "galleries.createGalleryRequest": {
             "type": "object",
             "properties": {
-                "expiry_date": {
-                    "type": "string",
-                    "example": "2023-12-31T23:59:59Z"
-                },
                 "name": {
                     "type": "string",
                     "example": "Example Gallery"
                 }
             }
         },
-        "gallery.createGalleryResponse": {
+        "galleries.createGalleryResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -386,18 +517,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gallery.generateQrRequest": {
-            "description": "Request body for generating a QR code",
-            "type": "object",
-            "properties": {
-                "url": {
-                    "description": "URL to be encoded in the QR code",
-                    "type": "string",
-                    "example": "https://example.com"
-                }
-            }
-        },
-        "qr.QrGenerationRequest": {
+        "galleries.generateQrRequest": {
             "description": "Request body for generating a QR code",
             "type": "object",
             "properties": {
@@ -418,7 +538,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Studio Ginger - QR code generator",
-	Description:      "Image gallery that provides uploading images",
+	Description:      "Image galleries that provides uploading images",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
