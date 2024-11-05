@@ -31,6 +31,15 @@ func (s *GalleryStorage) galleryExists(ctx context.Context, galleryId primitive.
 	return count > 0, nil
 }
 
+func (s *GalleryStorage) collectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID) (int64, error) {
+	coll := s.db.Collection("galleries")
+	count, err := coll.CountDocuments(ctx, bson.D{{"collectionId", collectionId}})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (s *GalleryStorage) getGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 
@@ -61,7 +70,7 @@ func (s *GalleryStorage) getGallery(ctx context.Context, galleryId primitive.Obj
 
 func (s *GalleryStorage) createGallery(ctx context.Context, collectionId primitive.ObjectID, name string) (string, error) {
 
-	mongoCollection := s.db.Collection("galleries")
+	galleriesColl := s.db.Collection("galleries")
 	galleryID := primitive.NewObjectID()
 
 	gallery := bson.D{
@@ -72,7 +81,7 @@ func (s *GalleryStorage) createGallery(ctx context.Context, collectionId primiti
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
 		{"sharingEnabled", false},
 	}
-	_, err := mongoCollection.InsertOne(ctx, gallery)
+	_, err := galleriesColl.InsertOne(ctx, gallery)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +95,7 @@ func (s *GalleryStorage) deleteGallery(ctx context.Context, galleryId primitive.
 	return err
 }
 
-func (s *GalleryStorage) updateGallery(ctx context.Context, galleryId primitive.ObjectID, name string, sharingEnabled bool, sharingExpiryDate primitive.DateTime) error {
+func (s *GalleryStorage) updateGallery(ctx context.Context, galleryId primitive.ObjectID, name string, sharingEnabled bool, sharingExpiryDate primitive.DateTime) (domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 	filter := bson.D{{"_id", galleryId}}
 	update := bson.D{
@@ -99,6 +108,8 @@ func (s *GalleryStorage) updateGallery(ctx context.Context, galleryId primitive.
 			{"updatedAt", true},
 		}},
 	}
-	_, err := coll.UpdateOne(ctx, filter, update)
-	return err
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	var gallery domain.GalleryDB
+	err := coll.FindOneAndUpdate(ctx, filter, update, opts).Decode(&gallery)
+	return gallery, err
 }

@@ -79,7 +79,7 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	collectionStore := collections.NewCollectionStorage(db)
 	collectionController := collections.NewCollectionController(collectionStore)
 	galleryStore := galleries.NewGalleryStorage(db)
-	galleryService := galleries.NewGalleryService(galleryStore)
+	galleryService := galleries.NewGalleryService(galleryStore, collectionStore)
 	galleryController := galleries.NewGalleryController(galleryService)
 
 	// Add routes

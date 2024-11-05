@@ -68,6 +68,8 @@ definitions:
         example: https://example.com
         type: string
     type: object
+  galleries.updateGalleryRequest:
+    type: object
 info:
   contact:
     name: Michał Klemens
@@ -291,6 +293,97 @@ paths:
       summary: Create one gallery
       tags:
       - collections
+  /api/v1/galleries/{galleryId}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a specific gallery
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete gallery
+      tags:
+      - galleries
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific gallery by its ID
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GalleryDB'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery
+      tags:
+      - galleries
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing gallery's information
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Gallery update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/galleries.updateGalleryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Update gallery
+      tags:
+      - galleries
   /api/v1/galleries/{galleryId}/qr:
     post:
       consumes:

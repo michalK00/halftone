@@ -2,6 +2,7 @@ package galleries
 
 import (
 	"context"
+	"github.com/michalK00/sg-qr/app/collections"
 	"github.com/michalK00/sg-qr/internal/util"
 	aws2 "github.com/michalK00/sg-qr/platform/cloud/aws"
 	"log"
@@ -10,12 +11,14 @@ import (
 )
 
 type GalleryService struct {
-	storage *GalleryStorage
+	galleryStorage    *GalleryStorage
+	collectionStorage *collections.CollectionStorage
 }
 
-func NewGalleryService(storage *GalleryStorage) *GalleryService {
+func NewGalleryService(galleryStorage *GalleryStorage, collectionStorage *collections.CollectionStorage) *GalleryService {
 	return &GalleryService{
-		storage: storage,
+		galleryStorage:    galleryStorage,
+		collectionStorage: collectionStorage,
 	}
 }
 

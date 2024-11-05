@@ -13,14 +13,15 @@ func AddRoutes(app *fiber.App, controller *GalleryController, config config.EnvV
 
 	// routes
 	gallery.Get("/collections/:collectionId/galleries", controller.getGalleries)
-	gallery.Post("/:collectionId/galleries", controller.createGallery)
+	gallery.Get("/collections/:collectionId/galleryCount", controller.getGalleryCount)
+	gallery.Post("/collections/:collectionId/galleries", controller.createGallery)
 
 	//gallery.Post("/:collectionId/galleries/batch")
 	//gallery.Delete("/:collectionId/galleries/batch")
 
-	//gallery.Get("/galleries/:galleryId")
-	//gallery.Put("/galleries/:galleryId")
-	//gallery.Delete("/galleries/:galleryId")
+	gallery.Get("/galleries/:galleryId", controller.getGallery)
+	gallery.Put("/galleries/:galleryId", controller.updateGallery)
+	gallery.Delete("/galleries/:galleryId", controller.deleteGallery)
 
 	gallery.Post("/galleries/:galleryId/qr", controller.generateQr)
 

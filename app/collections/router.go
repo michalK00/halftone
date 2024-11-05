@@ -14,7 +14,7 @@ func AddRoutes(app *fiber.App, controller *CollectionController, config config.E
 	route.Get("/collections", controller.getCollections)
 	route.Post("/collections", controller.createCollection)
 	route.Get("/collections/:collectionId", controller.getCollection)
-	route.Post("/collections/:collectionId", controller.updateCollection)
+	route.Put("/collections/:collectionId", controller.updateCollection)
 	route.Delete("/collections/:collectionId", controller.deleteCollection)
 
 	//TODO

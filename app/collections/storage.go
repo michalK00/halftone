@@ -20,7 +20,7 @@ func NewCollectionStorage(db *mongo.Database) *CollectionStorage {
 	}
 }
 
-func (s *CollectionStorage) collectionExists(ctx context.Context, collectionId primitive.ObjectID) (bool, error) {
+func (s *CollectionStorage) CollectionExists(ctx context.Context, collectionId primitive.ObjectID) (bool, error) {
 	coll := s.db.Collection("collections")
 
 	count, err := coll.CountDocuments(ctx, bson.D{{"_id", collectionId}}, options.Count().SetLimit(1))
