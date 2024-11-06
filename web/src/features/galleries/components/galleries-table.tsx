@@ -54,7 +54,7 @@ export function GalleriesTable({ galleries, isLoading, error, onEdit }: Gallerie
                     <TableRow key={gallery.id}>
                         <TableCell className="font-medium">
                             <Link
-                                to={`galleries/${gallery.id}`}
+                                to={`/galleries/${gallery.id}`}
                                 className="text-blue-500 hover:underline flex items-center gap-2"
                             >
                                 {gallery.name}
@@ -85,7 +85,7 @@ export function GalleriesTable({ galleries, isLoading, error, onEdit }: Gallerie
                                 )}
                             </div>
                         </TableCell>
-                        <TableCell className="text-right space-x-2">
+                        <TableCell className="text-right flex flex-col sm:flex-row gap-2 justify-end">
                             <Button
                                 variant="outline"
                                 size="icon"

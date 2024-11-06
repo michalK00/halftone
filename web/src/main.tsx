@@ -13,6 +13,8 @@ createRoot(document.getElementById("root")!).render(
       audience: import.meta.env.VITE_AUTH0_AUDIENCE,
       redirect_uri: window.location.origin,
     }}
+    useRefreshTokens
+    cacheLocation="localstorage"
   >
     <StrictMode>
         <BrowserRouter>

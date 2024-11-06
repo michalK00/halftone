@@ -293,6 +293,35 @@ paths:
       summary: Create one gallery
       tags:
       - collections
+  /api/v1/collections/{collectionId}/galleryCount:
+    get:
+      consumes:
+      - application/json
+      description: Returns the total number of galleries in a specific collection
+      parameters:
+      - description: Collection ID (MongoDB ObjectID hex string)
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Gallery count
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Collection not found or invalid ID format
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery count for a collection
+      tags:
+      - collections
   /api/v1/galleries/{galleryId}:
     delete:
       consumes:

@@ -5,6 +5,10 @@ export type Collection = {
     updatedAt: string
 }
 
+export type GalleryCount = {
+    count: number
+}
+
 export async function getCollections(): Promise<Array<Collection>> {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/collections`);
     return response.json();
@@ -15,7 +19,7 @@ export async function getCollection(collectionId: string): Promise<Collection> {
     return response.json()
 }
 
-export async function getGalleryCount(collectionId: string): Promise<number> {
+export async function getGalleryCount(collectionId: string): Promise<GalleryCount> {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/collections/${collectionId}/galleryCount`);
     return response.json();
 }

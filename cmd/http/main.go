@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/swagger"
-	collections "github.com/michalK00/sg-qr/app/collections"
-	galleries "github.com/michalK00/sg-qr/app/galleries"
+	"github.com/michalK00/sg-qr/app/collections"
+	"github.com/michalK00/sg-qr/app/galleries"
 	"github.com/michalK00/sg-qr/internal/config"
 	"github.com/michalK00/sg-qr/internal/middleware"
 	"github.com/michalK00/sg-qr/platform/database/mongodb"
@@ -16,9 +16,8 @@ import (
 	"github.com/michalK00/sg-qr/internal/shutdown"
 )
 
-// @title Studio Ginger - QR code generator
+// @title Image library
 // @version 0.1
-// @description Image galleries that provides uploading images
 // @contact.name Michał Klemens
 func main() {
 	var exitCode int

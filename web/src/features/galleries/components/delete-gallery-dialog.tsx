@@ -18,9 +18,10 @@ import {useToast} from "@/hooks/use-toast.ts";
 
 type DeleteGalleryDialogProps = {
     gallery: Gallery;
+    onDelete?: () => void;
 };
 
-export function DeleteGalleryDialog({ gallery }: DeleteGalleryDialogProps) {
+export function DeleteGalleryDialog({ gallery, onDelete }: DeleteGalleryDialogProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -34,6 +35,9 @@ export function DeleteGalleryDialog({ gallery }: DeleteGalleryDialogProps) {
                 title: "Success",
                 description: "Gallery deleted successfully",
             });
+            if (onDelete) {
+                onDelete()
+            }
         },
         onError: () => {
             toast({
@@ -49,7 +53,6 @@ export function DeleteGalleryDialog({ gallery }: DeleteGalleryDialogProps) {
             <Button
                 variant="destructive"
                 size="icon"
-                className="ml-2"
                 onClick={() => setIsOpen(true)}
             >
                 <Trash2 className="w-4 h-4" />

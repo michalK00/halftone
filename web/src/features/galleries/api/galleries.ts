@@ -16,6 +16,15 @@ export async function getGalleries(collectionId: string): Promise<Gallery[]> {
     return response.json();
 }
 
+export async function getGallery(galleryId: string): Promise<Gallery> {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/galleries/${galleryId}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch gallery');
+    }
+    return response.json();
+}
+
+
 export async function createGallery(collectionId: string, data: { name: string }): Promise<Gallery> {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/collections/${collectionId}/galleries`, {
         method: 'POST',

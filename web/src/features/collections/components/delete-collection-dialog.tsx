@@ -52,7 +52,6 @@ export function DeleteCollectionDialog({ collection, onDelete }: DeleteCollectio
                 variant="destructive"
                 size="icon"
                 onClick={() => setIsOpen(true)}
-                className="ml-2"
             >
                 <Trash2/>
             </Button>

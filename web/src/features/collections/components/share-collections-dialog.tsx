@@ -16,7 +16,6 @@ export function ShareCollectionDialog({ onOpenChange }: CollectionDialogProps) {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="ml-2"
                             >
                                 <Share/>
                             </Button>

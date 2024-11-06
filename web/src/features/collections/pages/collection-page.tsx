@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import { getCollection } from "@/features/collections/api/collections.ts";
+import {Collection, getCollection} from "@/features/collections/api/collections.ts";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -19,39 +19,14 @@ import { useState } from "react";
 import { CollectionDialog } from "@/features/collections/components/collection-dialog";
 import { DeleteCollectionDialog } from "@/features/collections/components/delete-collection-dialog";
 
-function CollectionQuery() {
+type CollectionContentProps = {
+    collection: Collection;
+};
+
+
+function CollectionContent({ collection } : CollectionContentProps) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const navigate = useNavigate();
-    const params = useParams();
-    const collectionQuery = useQuery({
-        queryKey: ['collections', params.collectionId],
-        queryFn: () => getCollection(params.collectionId!),
-        enabled: !!params.collectionId,
-    });
-
-    if (collectionQuery.status === 'pending') {
-        return (
-            <Card className="w-full">
-                <CardContent className="flex p-6 h-64 justify-center items-center">
-                    <LoadingSpinner />
-                </CardContent>
-            </Card>
-        );
-    }
-
-    if (collectionQuery.status === 'error') {
-        return (
-            <Card className="w-full">
-                <CardContent className="p-6">
-                    <div className="text-center text-red-500">
-                        Error loading collection. Please try again later.
-                    </div>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    const collection = collectionQuery.data;
 
     return (
         <div className="space-y-3">
@@ -64,7 +39,7 @@ function CollectionQuery() {
                                 Created on {new Date(collection.createdAt).toLocaleDateString()}
                             </CardDescription>
                         </div>
-                        <div className="flex">
+                        <div className="flex gap-2">
                             <Button
                                 variant="outline"
                                 size="icon"
@@ -93,10 +68,36 @@ function CollectionQuery() {
 export default function CollectionPage() {
     const params = useParams();
     const collectionQuery = useQuery({
-        queryKey: ['collection', params.collectionId],
+        queryKey: ['collections', params.collectionId],
         queryFn: () => getCollection(params.collectionId!),
         enabled: !!params.collectionId,
     });
+
+    const renderContent = () => {
+        if (collectionQuery.status === 'pending') {
+            return (
+                <Card className="w-full">
+                    <CardContent className="flex p-6 h-64 justify-center items-center">
+                        <LoadingSpinner />
+                    </CardContent>
+                </Card>
+            );
+        }
+
+        if (collectionQuery.status === 'error') {
+            return (
+                <Card className="w-full">
+                    <CardContent className="p-6">
+                        <div className="text-center text-red-500">
+                            Error loading collection. Please try again later.
+                        </div>
+                    </CardContent>
+                </Card>
+            );
+        }
+
+        return <CollectionContent collection={collectionQuery.data} />;
+    };
 
     return (
         <main className="w-full">
@@ -124,7 +125,7 @@ export default function CollectionPage() {
                 <ModeToggle/>
             </div>
             <div className="p-4">
-                <CollectionQuery />
+                {renderContent()}
             </div>
         </main>
     );

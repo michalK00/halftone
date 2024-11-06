@@ -3,7 +3,7 @@ import {LoadingSpinner} from "@/components/ui/loading-spinner";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Pencil} from "lucide-react";
 import {Link} from "react-router-dom";
-import {Collection} from "../api/collections";
+import {Collection, GalleryCount} from "../api/collections";
 import {DeleteCollectionDialog} from "./delete-collection-dialog";
 import {ShareCollectionDialog} from "@/features/collections/components/share-collections-dialog.tsx";
 
@@ -11,7 +11,7 @@ type CollectionsTableProps = {
     collections: Collection[];
     galleryCounts: Array<{
         status: 'pending' | 'error' | 'success';
-        data?: number;
+        data?: GalleryCount;
     }>;
     onEdit: (collection: Collection) => void;
 };
@@ -51,16 +51,15 @@ export function CollectionsTable({ collections, galleryCounts, onEdit }: Collect
                             ) : galleryCounts[index].status === 'error' ? (
                                 'Error'
                             ) : (
-                                galleryCounts[index].data
+                                galleryCounts[index].data!.count
                             )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right flex flex-col sm:flex-row gap-2 justify-end">
                             <ShareCollectionDialog
                                 collection={collection}
                                 onOpenChange={() => {}}
                             />
                             <Button
-                                className="ml-2"
                                 variant="outline"
                                 size="icon"
                                 onClick={() => onEdit(collection)}

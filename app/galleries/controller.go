@@ -56,6 +56,16 @@ func (c *GalleryController) getGalleries(ctx *fiber.Ctx) error {
 	return ctx.JSON(galleries)
 }
 
+// @Summary Get gallery count for a collection
+// @Description Returns the total number of galleries in a specific collection
+// @Tags collections
+// @Accept json
+// @Produce json
+// @Param collectionId path string true "Collection ID (MongoDB ObjectID hex string)"
+// @Success 200 {object} fiber.Map "Gallery count"
+// @Failure 404 {object} fiber.Map "Collection not found or invalid ID format"
+// @Failure 500 {object} fiber.Map "Server error"
+// @Router /api/v1/collections/{collectionId}/galleryCount [get]
 func (c *GalleryController) getGalleryCount(ctx *fiber.Ctx) error {
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
@@ -65,7 +75,7 @@ func (c *GalleryController) getGalleryCount(ctx *fiber.Ctx) error {
 	if err != nil {
 		return util.ServerError(ctx, err, "Failed to fetch gallery count")
 	}
-	return ctx.JSON(count)
+	return ctx.JSON(fiber.Map{"count": count})
 }
 
 // @Summary Create one gallery
