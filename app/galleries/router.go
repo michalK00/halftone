@@ -25,10 +25,6 @@ func AddRoutes(app *fiber.App, controller *GalleryController, config config.EnvV
 
 	gallery.Post("/galleries/:galleryId/qr", controller.generateQr)
 
-	//gallery.Get("/galleries/:galleryId/photos")
-	gallery.Post("/galleries/:galleryId/photos", controller.uploadPhotos)
-	//gallery.Delete("/galleries/:galleryId/photos")
-
 	//TODO client routes
 	//client := app.Group("/api/v1/client")
 	//
