@@ -130,6 +130,7 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 }
 
 type getPhotoResponse struct {
+	Id               string             `json:"id"`
 	OriginalFilename string             `json:"originalFilename"`
 	Url              string             `json:"url"`
 	UpdatedAt        primitive.DateTime `json:"updatedAt"`
@@ -165,6 +166,7 @@ func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
 			return ServerError(ctx, err, "Failed to get photo url")
 		}
 		res[i] = getPhotoResponse{
+			Id:               photo.ID.Hex(),
 			OriginalFilename: photo.OriginalFilename,
 			Url:              url,
 			UpdatedAt:        photo.UpdatedAt,

@@ -32,6 +32,8 @@ definitions:
     properties:
       createdAt:
         type: integer
+      id:
+        type: string
       originalFilename:
         type: string
       updatedAt:
@@ -46,6 +48,8 @@ definitions:
     type: object
   api.photoUploadResponse:
     properties:
+      id:
+        type: string
       originalFilename:
         type: string
       presignedPostRequest:
@@ -99,6 +103,8 @@ definitions:
       galleryId:
         type: string
       id:
+        type: string
+      objectKey:
         type: string
       originalFilename:
         type: string
@@ -601,6 +607,34 @@ paths:
       summary: Generate QR code
       tags:
       - QR
+  /api/v1/photos/{photoId}:
+    delete:
+      consumes:
+      - application/json
+      description: 'Deletes a specific photo by ID (Note: AWS cleanup pending implementation)'
+      parameters:
+      - description: Photo ID (MongoDB ObjectID)
+        format: objectid
+        in: path
+        name: photoId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Photo successfully deleted
+        "404":
+          description: Photo not found or invalid ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error while deleting photo
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete photo
+      tags:
+      - photos
   /api/v1/photos/{photoId}/confirm:
     put:
       consumes:

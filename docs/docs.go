@@ -712,6 +712,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/photos/{photoId}": {
+            "delete": {
+                "description": "Deletes a specific photo by ID (Note: AWS cleanup pending implementation)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "photos"
+                ],
+                "summary": "Delete photo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectid",
+                        "description": "Photo ID (MongoDB ObjectID)",
+                        "name": "photoId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Photo successfully deleted"
+                    },
+                    "404": {
+                        "description": "Photo not found or invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error while deleting photo",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/photos/{photoId}/confirm": {
             "put": {
                 "description": "Confirms that a photo has been successfully uploaded by updating its status",
@@ -809,6 +851,9 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "integer"
                 },
+                "id": {
+                    "type": "string"
+                },
                 "originalFilename": {
                     "type": "string"
                 },
@@ -831,6 +876,9 @@ const docTemplate = `{
         "api.photoUploadResponse": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "originalFilename": {
                     "type": "string"
                 },
@@ -912,6 +960,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "objectKey": {
                     "type": "string"
                 },
                 "originalFilename": {

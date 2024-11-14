@@ -8,7 +8,7 @@ import {
     CarouselNext,
     CarouselPrevious
 } from "@/components/ui/carousel.tsx";
-import {getPhotos} from "@/features/galleries/api/photos.ts";
+import {deletePhoto, getPhotos} from "@/features/galleries/api/photos.ts";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import ImageCard from "@/features/galleries/components/image-card.tsx";
 import {Dialog, DialogContent, DialogTitle} from "@/components/ui/dialog.tsx";
@@ -16,42 +16,79 @@ import {useQuery} from "@tanstack/react-query";
 import ImageUploadModal from "@/features/galleries/components/image-upload-modal.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Check, Trash2, X} from "lucide-react";
+import {useToast} from "@/hooks/use-toast.ts";
 
 type GalleryContentProps = {
     gallery: Gallery;
 };
 
-
-function PhotoGallery({gallery} : GalleryContentProps) {
-
+function PhotoGallery({gallery}: GalleryContentProps) {
     const [api, setApi] = useState<CarouselApi>();
     const [current, setCurrent] = useState<number | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-    const [deleting, setDeletingMode] = useState<boolean>(false)
-    const [selectedToDelete, setSelectedToDelete] = useState<number[]>([])
+    const [deleting, setDeletingMode] = useState<boolean>(false);
+    const [selectedToDelete, setSelectedToDelete] = useState<number[]>([]);
+    const {toast} = useToast();
 
-    function switchDeleteMode(e: React.FormEvent) {
-        e.preventDefault();
-        setDeletingMode(!deleting)
-    }
-
-    const { data: images, isLoading, isError } = useQuery({
+    const {data: images, isLoading, isError} = useQuery({
         queryKey: ['photos', gallery.id],
         queryFn: () => getPhotos(gallery.id),
     });
 
-    useEffect(() => {
-        if (!api) {
-            return;
-        }
-        setCurrent(api.selectedScrollSnap() + 1);
+    function switchDeleteMode(e: React.FormEvent) {
+        e.preventDefault();
+        setDeletingMode(!deleting);
+        setSelectedToDelete([]);
+    }
 
+    const handleSelect = (index: number) => {
+        if (deleting) {
+            setSelectedToDelete(prev =>
+                prev.includes(index)
+                    ? prev.filter(i => i !== index)
+                    : [...prev, index]
+            );
+        } else {
+            setSelectedImageIndex(index);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (images && selectedToDelete.length > 0) {
+            try {
+                const photos = selectedToDelete.map(index => images[index])
+                for (let i = 0; i < photos.length; i++) {
+                    await deletePhoto(photos[i].id)
+                    images.splice(i, 1)
+                }
+
+                toast({
+                    title: "Success",
+                    description: `Deleted ${selectedToDelete.length} photos`,
+                });
+
+
+                setDeletingMode(false);
+                setSelectedToDelete([]);
+            } catch (error) {
+                console.error('Delete failed:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to delete photos",
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (!api) return;
+        setCurrent(api.selectedScrollSnap() + 1);
         api.on("select", () => {
             setCurrent(api.selectedScrollSnap() + 1);
         });
     }, [api]);
 
-    // Handle loading state
     if (isLoading) {
         return (
             <div className="space-y-3">
@@ -71,7 +108,6 @@ function PhotoGallery({gallery} : GalleryContentProps) {
         );
     }
 
-    // Handle error state
     if (isError) {
         return (
             <Card className="w-full p-6">
@@ -87,23 +123,28 @@ function PhotoGallery({gallery} : GalleryContentProps) {
             <Card className="w-full">
                 <CardHeader>
                     <div className="flex justify-between items-start">
-                        <CardTitle>Photos</CardTitle>
+                        <CardTitle>Photos <span className="text-sm text-muted-foreground">{deleting && `(${selectedToDelete.length} selected)`}</span></CardTitle>
                         <div className="flex gap-2 justify-end">
                             <ImageUploadModal galleryId={gallery.id}/>
-                            {deleting ?
+                            {deleting ? (
                                 <>
-                                    <Button variant="destructive" size="icon" onClick={switchDeleteMode}>
-                                        <Check/>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        onClick={handleDelete}
+                                        disabled={selectedToDelete.length === 0}
+                                    >
+                                        <Check className="w-4 h-4"/>
                                     </Button>
                                     <Button size="icon" onClick={switchDeleteMode}>
-                                        <X/>
+                                        <X className="w-4 h-4"/>
                                     </Button>
                                 </>
-                                :
+                            ) : (
                                 <Button variant="destructive" size="icon" onClick={switchDeleteMode}>
-                                    <Trash2/>
+                                    <Trash2 className="w-4 h-4"/>
                                 </Button>
-                            }
+                            )}
                         </div>
                     </div>
                 </CardHeader>
@@ -113,7 +154,9 @@ function PhotoGallery({gallery} : GalleryContentProps) {
                             key={index}
                             image={image}
                             index={index}
-                            onSelect={setSelectedImageIndex}
+                            onSelect={handleSelect}
+                            isSelected={selectedToDelete.includes(index)}
+                            selectionMode={deleting}
                         />
                     ))}
                 </CardContent>
@@ -149,4 +192,5 @@ function PhotoGallery({gallery} : GalleryContentProps) {
         </>
     );
 }
-export default PhotoGallery
+
+export default PhotoGallery;

@@ -1,6 +1,7 @@
 import {getMimeType} from "@/lib/utils.ts";
 
 export interface Photo {
+    id: string
     url: string;
     originalFilename: string;
 }
@@ -68,3 +69,13 @@ export async function confirmUpload(photoId: string) {
         throw new Error('Failed to confirm upload');
     }
 };
+
+export async function deletePhoto(photoId: string) {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/photos/${photoId}`, {
+        method: 'DELETE',
+    })
+    if (!response.ok) {
+        throw new Error('Failed to delete photo')
+    }
+
+}
