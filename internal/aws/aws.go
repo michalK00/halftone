@@ -12,6 +12,36 @@ import (
 
 const lifetimeSecs int64 = 60
 
+func DeleteObject(key string) error {
+
+	client, err := aws.GetAWSClient()
+	if err != nil {
+		log.Printf("Failed GetAWSClient, %v \n", err)
+		return err
+	}
+	err = client.DeleteObject(context.Background(), key)
+	if err != nil {
+		log.Printf("Failed DeleteObject, %v \n", err)
+		return err
+	}
+
+	return nil
+}
+
+func ObjectExists(key string) (bool, error) {
+	client, err := aws.GetAWSClient()
+	if err != nil {
+		log.Printf("Failed GetAWSClient, %v \n", err)
+		return false, err
+	}
+	exists, err := client.ObjectExists(context.Background(), key)
+	if err != nil {
+		log.Printf("Failed ObjectExists, %v \n", err)
+		return false, err
+	}
+	return exists, nil
+}
+
 func GetObjectUrl(key string) (string, error) {
 
 	client, err := aws.GetAWSClient()

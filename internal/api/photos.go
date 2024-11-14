@@ -111,8 +111,16 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	//TODO check for presence in aws
-	photo, err := a.photoRepo.UpdatePhoto(ctx.Context(), photoId, domain.PhotoStatus(1))
+
+	photo, err := a.photoRepo.GetPhoto(ctx.Context(), photoId)
+	if err != nil {
+		return ServerError(ctx, err, "Server error while retrieving photo from db")
+	}
+
+	if _, err := aws.ObjectExists(photo.ObjectKey); err != nil {
+		return NotFound(ctx, err)
+	}
+	photo, err = a.photoRepo.UpdatePhoto(ctx.Context(), photoId, domain.PhotoStatus(1))
 	if err != nil {
 		return ServerError(ctx, err, "Failed to confirm photo upload")
 	}
@@ -149,13 +157,8 @@ func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
 
 	res := make([]getPhotoResponse, len(photos))
 	for i, photo := range photos {
-		ext := filepath.Ext(photo.OriginalFilename)
-		if ext == "" {
-			ext = ".jpg"
-		}
-		objectPath := path.Join(photo.CollectionId.Hex(), photo.GalleryId.Hex(), "photos", photo.ID.Hex()+ext)
 
-		url, err := aws.GetObjectUrl(objectPath)
+		url, err := aws.GetObjectUrl(photo.ObjectKey)
 		if err != nil {
 			return ServerError(ctx, err, "Failed to get photo url")
 		}
@@ -185,8 +188,15 @@ func (a *api) deletePhotoHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	//TODO
-	// Clear AWS beforehand
+	photo, err := a.photoRepo.GetPhoto(ctx.Context(), photoId)
+	if err != nil {
+		return ServerError(ctx, err, "Failed to get photo")
+	}
+
+	err = aws.DeleteObject(photo.ObjectKey)
+	if err != nil {
+		return ServerError(ctx, err, "Failed to delete photo")
+	}
 	err = a.photoRepo.DeletePhoto(ctx.Context(), photoId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to delete photo")

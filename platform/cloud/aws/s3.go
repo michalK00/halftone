@@ -22,8 +22,6 @@ type S3Object struct {
 	Body *[]byte
 }
 
-const maxConcurrency int = 3
-
 func NewPresignClient(c *AWSClient) *Presigner {
 	return &Presigner{
 		PresignClient: s3.NewPresignClient(c.S3Client),
@@ -45,6 +43,30 @@ func (c *AWSClient) UploadObject(ctx context.Context, object *S3Object) (*manage
 		Body:   bytes.NewBuffer(*object.Body),
 	})
 
+}
+
+func (c *AWSClient) ObjectExists(ctx context.Context, key string) (bool, error) {
+	_, err := c.S3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: &c.env.AWS_S3_NAME,
+		Key:    &key,
+	})
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *AWSClient) DeleteObject(ctx context.Context, objectKey string) error {
+	input := &s3.DeleteObjectInput{
+		Bucket: &c.env.AWS_S3_NAME,
+		Key:    &objectKey,
+	}
+
+	_, err := c.S3Client.DeleteObject(ctx, input)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (presigner Presigner) GetObjectUrl(ctx context.Context, objectKey string, lifetimeSecs int64) (*v4.PresignedHTTPRequest, error) {

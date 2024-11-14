@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"path"
+	"path/filepath"
 	"time"
 )
 
@@ -73,6 +75,10 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 
 	coll := s.db.Collection("photos")
 	photoId := primitive.NewObjectID()
+	ext := filepath.Ext(originalFilename)
+	if ext == "" {
+		ext = ".jpg"
+	}
 
 	photo := bson.D{
 		{"_id", photoId},
@@ -82,6 +88,7 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 		{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
 		{"status", "pending"},
+		{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
 	}
 	_, err := coll.InsertOne(ctx, photo)
 	if err != nil {
@@ -99,6 +106,10 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 	documents := make([]interface{}, len(originalFilenames))
 	for i, filename := range originalFilenames {
 		photoId := primitive.NewObjectID()
+		ext := filepath.Ext(filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
 		photo := bson.D{
 			{"_id", photoId},
 			{"collectionId", collectionId},
@@ -107,6 +118,7 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 			{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
 			{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
 			{"status", "pending"},
+			{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
 		}
 		documents[i] = photo
 		photoIds[i] = photoId

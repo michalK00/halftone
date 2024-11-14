@@ -13,6 +13,7 @@ type PhotoDB struct {
 	CreatedAt        primitive.DateTime `bson:"createdAt" json:"createdAt"`
 	UpdatedAt        primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
 	OriginalFilename string             `bson:"originalFilename" json:"originalFilename"`
+	ObjectKey        string             `bson:"objectKey" json:"objectKey"`
 }
 
 type PhotoStatus int64

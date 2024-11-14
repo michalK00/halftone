@@ -63,7 +63,7 @@ func (a *api) Routes(app *fiber.App, config config.EnvVars) {
 	//photos.Delete("/galleries/:galleryId/photos")
 	//photos.Get("/photos/:photoId")
 	photos.Put("/photos/:photoId/confirm", a.confirmPhotoUploadHandler)
-	//photos.Delete("/photos/:photoId")
+	photos.Delete("/photos/:photoId", a.deletePhotoHandler)
 
 	//order := app.Group("/api/v1")
 	//order.Get("/orders/:orderId")
