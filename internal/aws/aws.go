@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/michalK00/sg-qr/platform/cloud/aws"
 	"log"
@@ -72,7 +71,6 @@ func PostObjectRequest(key string, conditions []interface{}) (*s3.PresignedPostR
 		log.Printf("Failed PutObjectUrl, %v \n", err)
 		return nil, err
 	}
-	fmt.Println(request)
 
 	return request, nil
 }

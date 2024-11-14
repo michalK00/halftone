@@ -1,0 +1,152 @@
+import {Gallery} from "@/features/galleries/api/galleries.ts";
+import {useEffect, useState} from "react";
+import {
+    Carousel,
+    CarouselApi,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious
+} from "@/components/ui/carousel.tsx";
+import {getPhotos} from "@/features/galleries/api/photos.ts";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import ImageCard from "@/features/galleries/components/image-card.tsx";
+import {Dialog, DialogContent, DialogTitle} from "@/components/ui/dialog.tsx";
+import {useQuery} from "@tanstack/react-query";
+import ImageUploadModal from "@/features/galleries/components/image-upload-modal.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {Check, Trash2, X} from "lucide-react";
+
+type GalleryContentProps = {
+    gallery: Gallery;
+};
+
+
+function PhotoGallery({gallery} : GalleryContentProps) {
+
+    const [api, setApi] = useState<CarouselApi>();
+    const [current, setCurrent] = useState<number | null>(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+    const [deleting, setDeletingMode] = useState<boolean>(false)
+    const [selectedToDelete, setSelectedToDelete] = useState<number[]>([])
+
+    function switchDeleteMode(e: React.FormEvent) {
+        e.preventDefault();
+        setDeletingMode(!deleting)
+    }
+
+    const { data: images, isLoading, isError } = useQuery({
+        queryKey: ['photos', gallery.id],
+        queryFn: () => getPhotos(gallery.id),
+    });
+
+    useEffect(() => {
+        if (!api) {
+            return;
+        }
+        setCurrent(api.selectedScrollSnap() + 1);
+
+        api.on("select", () => {
+            setCurrent(api.selectedScrollSnap() + 1);
+        });
+    }, [api]);
+
+    // Handle loading state
+    if (isLoading) {
+        return (
+            <div className="space-y-3">
+                <Card className="w-full">
+                    <CardHeader>
+                        <div className="animate-pulse h-8 rounded w-1/4"></div>
+                    </CardHeader>
+                </Card>
+                <Card className="w-full p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="animate-pulse dark:bg-zinc-800 light:bg-zinc-600 rounded aspect-square"></div>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    // Handle error state
+    if (isError) {
+        return (
+            <Card className="w-full p-6">
+                <div className="text-center text-red-500">
+                    Error loading photos. Please try again later.
+                </div>
+            </Card>
+        );
+    }
+
+    return (
+        <>
+            <Card className="w-full">
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <CardTitle>Photos</CardTitle>
+                        <div className="flex gap-2 justify-end">
+                            <ImageUploadModal galleryId={gallery.id}/>
+                            {deleting ?
+                                <>
+                                    <Button variant="destructive" size="icon" onClick={switchDeleteMode}>
+                                        <Check/>
+                                    </Button>
+                                    <Button size="icon" onClick={switchDeleteMode}>
+                                        <X/>
+                                    </Button>
+                                </>
+                                :
+                                <Button variant="destructive" size="icon" onClick={switchDeleteMode}>
+                                    <Trash2/>
+                                </Button>
+                            }
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr">
+                    {images?.map((image, index) => (
+                        <ImageCard
+                            key={index}
+                            image={image}
+                            index={index}
+                            onSelect={setSelectedImageIndex}
+                        />
+                    ))}
+                </CardContent>
+            </Card>
+
+            <Dialog open={selectedImageIndex !== null} onOpenChange={() => setSelectedImageIndex(null)}>
+                <DialogContent className="max-w-7xl w-[90%] sm:w-10/12 rounded-lg">
+                    <Carousel setApi={setApi} className="w-full" opts={{startIndex: selectedImageIndex!, loop: true}}>
+                        <CarouselContent>
+                            {images?.map((image, index) => (
+                                <CarouselItem key={index}>
+                                    <DialogTitle className="text-center pb-2 text-sm sm:text-base">
+                                        {image.originalFilename}
+                                    </DialogTitle>
+                                    <div className="relative w-full aspect-video">
+                                        <img
+                                            src={image.url}
+                                            alt={image.originalFilename}
+                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-full max-h-full object-contain"
+                                        />
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="hidden sm:flex"/>
+                        <CarouselNext className="hidden sm:flex"/>
+                    </Carousel>
+                    <div className="text-center text-sm sm:text-base -mt-2 -mb-2">
+                        Photo {current} out of {images?.length}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+export default PhotoGallery

@@ -16,6 +16,7 @@ type photoUploadRequest struct {
 }
 
 type photoUploadResponse struct {
+	Id                   string                  `json:"id"`
 	OriginalFilename     string                  `json:"originalFilename"`
 	PresignedPostRequest s3.PresignedPostRequest `json:"presignedPostRequest"`
 }
@@ -87,6 +88,7 @@ func (a *api) uploadPhotosHandler(ctx *fiber.Ctx) error {
 		}
 
 		res[i] = photoUploadResponse{
+			Id:                   photoId.Hex(),
 			OriginalFilename:     filenames[i],
 			PresignedPostRequest: *postReq,
 		}
