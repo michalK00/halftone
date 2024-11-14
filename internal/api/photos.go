@@ -114,7 +114,7 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 
 	photo, err := a.photoRepo.GetPhoto(ctx.Context(), photoId)
 	if err != nil {
-		return ServerError(ctx, err, "Server error while retrieving photo from db")
+		return NotFound(ctx, err)
 	}
 
 	if _, err := aws.ObjectExists(photo.ObjectKey); err != nil {

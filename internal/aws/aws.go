@@ -34,12 +34,12 @@ func ObjectExists(key string) (bool, error) {
 		log.Printf("Failed GetAWSClient, %v \n", err)
 		return false, err
 	}
-	exists, err := client.ObjectExists(context.Background(), key)
+	_, err = client.HeadObject(context.Background(), key)
 	if err != nil {
 		log.Printf("Failed ObjectExists, %v \n", err)
 		return false, err
 	}
-	return exists, nil
+	return true, nil
 }
 
 func GetObjectUrl(key string) (string, error) {

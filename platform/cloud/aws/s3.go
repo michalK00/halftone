@@ -45,15 +45,12 @@ func (c *AWSClient) UploadObject(ctx context.Context, object *S3Object) (*manage
 
 }
 
-func (c *AWSClient) ObjectExists(ctx context.Context, key string) (bool, error) {
-	_, err := c.S3Client.GetObject(ctx, &s3.GetObjectInput{
+func (c *AWSClient) HeadObject(ctx context.Context, key string) (*s3.HeadObjectOutput, error) {
+	out, err := c.S3Client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: &c.env.AWS_S3_NAME,
 		Key:    &key,
 	})
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return out, err
 }
 
 func (c *AWSClient) DeleteObject(ctx context.Context, objectKey string) error {

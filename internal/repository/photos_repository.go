@@ -117,7 +117,7 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 			{"originalFilename", filename},
 			{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
 			{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
-			{"status", "pending"},
+			{"status", domain.PhotoStatus(0)},
 			{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
 		}
 		documents[i] = photo
