@@ -1,8 +1,8 @@
-package galleries
+package repository
 
 import (
 	"context"
-	"github.com/michalK00/sg-qr/app/domain"
+	"github.com/michalK00/sg-qr/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,17 +10,17 @@ import (
 	"time"
 )
 
-type GalleryStorage struct {
+type MongoGallery struct {
 	db *mongo.Database
 }
 
-func NewGalleryStorage(db *mongo.Database) *GalleryStorage {
-	return &GalleryStorage{
+func NewMongoGallery(db *mongo.Database) *MongoGallery {
+	return &MongoGallery{
 		db: db,
 	}
 }
 
-func (s *GalleryStorage) galleryExists(ctx context.Context, galleryId primitive.ObjectID) (bool, error) {
+func (s *MongoGallery) GalleryExists(ctx context.Context, galleryId primitive.ObjectID) (bool, error) {
 	coll := s.db.Collection("galleries")
 
 	count, err := coll.CountDocuments(ctx, bson.D{{"_id", galleryId}}, options.Count().SetLimit(1))
@@ -31,7 +31,7 @@ func (s *GalleryStorage) galleryExists(ctx context.Context, galleryId primitive.
 	return count > 0, nil
 }
 
-func (s *GalleryStorage) collectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID) (int64, error) {
+func (s *MongoGallery) CollectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID) (int64, error) {
 	coll := s.db.Collection("galleries")
 	count, err := coll.CountDocuments(ctx, bson.D{{"collectionId", collectionId}})
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *GalleryStorage) collectionGalleryCount(ctx context.Context, collectionI
 	return count, nil
 }
 
-func (s *GalleryStorage) getGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]domain.GalleryDB, error) {
+func (s *MongoGallery) GetGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 
 	var result []domain.GalleryDB
@@ -56,7 +56,7 @@ func (s *GalleryStorage) getGalleries(ctx context.Context, collectionId primitiv
 	return result, nil
 }
 
-func (s *GalleryStorage) getGallery(ctx context.Context, galleryId primitive.ObjectID) (domain.GalleryDB, error) {
+func (s *MongoGallery) GetGallery(ctx context.Context, galleryId primitive.ObjectID) (domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 
 	var result domain.GalleryDB
@@ -68,7 +68,7 @@ func (s *GalleryStorage) getGallery(ctx context.Context, galleryId primitive.Obj
 	return result, nil
 }
 
-func (s *GalleryStorage) createGallery(ctx context.Context, collectionId primitive.ObjectID, name string) (string, error) {
+func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive.ObjectID, name string) (string, error) {
 
 	galleriesColl := s.db.Collection("galleries")
 	galleryID := primitive.NewObjectID()
@@ -89,13 +89,13 @@ func (s *GalleryStorage) createGallery(ctx context.Context, collectionId primiti
 	return galleryID.Hex(), nil
 }
 
-func (s *GalleryStorage) deleteGallery(ctx context.Context, galleryId primitive.ObjectID) error {
+func (s *MongoGallery) DeleteGallery(ctx context.Context, galleryId primitive.ObjectID) error {
 	coll := s.db.Collection("galleries")
 	_, err := coll.DeleteOne(ctx, bson.D{{"_id", galleryId}})
 	return err
 }
 
-func (s *GalleryStorage) updateGallery(ctx context.Context, galleryId primitive.ObjectID, name string, sharingEnabled bool, sharingExpiryDate primitive.DateTime) (domain.GalleryDB, error) {
+func (s *MongoGallery) UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, name string, sharingEnabled bool, sharingExpiryDate primitive.DateTime) (domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 	filter := bson.D{{"_id", galleryId}}
 	update := bson.D{

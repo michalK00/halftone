@@ -73,7 +73,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/collections.createCollectionRequest"
+                            "$ref": "#/definitions/api.createCollectionRequest"
                         }
                     }
                 ],
@@ -81,7 +81,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/collections.createCollectionResponse"
+                            "$ref": "#/definitions/api.createCollectionResponse"
                         }
                     },
                     "400": {
@@ -170,7 +170,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/collections.updateCollectionRequest"
+                            "$ref": "#/definitions/api.updateCollectionRequest"
                         }
                     },
                     {
@@ -310,7 +310,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/galleries.createGalleryRequest"
+                            "$ref": "#/definitions/api.createGalleryRequest"
                         }
                     },
                     {
@@ -325,7 +325,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/galleries.createGalleryResponse"
+                            "$ref": "#/definitions/api.createGalleryResponse"
                         }
                     },
                     "400": {
@@ -456,7 +456,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/galleries.updateGalleryRequest"
+                            "$ref": "#/definitions/api.updateGalleryRequest"
                         }
                     }
                 ],
@@ -524,6 +524,116 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/galleries/{galleryId}/photos": {
+            "get": {
+                "description": "Retrieves all photos from a specific gallery, including their signed URLs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "photos"
+                ],
+                "summary": "Get gallery photos",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectid",
+                        "description": "Gallery ID (MongoDB ObjectID)",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.getPhotoResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Gallery not found or invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error while retrieving photos",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates new photo entries in a gallery and returns pre-signed URLs for uploading the actual photo files",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "photos",
+                    "gallery"
+                ],
+                "summary": "Upload photos to a gallery",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectId",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Photo upload requests",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.photoUploadRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully created photo entries with upload URLs",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.photoUploadResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or gallery ID",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Gallery not found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/galleries/{galleryId}/qr": {
             "post": {
                 "description": "Generate a QR code from a given URL",
@@ -544,7 +654,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/galleries.generateQrRequest"
+                            "$ref": "#/definitions/api.generateQrRequest"
                         }
                     },
                     {
@@ -601,10 +711,97 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/photos/{photoId}": {
+            "delete": {
+                "description": "Deletes a specific photo by ID (Note: AWS cleanup pending implementation)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "photos"
+                ],
+                "summary": "Delete photo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectid",
+                        "description": "Photo ID (MongoDB ObjectID)",
+                        "name": "photoId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Photo successfully deleted"
+                    },
+                    "404": {
+                        "description": "Photo not found or invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error while deleting photo",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/photos/{photoId}/confirm": {
+            "put": {
+                "description": "Confirms that a photo has been successfully uploaded by updating its status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "photos"
+                ],
+                "summary": "Confirm photo upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectid",
+                        "description": "Photo ID (MongoDB ObjectID)",
+                        "name": "photoId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.PhotoDB"
+                        }
+                    },
+                    "404": {
+                        "description": "Photo not found or invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error while confirming upload",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "collections.createCollectionRequest": {
+        "api.createCollectionRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -612,7 +809,7 @@ const docTemplate = `{
                 }
             }
         },
-        "collections.createCollectionResponse": {
+        "api.createCollectionResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -620,13 +817,86 @@ const docTemplate = `{
                 }
             }
         },
-        "collections.updateCollectionRequest": {
+        "api.createGalleryRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Example Gallery"
+                }
+            }
+        },
+        "api.createGalleryResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.generateQrRequest": {
+            "description": "Request body for generating a QR code",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "description": "URL to be encoded in the QR code",
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "api.getPhotoResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "originalFilename": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.photoUploadRequest": {
+            "type": "object",
+            "properties": {
+                "originalFilename": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.photoUploadResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "originalFilename": {
+                    "type": "string"
+                },
+                "presignedPostRequest": {
+                    "$ref": "#/definitions/s3.PresignedPostRequest"
+                }
+            }
+        },
+        "api.updateCollectionRequest": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
                 }
             }
+        },
+        "api.updateGalleryRequest": {
+            "type": "object"
         },
         "domain.CollectionDB": {
             "type": "object",
@@ -677,40 +947,65 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.PhotoDB": {
+            "type": "object",
+            "properties": {
+                "collectionId": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "galleryId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "objectKey": {
+                    "type": "string"
+                },
+                "originalFilename": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.PhotoStatus"
+                },
+                "updatedAt": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.PhotoStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "Pending",
+                "Uploaded"
+            ]
+        },
         "fiber.Map": {
             "type": "object",
             "additionalProperties": true
         },
-        "galleries.createGalleryRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "example": "Example Gallery"
-                }
-            }
-        },
-        "galleries.createGalleryResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                }
-            }
-        },
-        "galleries.generateQrRequest": {
-            "description": "Request body for generating a QR code",
+        "s3.PresignedPostRequest": {
             "type": "object",
             "properties": {
                 "url": {
-                    "description": "URL to be encoded in the QR code",
-                    "type": "string",
-                    "example": "https://example.com"
+                    "description": "Represents the Base URL to make a request to",
+                    "type": "string"
+                },
+                "values": {
+                    "description": "Values is a key-value map of values to be sent as FormData\nthese values are not encoded",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
-        },
-        "galleries.updateGalleryRequest": {
-            "type": "object"
         }
     }
 }`
@@ -721,8 +1016,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Studio Ginger - QR code generator",
-	Description:      "Image galleries that provides uploading images",
+	Title:            "Image library",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

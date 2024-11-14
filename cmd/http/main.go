@@ -3,8 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/swagger"
-	"github.com/michalK00/sg-qr/app/collections"
-	"github.com/michalK00/sg-qr/app/galleries"
+	"github.com/michalK00/sg-qr/internal/api"
 	"github.com/michalK00/sg-qr/internal/config"
 	"github.com/michalK00/sg-qr/internal/middleware"
 	"github.com/michalK00/sg-qr/platform/database/mongodb"
@@ -74,21 +73,13 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	// middleware
 	middleware.FiberMiddleware(app)
 
-	// Create user domain
-	collectionStore := collections.NewCollectionStorage(db)
-	collectionController := collections.NewCollectionController(collectionStore)
-	galleryStore := galleries.NewGalleryStorage(db)
-	galleryService := galleries.NewGalleryService(galleryStore, collectionStore)
-	galleryController := galleries.NewGalleryController(galleryService)
-
+	a := api.NewApi(db)
+	a.Routes(app, env)
 	// Add routes
 	app.Get("/swagger/*", swagger.HandlerDefault)
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("Healthy!")
 	})
-
-	collections.AddRoutes(app, collectionController, env)
-	galleries.AddRoutes(app, galleryController, env)
 
 	return app, func() {
 		mongodb.CloseMongo(db)
