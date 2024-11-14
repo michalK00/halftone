@@ -1,20 +1,9 @@
-package collections
+package api
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-type CollectionController struct {
-	storage *CollectionStorage
-}
-
-func NewCollectionController(storage *CollectionStorage) *CollectionController {
-	return &CollectionController{
-		storage: storage,
-	}
-}
 
 type createCollectionRequest struct {
 	Name string `json:"name"`
@@ -35,16 +24,16 @@ type createCollectionResponse struct {
 // @Failure 401 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections [post]
-func (c *CollectionController) createCollection(ctx *fiber.Ctx) error {
+func (a *api) createCollectionHandler(ctx *fiber.Ctx) error {
 
 	var req createCollectionRequest
 	if err := ctx.BodyParser(&req); err != nil {
-		return util.BadRequest(ctx, err)
+		return BadRequest(ctx, err)
 	}
 
-	id, err := c.storage.createCollection(ctx.Context(), req.Name)
+	id, err := a.collectionRepo.CreateCollection(ctx.Context(), req.Name)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to create collection")
+		return ServerError(ctx, err, "Failed to create collection")
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(createCollectionResponse{
@@ -61,11 +50,11 @@ func (c *CollectionController) createCollection(ctx *fiber.Ctx) error {
 // @Failure 401 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections [get]
-func (c *CollectionController) getCollections(ctx *fiber.Ctx) error {
+func (a *api) getCollectionsHandler(ctx *fiber.Ctx) error {
 
-	collections, err := c.storage.getCollections(ctx.Context())
+	collections, err := a.collectionRepo.GetCollections(ctx.Context())
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to get collections")
+		return ServerError(ctx, err, "Failed to get collections")
 	}
 
 	return ctx.JSON(collections)
@@ -81,16 +70,16 @@ func (c *CollectionController) getCollections(ctx *fiber.Ctx) error {
 // @Failure 401 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections/{collectionId} [get]
-func (c *CollectionController) getCollection(ctx *fiber.Ctx) error {
+func (a *api) getCollectionHandler(ctx *fiber.Ctx) error {
 
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		return util.NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
 
-	collection, err := c.storage.getCollection(ctx.Context(), collectionId)
+	collection, err := a.collectionRepo.GetCollection(ctx.Context(), collectionId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to get collection")
+		return ServerError(ctx, err, "Failed to get collection")
 	}
 
 	return ctx.JSON(collection)
@@ -113,22 +102,22 @@ type updateCollectionRequest struct {
 // @Failure 404 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections/{collectionId} [put]
-func (c *CollectionController) updateCollection(ctx *fiber.Ctx) error {
+func (a *api) updateCollectionHandler(ctx *fiber.Ctx) error {
 
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		return util.NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
 
 	var req updateCollectionRequest
 	err = ctx.BodyParser(&req)
 	if err != nil {
-		return util.BadRequest(ctx, err)
+		return BadRequest(ctx, err)
 	}
 
-	collection, err := c.storage.updateCollection(ctx.Context(), collectionId, req.Name)
+	collection, err := a.collectionRepo.UpdateCollection(ctx.Context(), collectionId, req.Name)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to update collection")
+		return ServerError(ctx, err, "Failed to update collection")
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(collection)
@@ -144,16 +133,16 @@ func (c *CollectionController) updateCollection(ctx *fiber.Ctx) error {
 // @Failure 401 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections/{collectionId} [delete]
-func (c *CollectionController) deleteCollection(ctx *fiber.Ctx) error {
+func (a *api) deleteCollectionHandler(ctx *fiber.Ctx) error {
 
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusNoContent)
 	}
 
-	err = c.storage.deleteCollection(ctx.Context(), collectionId)
+	err = a.collectionRepo.DeleteCollection(ctx.Context(), collectionId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to delete collection")
+		return ServerError(ctx, err, "Failed to delete collection")
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)

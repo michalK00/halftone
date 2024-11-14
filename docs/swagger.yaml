@@ -1,18 +1,62 @@
 definitions:
-  collections.createCollectionRequest:
+  api.createCollectionRequest:
     properties:
       name:
         type: string
     type: object
-  collections.createCollectionResponse:
+  api.createCollectionResponse:
     properties:
       id:
         type: string
     type: object
-  collections.updateCollectionRequest:
+  api.createGalleryRequest:
+    properties:
+      name:
+        example: Example Gallery
+        type: string
+    type: object
+  api.createGalleryResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  api.generateQrRequest:
+    description: Request body for generating a QR code
+    properties:
+      url:
+        description: URL to be encoded in the QR code
+        example: https://example.com
+        type: string
+    type: object
+  api.getPhotoResponse:
+    properties:
+      createdAt:
+        type: integer
+      originalFilename:
+        type: string
+      updatedAt:
+        type: integer
+      url:
+        type: string
+    type: object
+  api.photoUploadRequest:
+    properties:
+      originalFilename:
+        type: string
+    type: object
+  api.photoUploadResponse:
+    properties:
+      originalFilename:
+        type: string
+      presignedPostRequest:
+        $ref: '#/definitions/s3.PresignedPostRequest'
+    type: object
+  api.updateCollectionRequest:
     properties:
       name:
         type: string
+    type: object
+  api.updateGalleryRequest:
     type: object
   domain.CollectionDB:
     properties:
@@ -46,35 +90,51 @@ definitions:
       updatedAt:
         type: integer
     type: object
+  domain.PhotoDB:
+    properties:
+      collectionId:
+        type: string
+      createdAt:
+        type: integer
+      galleryId:
+        type: string
+      id:
+        type: string
+      originalFilename:
+        type: string
+      status:
+        $ref: '#/definitions/domain.PhotoStatus'
+      updatedAt:
+        type: integer
+    type: object
+  domain.PhotoStatus:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - Pending
+    - Uploaded
   fiber.Map:
     additionalProperties: true
     type: object
-  galleries.createGalleryRequest:
-    properties:
-      name:
-        example: Example Gallery
-        type: string
-    type: object
-  galleries.createGalleryResponse:
-    properties:
-      id:
-        type: string
-    type: object
-  galleries.generateQrRequest:
-    description: Request body for generating a QR code
+  s3.PresignedPostRequest:
     properties:
       url:
-        description: URL to be encoded in the QR code
-        example: https://example.com
+        description: Represents the Base URL to make a request to
         type: string
-    type: object
-  galleries.updateGalleryRequest:
+      values:
+        additionalProperties:
+          type: string
+        description: |-
+          Values is a key-value map of values to be sent as FormData
+          these values are not encoded
+        type: object
     type: object
 info:
   contact:
     name: Michał Klemens
-  description: Image galleries that provides uploading images
-  title: Studio Ginger - QR code generator
+  title: Image library
   version: "0.1"
 paths:
   /api/v1/collections:
@@ -112,14 +172,14 @@ paths:
         name: collections
         required: true
         schema:
-          $ref: '#/definitions/collections.createCollectionRequest'
+          $ref: '#/definitions/api.createCollectionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/collections.createCollectionResponse'
+            $ref: '#/definitions/api.createCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -202,7 +262,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/collections.updateCollectionRequest'
+          $ref: '#/definitions/api.updateCollectionRequest'
       - description: Collection ID
         in: path
         name: collectionId
@@ -269,7 +329,7 @@ paths:
         name: galleries
         required: true
         schema:
-          $ref: '#/definitions/galleries.createGalleryRequest'
+          $ref: '#/definitions/api.createGalleryRequest'
       - description: Collection ID
         in: path
         name: collectionId
@@ -281,7 +341,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/galleries.createGalleryResponse'
+            $ref: '#/definitions/api.createGalleryResponse'
         "400":
           description: Bad Request
           schema:
@@ -390,7 +450,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/galleries.updateGalleryRequest'
+          $ref: '#/definitions/api.updateGalleryRequest'
       produces:
       - application/json
       responses:
@@ -413,6 +473,82 @@ paths:
       summary: Update gallery
       tags:
       - galleries
+  /api/v1/galleries/{galleryId}/photos:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all photos from a specific gallery, including their signed
+        URLs
+      parameters:
+      - description: Gallery ID (MongoDB ObjectID)
+        format: objectid
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.getPhotoResponse'
+        "404":
+          description: Gallery not found or invalid ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error while retrieving photos
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery photos
+      tags:
+      - photos
+    post:
+      consumes:
+      - application/json
+      description: Creates new photo entries in a gallery and returns pre-signed URLs
+        for uploading the actual photo files
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Photo upload requests
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/api.photoUploadRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created photo entries with upload URLs
+          schema:
+            items:
+              $ref: '#/definitions/api.photoUploadResponse'
+            type: array
+        "400":
+          description: Invalid request body or gallery ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Gallery not found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Upload photos to a gallery
+      tags:
+      - photos
+      - gallery
   /api/v1/galleries/{galleryId}/qr:
     post:
       consumes:
@@ -424,7 +560,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/galleries.generateQrRequest'
+          $ref: '#/definitions/api.generateQrRequest'
       - description: Collection ID
         in: path
         name: collectionId
@@ -465,4 +601,35 @@ paths:
       summary: Generate QR code
       tags:
       - QR
+  /api/v1/photos/{photoId}/confirm:
+    put:
+      consumes:
+      - application/json
+      description: Confirms that a photo has been successfully uploaded by updating
+        its status
+      parameters:
+      - description: Photo ID (MongoDB ObjectID)
+        format: objectid
+        in: path
+        name: photoId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PhotoDB'
+        "404":
+          description: Photo not found or invalid ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error while confirming upload
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Confirm photo upload
+      tags:
+      - photos
 swagger: "2.0"

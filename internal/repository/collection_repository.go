@@ -1,8 +1,8 @@
-package collections
+package repository
 
 import (
 	"context"
-	"github.com/michalK00/sg-qr/app/domain"
+	"github.com/michalK00/sg-qr/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,17 +10,17 @@ import (
 	"time"
 )
 
-type CollectionStorage struct {
+type MongoCollection struct {
 	db *mongo.Database
 }
 
-func NewCollectionStorage(db *mongo.Database) *CollectionStorage {
-	return &CollectionStorage{
+func NewMongoCollection(db *mongo.Database) *MongoCollection {
+	return &MongoCollection{
 		db: db,
 	}
 }
 
-func (s *CollectionStorage) CollectionExists(ctx context.Context, collectionId primitive.ObjectID) (bool, error) {
+func (s *MongoCollection) CollectionExists(ctx context.Context, collectionId primitive.ObjectID) (bool, error) {
 	coll := s.db.Collection("collections")
 
 	count, err := coll.CountDocuments(ctx, bson.D{{"_id", collectionId}}, options.Count().SetLimit(1))
@@ -31,7 +31,7 @@ func (s *CollectionStorage) CollectionExists(ctx context.Context, collectionId p
 	return count > 0, nil
 }
 
-func (s *CollectionStorage) getCollection(ctx context.Context, collectionId primitive.ObjectID) (domain.CollectionDB, error) {
+func (s *MongoCollection) GetCollection(ctx context.Context, collectionId primitive.ObjectID) (domain.CollectionDB, error) {
 	coll := s.db.Collection("collections")
 
 	var collection domain.CollectionDB
@@ -43,7 +43,7 @@ func (s *CollectionStorage) getCollection(ctx context.Context, collectionId prim
 	return collection, nil
 }
 
-func (s *CollectionStorage) getCollections(ctx context.Context) ([]domain.CollectionDB, error) {
+func (s *MongoCollection) GetCollections(ctx context.Context) ([]domain.CollectionDB, error) {
 	collection := s.db.Collection("collections")
 
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -59,7 +59,7 @@ func (s *CollectionStorage) getCollections(ctx context.Context) ([]domain.Collec
 	return collections, nil
 }
 
-func (s *CollectionStorage) createCollection(ctx context.Context, name string) (string, error) {
+func (s *MongoCollection) CreateCollection(ctx context.Context, name string) (string, error) {
 	collection := s.db.Collection("collections")
 
 	col := bson.D{
@@ -75,13 +75,13 @@ func (s *CollectionStorage) createCollection(ctx context.Context, name string) (
 	return result.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (s *CollectionStorage) deleteCollection(ctx context.Context, collectionId primitive.ObjectID) error {
+func (s *MongoCollection) DeleteCollection(ctx context.Context, collectionId primitive.ObjectID) error {
 	collection := s.db.Collection("collections")
 	_, err := collection.DeleteOne(ctx, bson.D{{"_id", collectionId}})
 	return err
 }
 
-func (s *CollectionStorage) updateCollection(ctx context.Context, collectionId primitive.ObjectID, name string) (domain.CollectionDB, error) {
+func (s *MongoCollection) UpdateCollection(ctx context.Context, collectionId primitive.ObjectID, name string) (domain.CollectionDB, error) {
 	coll := s.db.Collection("collections")
 
 	filter := bson.D{{"_id", collectionId}}

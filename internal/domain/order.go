@@ -1,6 +1,8 @@
 package domain
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type OrderDB struct {
 	ID           primitive.ObjectID   `bson:"_id" json:"id"`
@@ -10,4 +12,7 @@ type OrderDB struct {
 	CreatedAt    primitive.DateTime   `bson:"createdAt" json:"createdAt"`
 	UpdatedAt    primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
 	Photos       []primitive.ObjectID `bson:"photos" json:"photos"`
+}
+
+type OrderRepository interface {
 }

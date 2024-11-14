@@ -1,23 +1,13 @@
-package galleries
+package api
 
 import (
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/util"
+	"github.com/michalK00/sg-qr/internal/aws"
+	"github.com/michalK00/sg-qr/internal/qr"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"path"
 )
-
-type GalleryController struct {
-	service *GalleryService
-}
-
-func NewGalleryController(service *GalleryService) *GalleryController {
-	return &GalleryController{
-		service: service,
-	}
-}
 
 type createGalleryRequest struct {
 	Name string `json:"name" example:"Example Gallery"`
@@ -41,16 +31,16 @@ type updateGalleryRequest struct {
 // @Param collectionId path string true "Collection ID"
 // @Success 200 {array} domain.GalleryDB
 // @Router /api/v1/collections/{collectionId}/galleries [get]
-func (c *GalleryController) getGalleries(ctx *fiber.Ctx) error {
+func (a *api) getGalleriesHandler(ctx *fiber.Ctx) error {
 
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		return util.NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
 
-	galleries, err := c.service.galleryStorage.getGalleries(ctx.Context(), collectionId)
+	galleries, err := a.galleryRepo.GetGalleries(ctx.Context(), collectionId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to fetch galleries")
+		return ServerError(ctx, err, "Failed to fetch galleries")
 	}
 
 	return ctx.JSON(galleries)
@@ -66,14 +56,14 @@ func (c *GalleryController) getGalleries(ctx *fiber.Ctx) error {
 // @Failure 404 {object} fiber.Map "Collection not found or invalid ID format"
 // @Failure 500 {object} fiber.Map "Server error"
 // @Router /api/v1/collections/{collectionId}/galleryCount [get]
-func (c *GalleryController) getGalleryCount(ctx *fiber.Ctx) error {
+func (a *api) getGalleryCountHandler(ctx *fiber.Ctx) error {
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		return util.NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
-	count, err := c.service.galleryStorage.collectionGalleryCount(ctx.Context(), collectionId)
+	count, err := a.galleryRepo.CollectionGalleryCount(ctx.Context(), collectionId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to fetch gallery count")
+		return ServerError(ctx, err, "Failed to fetch gallery count")
 	}
 	return ctx.JSON(fiber.Map{"count": count})
 }
@@ -89,28 +79,28 @@ func (c *GalleryController) getGalleryCount(ctx *fiber.Ctx) error {
 // @Failure 400 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections/{collectionId}/galleries [post]
-func (c *GalleryController) createGallery(ctx *fiber.Ctx) error {
+func (a *api) createGalleryHandler(ctx *fiber.Ctx) error {
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		util.NotFound(ctx, err)
+		NotFound(ctx, err)
 	}
 
-	exists, err := c.service.collectionStorage.CollectionExists(ctx.Context(), collectionId)
+	exists, err := a.collectionRepo.CollectionExists(ctx.Context(), collectionId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to check if collection exists")
+		return ServerError(ctx, err, "Failed to check if collection exists")
 	}
 	if !exists {
-		return util.NotFound(ctx, fmt.Errorf("Collection does not exist"))
+		return NotFound(ctx, fmt.Errorf("Collection does not exist"))
 	}
 
 	var req createGalleryRequest
 	if err := ctx.BodyParser(&req); err != nil {
-		util.BadRequest(ctx, err)
+		BadRequest(ctx, err)
 	}
 
-	id, err := c.service.galleryStorage.createGallery(ctx.Context(), collectionId, req.Name)
+	id, err := a.galleryRepo.CreateGallery(ctx.Context(), collectionId, req.Name)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to create galleries")
+		return ServerError(ctx, err, "Failed to create galleries")
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(createGalleryResponse{
@@ -128,14 +118,14 @@ func (c *GalleryController) createGallery(ctx *fiber.Ctx) error {
 // @Failure 404 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/galleries/{galleryId} [get]
-func (c *GalleryController) getGallery(ctx *fiber.Ctx) error {
+func (a *api) getGalleryHandler(ctx *fiber.Ctx) error {
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
-		util.NotFound(ctx, err)
+		NotFound(ctx, err)
 	}
-	gallery, err := c.service.galleryStorage.getGallery(ctx.Context(), galleryId)
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
 	if err != nil {
-		util.ServerError(ctx, err, "Failed to fetch gallery")
+		ServerError(ctx, err, "Failed to fetch gallery")
 	}
 	return ctx.JSON(gallery)
 }
@@ -152,19 +142,19 @@ func (c *GalleryController) getGallery(ctx *fiber.Ctx) error {
 // @Failure 404 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/galleries/{galleryId} [put]
-func (c *GalleryController) updateGallery(ctx *fiber.Ctx) error {
+func (a *api) updateGalleryHandler(ctx *fiber.Ctx) error {
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
-		util.NotFound(ctx, err)
+		NotFound(ctx, err)
 	}
 	var req updateGalleryRequest
 	if err := ctx.BodyParser(&req); err != nil {
-		util.BadRequest(ctx, err)
+		BadRequest(ctx, err)
 	}
 
-	gallery, err := c.service.galleryStorage.updateGallery(ctx.Context(), galleryId, req.Name, req.SharingEnabled, req.SharingExpiryDate)
+	gallery, err := a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, req.Name, req.SharingEnabled, req.SharingExpiryDate)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to update gallery")
+		return ServerError(ctx, err, "Failed to update gallery")
 	}
 	return ctx.Status(fiber.StatusOK).JSON(gallery)
 }
@@ -178,14 +168,14 @@ func (c *GalleryController) updateGallery(ctx *fiber.Ctx) error {
 // @Success 200 {object} fiber.Map
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/galleries/{galleryId} [delete]
-func (c *GalleryController) deleteGallery(ctx *fiber.Ctx) error {
+func (a *api) deleteGalleryHandler(ctx *fiber.Ctx) error {
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusOK)
 	}
-	err = c.service.galleryStorage.deleteGallery(ctx.Context(), galleryId)
+	err = a.galleryRepo.DeleteGallery(ctx.Context(), galleryId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to delete gallery")
+		return ServerError(ctx, err, "Failed to delete gallery")
 	}
 	return ctx.SendStatus(fiber.StatusOK)
 }
@@ -210,38 +200,38 @@ const qrSize int = 256
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/galleries/{galleryId}/qr [post]
-func (c *GalleryController) generateQr(ctx *fiber.Ctx) error {
+func (a *api) generateQrHandler(ctx *fiber.Ctx) error {
 
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		return util.NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
-		return util.NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
-	exists, err := c.service.galleryStorage.galleryExists(ctx.Context(), galleryId)
+	exists, err := a.galleryRepo.GalleryExists(ctx.Context(), galleryId)
 	if err != nil {
-		return util.ServerError(ctx, err, "Server error")
+		return ServerError(ctx, err, "Server error")
 	}
 	if !exists {
-		return util.NotFound(ctx, errors.New("galleries does not exist"))
+		return NotFound(ctx, errors.New("galleries does not exist"))
 	}
 
 	var req generateQrRequest
 	if err := ctx.BodyParser(&req); err != nil {
-		return util.BadRequest(ctx, err)
+		return BadRequest(ctx, err)
 	}
 
-	body, err := c.service.generateQr(qrCode{Content: req.Url, Size: qrSize})
+	body, err := qr.GenerateQr(qr.QrCode{Content: req.Url, Size: qrSize})
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to generate qr code")
+		return ServerError(ctx, err, "Failed to generate qr code")
 	}
 
-	objectKey, err := c.service.uploadQr(
+	objectKey, err := qr.UploadQr(
 		collectionId.Hex(),
 		galleryId.Hex(),
-		&file{
+		&qr.File{
 			Name: "qr",
 			Ext:  ".png",
 			Body: body,
@@ -249,41 +239,11 @@ func (c *GalleryController) generateQr(ctx *fiber.Ctx) error {
 	)
 
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to upload qr code")
+		return ServerError(ctx, err, "Failed to upload qr code")
 	}
-	url, err := c.service.getObjectUrl(objectKey)
+	url, err := aws.GetObjectUrl(objectKey)
 	if err != nil {
-		return util.ServerError(ctx, err, "Failed to get presinged url")
-	}
-
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"url": url,
-	})
-}
-
-func (c *GalleryController) uploadPhotos(ctx *fiber.Ctx) error {
-
-	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
-	if err != nil {
-		return util.NotFound(ctx, err)
-	}
-	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
-	if err != nil {
-		return util.NotFound(ctx, err)
-	}
-	exists, err := c.service.galleryStorage.galleryExists(ctx.Context(), galleryId)
-	if err != nil {
-		return util.ServerError(ctx, err, "Server error")
-	}
-	if !exists {
-		return util.NotFound(ctx, errors.New("galleries does not exist"))
-	}
-
-	path := path.Join(collectionId.Hex(), galleryId.Hex(), "photos")
-
-	url, err := c.service.putObjectUrl(path)
-	if err != nil {
-		return util.ServerError(ctx, err, "Failed to get presinged url")
+		return ServerError(ctx, err, "Failed to get presinged url")
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
