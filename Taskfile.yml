@@ -14,4 +14,8 @@ tasks:
   ginstall:
     cmds:
       - go install github.com/swaggo/swag/cmd/swag@latest
+  lambdas:
+    dir: "lambdas"
+    cmds:
+      - cd imgd; go mod tidy; GOARCH=amd64 GOOS=linux go build -o bootstrap main.go; zip deployment.zip bootstrap; cd ..
 # TODO add dockerfiles, docker compose and add a task cmd to handle it all
