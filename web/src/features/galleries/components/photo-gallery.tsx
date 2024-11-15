@@ -8,11 +8,11 @@ import {
     CarouselNext,
     CarouselPrevious
 } from "@/components/ui/carousel.tsx";
-import {deletePhoto, getPhotos} from "@/features/galleries/api/photos.ts";
+import {deletePhoto, getPhotos, Photo} from "@/features/galleries/api/photos.ts";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import ImageCard from "@/features/galleries/components/image-card.tsx";
 import {Dialog, DialogContent, DialogTitle} from "@/components/ui/dialog.tsx";
-import {useQuery} from "@tanstack/react-query";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 import ImageUploadModal from "@/features/galleries/components/image-upload-modal.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Check, Trash2, X} from "lucide-react";
@@ -27,8 +27,9 @@ function PhotoGallery({gallery}: GalleryContentProps) {
     const [current, setCurrent] = useState<number | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
     const [deleting, setDeletingMode] = useState<boolean>(false);
-    const [selectedToDelete, setSelectedToDelete] = useState<number[]>([]);
+    const [indexesToDelete, setIndexesToDelete] = useState<number[]>([]);
     const {toast} = useToast();
+    const queryClient = useQueryClient();
 
     const {data: images, isLoading, isError} = useQuery({
         queryKey: ['photos', gallery.id],
@@ -38,12 +39,12 @@ function PhotoGallery({gallery}: GalleryContentProps) {
     function switchDeleteMode(e: React.FormEvent) {
         e.preventDefault();
         setDeletingMode(!deleting);
-        setSelectedToDelete([]);
+        setIndexesToDelete([]);
     }
 
     const handleSelect = (index: number) => {
         if (deleting) {
-            setSelectedToDelete(prev =>
+            setIndexesToDelete(prev =>
                 prev.includes(index)
                     ? prev.filter(i => i !== index)
                     : [...prev, index]
@@ -54,22 +55,25 @@ function PhotoGallery({gallery}: GalleryContentProps) {
     };
 
     const handleDelete = async () => {
-        if (images && selectedToDelete.length > 0) {
+        if (images && indexesToDelete.length > 0) {
             try {
-                const photos = selectedToDelete.map(index => images[index])
+                const photos = indexesToDelete.map(index => images[index])
                 for (let i = 0; i < photos.length; i++) {
                     await deletePhoto(photos[i].id)
-                    images.splice(i, 1)
                 }
+                const queryKey = ['photos', gallery.id];
+                queryClient.setQueryData(queryKey, (oldData: Photo[]) => {
+                    return oldData.filter((_, index) => !indexesToDelete.includes(index))
+                })
 
                 toast({
                     title: "Success",
-                    description: `Deleted ${selectedToDelete.length} photos`,
+                    description: `Deleted ${indexesToDelete.length} photos`,
                 });
 
 
                 setDeletingMode(false);
-                setSelectedToDelete([]);
+                setIndexesToDelete([]);
             } catch (error) {
                 console.error('Delete failed:', error);
                 toast({
@@ -123,7 +127,7 @@ function PhotoGallery({gallery}: GalleryContentProps) {
             <Card className="w-full">
                 <CardHeader>
                     <div className="flex justify-between items-start">
-                        <CardTitle>Photos <span className="text-sm text-muted-foreground">{deleting && `(${selectedToDelete.length} selected)`}</span></CardTitle>
+                        <CardTitle>Photos <span className="text-sm text-muted-foreground">{deleting && `(${indexesToDelete.length} selected)`}</span></CardTitle>
                         <div className="flex gap-2 justify-end">
                             <ImageUploadModal galleryId={gallery.id}/>
                             {deleting ? (
@@ -132,7 +136,7 @@ function PhotoGallery({gallery}: GalleryContentProps) {
                                         variant="destructive"
                                         size="icon"
                                         onClick={handleDelete}
-                                        disabled={selectedToDelete.length === 0}
+                                        disabled={indexesToDelete.length === 0}
                                     >
                                         <Check className="w-4 h-4"/>
                                     </Button>
@@ -155,7 +159,7 @@ function PhotoGallery({gallery}: GalleryContentProps) {
                             image={image}
                             index={index}
                             onSelect={handleSelect}
-                            isSelected={selectedToDelete.includes(index)}
+                            isSelected={indexesToDelete.includes(index)}
                             selectionMode={deleting}
                         />
                     ))}

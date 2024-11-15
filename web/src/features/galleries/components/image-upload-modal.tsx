@@ -59,10 +59,16 @@ function ImageUploadModal({galleryId}: ImageUploadModalProps){
 
         const photoUploads = await getUploadUrls(galleryId, body)
 
-        for (let i = 0; i < selectedFiles.length; i++) {
-            await uploadToAWS(selectedFiles[i].file, photoUploads[i])
-            await confirmUpload(photoUploads[i].id);
-        }
+        const awsUploadPromises = photoUploads.map(async (photoUpload, index) => {
+            await uploadToAWS(selectedFiles[index].file, photoUpload)
+        })
+
+        await Promise.all(awsUploadPromises)
+
+        const photoUploadConfirmations = photoUploads.map(async photoUpload => {
+            await confirmUpload(photoUpload.id)
+        })
+        await Promise.all(photoUploadConfirmations)
     }
 
     const handleUpload = async () => {
