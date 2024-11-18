@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/sg-qr/internal/middleware"
 	"github.com/michalK00/sg-qr/internal/repository"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -68,4 +70,16 @@ func (a *api) Routes(app *fiber.App) {
 	//order.Get("/orders/:orderId")
 	//order.Put("/orders/:orderId")
 	//order.Delete("/orders/:orderId")
+}
+
+func (a *api) Server() *fiber.App {
+	app := fiber.New()
+	middleware.FiberMiddleware(app)
+	a.Routes(app)
+	app.Get("/swagger/*", swagger.HandlerDefault)
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendString("Healthy!")
+	})
+
+	return app
 }

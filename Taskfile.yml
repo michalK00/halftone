@@ -4,10 +4,10 @@ tasks:
   docs:
     cmds:
       - swag i -d ./cmd/http,./internal/api --parseDependency --parseInternal
-  grun:
+  api:
     cmds:
-      - go run ./cmd/http/main.go
-  rrun:
+      - go run ./cmd/halftone/main.go api
+  client:
     dir: "web"
     cmds:
       - npm run dev
