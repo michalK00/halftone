@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.32.2
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41
 	github.com/gofiber/fiber/v2 v2.52.5
+	github.com/joho/godotenv v1.5.1
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/swag v1.16.3

@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/michalK00/sg-qr/internal/config"
 	"log"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -14,17 +14,14 @@ import (
 )
 
 type AuthMiddleware struct {
-	config config.EnvVars
 }
 
-func NewAuthMiddleware(config config.EnvVars) *AuthMiddleware {
-	return &AuthMiddleware{
-		config: config,
-	}
+func NewAuthMiddleware() *AuthMiddleware {
+	return &AuthMiddleware{}
 }
 
 func (a *AuthMiddleware) ValidateToken(ctx *fiber.Ctx) error {
-	issuerURL, err := url.Parse("https://" + a.config.AUTH0_DOMAIN + "/")
+	issuerURL, err := url.Parse("https://" + os.Getenv("AUTH0_DOMAIN") + "/")
 	if err != nil {
 		log.Fatalf("Failed to parse the issuer url: %v", err)
 	}
@@ -35,7 +32,7 @@ func (a *AuthMiddleware) ValidateToken(ctx *fiber.Ctx) error {
 		provider.KeyFunc,
 		validator.RS256,
 		issuerURL.String(),
-		[]string{a.config.AUTH0_AUDIENCE},
+		[]string{os.Getenv("AUTH0_AUDIENCE")},
 	)
 	if err != nil {
 		log.Fatalf("Failed to set up the jwt validator")

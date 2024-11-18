@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/gofiber/swagger"
 	"github.com/michalK00/sg-qr/internal/api"
-	"github.com/michalK00/sg-qr/internal/config"
 	"github.com/michalK00/sg-qr/internal/middleware"
 	"github.com/michalK00/sg-qr/platform/database/mongodb"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	_ "github.com/michalK00/sg-qr/docs"
 	"github.com/michalK00/sg-qr/internal/shutdown"
 )
@@ -25,7 +25,7 @@ func main() {
 	}()
 
 	// load config
-	env, err := config.LoadConfig()
+	err := godotenv.Load("app.env")
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		exitCode = 1
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// run server
-	cleanup, err := run(env)
+	cleanup, err := run()
 
 	// run the cleanup after the server is terminated
 	defer cleanup()
@@ -46,14 +46,14 @@ func main() {
 	shutdown.Gracefully()
 }
 
-func run(env config.EnvVars) (func(), error) {
-	app, cleanup, err := buildServer(env)
+func run() (func(), error) {
+	app, cleanup, err := buildServer()
 	if err != nil {
 		return nil, err
 	}
 
 	go func() {
-		app.Listen("0.0.0.0:" + env.PORT)
+		app.Listen("0.0.0.0:" + os.Getenv("PORT"))
 	}()
 
 	return func() {
@@ -62,8 +62,8 @@ func run(env config.EnvVars) (func(), error) {
 	}, nil
 }
 
-func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
-	db, err := mongodb.BootstrapMongo(env.MONGODB_URI, env.MONGODB_NAME, 10*time.Second)
+func buildServer() (*fiber.App, func(), error) {
+	db, err := mongodb.BootstrapMongo(os.Getenv("MONGODB_URI"), os.Getenv("MONGODB_NAME"), 10*time.Second)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -74,7 +74,7 @@ func buildServer(env config.EnvVars) (*fiber.App, func(), error) {
 	middleware.FiberMiddleware(app)
 
 	a := api.NewApi(db)
-	a.Routes(app, env)
+	a.Routes(app)
 	// Add routes
 	app.Get("/swagger/*", swagger.HandlerDefault)
 	app.Get("/health", func(c *fiber.Ctx) error {

@@ -13,7 +13,6 @@ import (
 
 type AWSClient struct {
 	S3Client *s3.Client
-	env      *awsVars
 }
 
 var (
@@ -24,27 +23,21 @@ var (
 
 func GetAWSClient() (*AWSClient, error) {
 	once.Do(func() {
-		env, err := loadConfig()
-		if err != nil {
-			awsClientErr = err
-			return
-		}
-
-		awsClient = &AWSClient{env: &env}
-		awsClientErr = initAWSClient(context.Background(), awsClient, env)
+		awsClient = &AWSClient{}
+		awsClientErr = initAWSClient(context.Background(), awsClient)
 	})
 
 	return awsClient, awsClientErr
 }
 
-func initAWSClient(ctx context.Context, client *AWSClient, env awsVars) error {
+func initAWSClient(ctx context.Context, client *AWSClient) error {
 	var cfg aws.Config
 	var err error
 
 	if os.Getenv("GO_ENV") == "production" {
 		cfg, err = config.LoadDefaultConfig(ctx)
 	} else {
-		cfg, err = loadDevConfig(ctx, env)
+		cfg, err = loadDevConfig(ctx)
 	}
 
 	if err != nil {
@@ -56,9 +49,9 @@ func initAWSClient(ctx context.Context, client *AWSClient, env awsVars) error {
 	return nil
 }
 
-func loadDevConfig(ctx context.Context, env awsVars) (aws.Config, error) {
+func loadDevConfig(ctx context.Context) (aws.Config, error) {
 
-	provider := credentials.NewStaticCredentialsProvider(env.AWS_ACCESS_KEY_ID, env.AWS_SECRET_ACCESS_KEY, "")
+	provider := credentials.NewStaticCredentialsProvider(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "")
 
-	return config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(provider), config.WithDefaultRegion(env.AWS_REGION))
+	return config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(provider), config.WithDefaultRegion(os.Getenv("AWS_REGION")))
 }

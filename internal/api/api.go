@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/config"
 	"github.com/michalK00/sg-qr/internal/domain"
 	"github.com/michalK00/sg-qr/internal/repository"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,7 +28,7 @@ func NewApi(db *mongo.Database) *api {
 	}
 }
 
-func (a *api) Routes(app *fiber.App, config config.EnvVars) {
+func (a *api) Routes(app *fiber.App) {
 	// authMiddleware := auth.NewAuthMiddleware(config)
 
 	collections := app.Group("/api/v1")
