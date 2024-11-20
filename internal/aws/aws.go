@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const lifetimeSecs int64 = 60
+const lifetimeSecs int64 = 60 * 10
 
 func DeleteObject(key string) error {
 
