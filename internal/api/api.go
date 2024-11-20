@@ -14,6 +14,7 @@ type api struct {
 	galleryRepo    domain.GalleryRepository
 	photoRepo      domain.PhotoRepository
 	orderRepo      domain.OrderRepository
+	jobRepo        domain.JobRepository
 }
 
 func NewApi(db *mongo.Database) *api {
@@ -21,12 +22,14 @@ func NewApi(db *mongo.Database) *api {
 	galleryRepo := repository.NewMongoGallery(db)
 	photoRepo := repository.NewMongoPhoto(db)
 	orderRepo := repository.NewMongoOrder(db)
+	jobRepo := repository.NewMongoJob(db)
 
 	return &api{
 		collectionRepo: collectionRepo,
 		galleryRepo:    galleryRepo,
 		photoRepo:      photoRepo,
 		orderRepo:      orderRepo,
+		jobRepo:        jobRepo,
 	}
 }
 
