@@ -1,0 +1,14 @@
+# TODO
+services:
+  api:
+  scheduler:
+  worker:
+  mongo:
+  redis:
+    image: redis/redis-stack:latest
+    environment:
+      REDIS_ARGS: ""
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+
