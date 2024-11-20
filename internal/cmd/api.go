@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/michalK00/sg-qr/internal/api"
 	"github.com/michalK00/sg-qr/internal/cmdutil"
@@ -20,11 +21,14 @@ func APICmd(ctx context.Context) *cobra.Command {
 				port = os.Getenv("PORT")
 			}
 
+			//logger := cmdutil.NewLogger("api")
+			//defer func() { _ = logger.Sync() }()
+
 			db, err := cmdutil.NewMongoClient()
 			if err != nil {
-				return err
+				return fmt.Errorf("could not connect to mongodb: %w", err)
 			}
-			defer db.Client().Disconnect(context.Background())
+			defer func() { _ = db.Client().Disconnect(context.Background()) }()
 
 			a := api.NewApi(db)
 			app := a.Server()

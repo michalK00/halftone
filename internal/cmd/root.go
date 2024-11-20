@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,7 @@ func Execute(ctx context.Context) int {
 	rootCmd.AddCommand(SchedulerCmd(ctx))
 
 	if err := rootCmd.Execute(); err != nil {
+		log.Error("command failed ", err)
 		return 1
 	}
 	return 0

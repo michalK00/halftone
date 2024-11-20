@@ -7,6 +7,9 @@ tasks:
   api:
     cmds:
       - go run ./cmd/halftone/main.go api
+  scheduler:
+    cmds:
+      - go run ./cmd/halftone/main.go scheduler
   client:
     dir: "web"
     cmds:
