@@ -30,7 +30,13 @@ func APICmd(ctx context.Context) *cobra.Command {
 			}
 			defer func() { _ = db.Client().Disconnect(context.Background()) }()
 
-			a := api.NewApi(db)
+			rdb, err := cmdutil.NewRedisClient(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to connect to redis: %w", err)
+			}
+			defer func() { _ = rdb.Close() }()
+
+			a := api.NewApi(db, rdb)
 			app := a.Server()
 
 			go func() {

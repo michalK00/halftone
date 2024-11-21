@@ -634,9 +634,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/galleries/{galleryId}/qr": {
+        "/api/v1/galleries/{galleryId}/share": {
             "post": {
-                "description": "Generate a QR code from a given URL",
+                "description": "Create a shareable link for a gallery with an expiration date",
                 "consumes": [
                     "application/json"
                 ],
@@ -644,46 +644,36 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "QR"
+                    "Gallery"
                 ],
-                "summary": "Generate QR code",
+                "summary": "Share Gallery",
                 "parameters": [
-                    {
-                        "description": "QR Generation Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.generateQrRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Collection ID",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Gallery ID",
                         "name": "galleryId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Share Gallery Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.shareGalleryRequest"
+                        }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/api.shareGalleryResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request body or expiry date",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -692,7 +682,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Gallery not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -701,7 +691,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -798,6 +788,67 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/qr": {
+            "post": {
+                "description": "Generate a QR code from a given URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "QR"
+                ],
+                "summary": "Generate QR code",
+                "parameters": [
+                    {
+                        "description": "QR Generation Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.generateQrRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "QR code image in PNG format",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -887,6 +938,34 @@ const docTemplate = `{
                 }
             }
         },
+        "api.shareGalleryRequest": {
+            "type": "object",
+            "properties": {
+                "sharingExpiry": {
+                    "type": "string"
+                },
+                "sharingStart": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.shareGalleryResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "galleryId": {
+                    "type": "string"
+                },
+                "shareUrl": {
+                    "type": "string"
+                },
+                "sharingExpiry": {
+                    "type": "string"
+                }
+            }
+        },
         "api.updateCollectionRequest": {
             "type": "object",
             "properties": {
@@ -918,6 +997,9 @@ const docTemplate = `{
         "domain.GalleryDB": {
             "type": "object",
             "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
                 "collectionId": {
                     "type": "string"
                 },
@@ -928,12 +1010,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "passwordAttempts": {
-                    "type": "integer"
-                },
-                "passwordHash": {
                     "type": "string"
                 },
                 "sharingEnabled": {
@@ -1016,7 +1092,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Image library",
+	Title:            "Halftone",
 	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

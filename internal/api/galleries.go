@@ -1,11 +1,9 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/aws"
-	"github.com/michalK00/sg-qr/internal/qr"
+	"github.com/michalK00/sg-qr/internal/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -152,7 +150,11 @@ func (a *api) updateGalleryHandler(ctx *fiber.Ctx) error {
 		BadRequest(ctx, err)
 	}
 
-	gallery, err := a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, req.Name, req.SharingEnabled, req.SharingExpiryDate)
+	gallery, err := a.galleryRepo.UpdateGallery(ctx.Context(), galleryId,
+		domain.WithName(req.Name),
+		domain.WithSharingEnabled(req.SharingEnabled),
+		domain.WithSharingExpiryDate(req.SharingExpiryDate),
+	)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")
 	}
@@ -178,75 +180,4 @@ func (a *api) deleteGalleryHandler(ctx *fiber.Ctx) error {
 		return ServerError(ctx, err, "Failed to delete gallery")
 	}
 	return ctx.SendStatus(fiber.StatusOK)
-}
-
-// @Description Request body for generating a QR code
-type generateQrRequest struct {
-	Url string `json:"url" example:"https://example.com"` // URL to be encoded in the QR code
-}
-
-const qrSize int = 256
-
-// @Summary Generate QR code
-// @Description Generate a QR code from a given URL
-// @Tags QR
-// @Accept json
-// @Produce json
-// @Param request body generateQrRequest true "QR Generation Request"
-// @Param collectionId path string true "Collection ID" example:"671442a11fd0c5eb46b5a3fa"
-// @Param galleryId path string true "Gallery ID" example:"671442a11fd0c5eb46b5a3fa"
-// @Success 201 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/v1/galleries/{galleryId}/qr [post]
-func (a *api) generateQrHandler(ctx *fiber.Ctx) error {
-
-	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
-	if err != nil {
-		return NotFound(ctx, err)
-	}
-	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
-	if err != nil {
-		return NotFound(ctx, err)
-	}
-	exists, err := a.galleryRepo.GalleryExists(ctx.Context(), galleryId)
-	if err != nil {
-		return ServerError(ctx, err, "Server error")
-	}
-	if !exists {
-		return NotFound(ctx, errors.New("galleries does not exist"))
-	}
-
-	var req generateQrRequest
-	if err := ctx.BodyParser(&req); err != nil {
-		return BadRequest(ctx, err)
-	}
-
-	body, err := qr.GenerateQr(qr.QrCode{Content: req.Url, Size: qrSize})
-	if err != nil {
-		return ServerError(ctx, err, "Failed to generate qr code")
-	}
-
-	objectKey, err := qr.UploadQr(
-		collectionId.Hex(),
-		galleryId.Hex(),
-		&qr.File{
-			Name: "qr",
-			Ext:  ".png",
-			Body: body,
-		},
-	)
-
-	if err != nil {
-		return ServerError(ctx, err, "Failed to upload qr code")
-	}
-	url, err := aws.GetObjectUrl(objectKey)
-	if err != nil {
-		return ServerError(ctx, err, "Failed to get presinged url")
-	}
-
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"url": url,
-	})
 }

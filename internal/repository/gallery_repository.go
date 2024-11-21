@@ -95,21 +95,25 @@ func (s *MongoGallery) DeleteGallery(ctx context.Context, galleryId primitive.Ob
 	return err
 }
 
-func (s *MongoGallery) UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, name string, sharingEnabled bool, sharingExpiryDate primitive.DateTime) (domain.GalleryDB, error) {
+func (s *MongoGallery) UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, opts ...domain.GalleryUpdateOption) (domain.GalleryDB, error) {
+
+	updateOptions := &domain.GalleryUpdateOptions{
+		SetFields: bson.D{},
+	}
+	for _, opt := range opts {
+		opt(updateOptions)
+	}
+
 	coll := s.db.Collection("galleries")
 	filter := bson.D{{"_id", galleryId}}
 	update := bson.D{
-		{"$set", bson.D{
-			{"name", name},
-			{"sharingEnabled", sharingEnabled},
-			{"sharingExpiryDate", sharingExpiryDate},
-		}},
+		{"$set", updateOptions.SetFields},
 		{"$currentDate", bson.D{
 			{"updatedAt", true},
 		}},
 	}
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	findOpts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	var gallery domain.GalleryDB
-	err := coll.FindOneAndUpdate(ctx, filter, update, opts).Decode(&gallery)
+	err := coll.FindOneAndUpdate(ctx, filter, update, findOpts).Decode(&gallery)
 	return gallery, err
 }

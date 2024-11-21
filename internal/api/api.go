@@ -6,6 +6,7 @@ import (
 	"github.com/michalK00/sg-qr/internal/domain"
 	"github.com/michalK00/sg-qr/internal/middleware"
 	"github.com/michalK00/sg-qr/internal/repository"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -15,14 +16,17 @@ type api struct {
 	photoRepo      domain.PhotoRepository
 	orderRepo      domain.OrderRepository
 	jobRepo        domain.JobRepository
+	jobQueue       domain.JobQueue
 }
 
-func NewApi(db *mongo.Database) *api {
+func NewApi(db *mongo.Database, rdb *redis.Client) *api {
 	collectionRepo := repository.NewMongoCollection(db)
 	galleryRepo := repository.NewMongoGallery(db)
 	photoRepo := repository.NewMongoPhoto(db)
 	orderRepo := repository.NewMongoOrder(db)
 	jobRepo := repository.NewMongoJob(db)
+
+	jobQueue := repository.NewRedisJob(rdb)
 
 	return &api{
 		collectionRepo: collectionRepo,
@@ -30,6 +34,7 @@ func NewApi(db *mongo.Database) *api {
 		photoRepo:      photoRepo,
 		orderRepo:      orderRepo,
 		jobRepo:        jobRepo,
+		jobQueue:       jobQueue,
 	}
 }
 
@@ -42,7 +47,9 @@ func (a *api) Routes(app *fiber.App) {
 	collections.Get("/collections/:collectionId", a.getCollectionHandler)
 	collections.Put("/collections/:collectionId", a.updateCollectionHandler)
 	collections.Delete("/collections/:collectionId", a.deleteCollectionHandler)
-	//collections.Get("/collections/:collectionId/qr")
+
+	qr := app.Group("/api/v1")
+	qr.Get("/qr", a.generateQrHandler)
 
 	gallery := app.Group("/api/v1")
 	gallery.Get("/collections/:collectionId/galleries", a.getGalleriesHandler)
@@ -53,7 +60,8 @@ func (a *api) Routes(app *fiber.App) {
 	gallery.Get("/galleries/:galleryId", a.getGalleryHandler)
 	gallery.Put("/galleries/:galleryId", a.updateGalleryHandler)
 	gallery.Delete("/galleries/:galleryId", a.deleteGalleryHandler)
-	gallery.Post("/galleries/:galleryId/qr", a.generateQrHandler)
+
+	gallery.Post("galleries/:galleryId/share", a.shareGalleryHandler)
 
 	//client := app.Group("/api/v1/client")
 	//client.Get("/galleries/:galleryId")

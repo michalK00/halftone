@@ -55,6 +55,24 @@ definitions:
       presignedPostRequest:
         $ref: '#/definitions/s3.PresignedPostRequest'
     type: object
+  api.shareGalleryRequest:
+    properties:
+      sharingExpiry:
+        type: string
+      sharingStart:
+        type: string
+    type: object
+  api.shareGalleryResponse:
+    properties:
+      accessToken:
+        type: string
+      galleryId:
+        type: string
+      shareUrl:
+        type: string
+      sharingExpiry:
+        type: string
+    type: object
   api.updateCollectionRequest:
     properties:
       name:
@@ -75,6 +93,8 @@ definitions:
     type: object
   domain.GalleryDB:
     properties:
+      accessToken:
+        type: string
       collectionId:
         type: string
       createdAt:
@@ -82,10 +102,6 @@ definitions:
       id:
         type: string
       name:
-        type: string
-      passwordAttempts:
-        type: integer
-      passwordHash:
         type: string
       sharingEnabled:
         type: boolean
@@ -140,7 +156,7 @@ definitions:
 info:
   contact:
     name: Michał Klemens
-  title: Image library
+  title: Halftone
   version: "0.1"
 paths:
   /api/v1/collections:
@@ -555,58 +571,51 @@ paths:
       tags:
       - photos
       - gallery
-  /api/v1/galleries/{galleryId}/qr:
+  /api/v1/galleries/{galleryId}/share:
     post:
       consumes:
       - application/json
-      description: Generate a QR code from a given URL
+      description: Create a shareable link for a gallery with an expiration date
       parameters:
-      - description: QR Generation Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.generateQrRequest'
-      - description: Collection ID
-        in: path
-        name: collectionId
-        required: true
-        type: string
       - description: Gallery ID
         in: path
         name: galleryId
         required: true
         type: string
+      - description: Share Gallery Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.shareGalleryRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/api.shareGalleryResponse'
         "400":
-          description: Bad Request
+          description: Invalid request body or expiry date
           schema:
             additionalProperties:
               type: string
             type: object
         "404":
-          description: Not Found
+          description: Gallery not found
           schema:
             additionalProperties:
               type: string
             type: object
         "500":
-          description: Internal Server Error
+          description: Server error
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Generate QR code
+      summary: Share Gallery
       tags:
-      - QR
+      - Gallery
   /api/v1/photos/{photoId}:
     delete:
       consumes:
@@ -666,4 +675,44 @@ paths:
       summary: Confirm photo upload
       tags:
       - photos
+  /api/v1/qr:
+    post:
+      consumes:
+      - application/json
+      description: Generate a QR code from a given URL
+      parameters:
+      - description: QR Generation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.generateQrRequest'
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: QR code image in PNG format
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate QR code
+      tags:
+      - QR
 swagger: "2.0"
