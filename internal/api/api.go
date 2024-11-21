@@ -62,6 +62,7 @@ func (a *api) Routes(app *fiber.App) {
 	gallery.Delete("/galleries/:galleryId", a.deleteGalleryHandler)
 
 	gallery.Post("galleries/:galleryId/share", a.shareGalleryHandler)
+	gallery.Put("galleries/:galleryId/reschedule", a.rescheduleGallerySharingHandler)
 
 	//client := app.Group("/api/v1/client")
 	//client.Get("/galleries/:galleryId")

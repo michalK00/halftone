@@ -38,7 +38,7 @@ func (s *MongoJob) GetJobsDue(ctx context.Context) ([]domain.Job, error) {
 	return result, nil
 }
 
-func (s *MongoJob) CreateJob(ctx context.Context, job *domain.Job) (string, error) {
+func (s *MongoJob) CreateJob(ctx context.Context, job *domain.Job) (primitive.ObjectID, error) {
 	collection := s.db.Collection("jobs")
 	jobID := primitive.NewObjectID()
 
@@ -46,9 +46,9 @@ func (s *MongoJob) CreateJob(ctx context.Context, job *domain.Job) (string, erro
 
 	_, err := collection.InsertOne(ctx, job)
 	if err != nil {
-		return "", err
+		return primitive.ObjectID{}, err
 	}
-	return jobID.Hex(), nil
+	return jobID, nil
 }
 
 func (s *MongoJob) RescheduleJob(ctx context.Context, jobId primitive.ObjectID, updatedScheduledAt time.Time) (domain.Job, error) {
@@ -57,7 +57,7 @@ func (s *MongoJob) RescheduleJob(ctx context.Context, jobId primitive.ObjectID, 
 	filter := bson.D{{"_id", jobId}}
 	update := bson.D{
 		{"$set", bson.D{
-			{"scheduled_at", updatedScheduledAt},
+			{"scheduledAt", updatedScheduledAt},
 		}},
 	}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)

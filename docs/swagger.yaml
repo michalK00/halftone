@@ -49,13 +49,14 @@ definitions:
     type: object
   api.rescheduleGallerySharingRequest:
     properties:
-      expiryDate:
+      sharingExpiry:
         description: 'example: "2024-12-31T23:59:59Z"'
         type: string
     type: object
   api.shareGalleryRequest:
     properties:
       sharingExpiry:
+        description: 'example: "2024-12-31T23:59:59Z"'
         type: string
     type: object
   api.shareGalleryResponse:
@@ -579,7 +580,52 @@ paths:
       summary: Upload photos to a gallery
       tags:
       - photos
-      - gallery
+  /api/v1/galleries/{galleryId}/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Updates the expiry date for a shared gallery and disables sharing
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Reschedule sharing request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.rescheduleGallerySharingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sharing successfully rescheduled
+          schema:
+            $ref: '#/definitions/api.shareGalleryResponse'
+        "404":
+          description: Gallery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Sharing already inactive
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reschedule gallery sharing expiry
+      tags:
+      - gallery sharing
   /api/v1/galleries/{galleryId}/share:
     post:
       consumes:
@@ -630,7 +676,7 @@ paths:
             type: object
       summary: Share Gallery
       tags:
-      - Gallery
+      - gallery sharing
   /api/v1/photos/{photoId}:
     delete:
       consumes:
@@ -723,48 +769,4 @@ paths:
       summary: Generate QR code image from URL
       tags:
       - QR
-  /galleries/{galleryId}/sharing/reschedule:
-    put:
-      consumes:
-      - application/json
-      description: Updates the expiry date for a shared gallery and disables sharing
-      parameters:
-      - description: Gallery ID
-        format: objectId
-        in: path
-        name: galleryId
-        required: true
-        type: string
-      - description: Reschedule sharing request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.rescheduleGallerySharingRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Sharing successfully rescheduled
-        "404":
-          description: Gallery not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "405":
-          description: Sharing already inactive
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Reschedule gallery sharing expiry
-      tags:
-      - gallery
 swagger: "2.0"

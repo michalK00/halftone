@@ -33,7 +33,7 @@ type Job struct {
 
 type JobRepository interface {
 	GetJobsDue(ctx context.Context) ([]Job, error)
-	CreateJob(ctx context.Context, job *Job) (string, error)
+	CreateJob(ctx context.Context, job *Job) (primitive.ObjectID, error)
 	DeleteJob(ctx context.Context, jobId primitive.ObjectID) error
 	RescheduleJob(ctx context.Context, jobId primitive.ObjectID, updatedScheduledAt time.Time) (Job, error)
 }
@@ -58,7 +58,6 @@ func NewGalleryShareJob(payload GallerySharePayload, scheduledAt time.Time) (*Jo
 	}
 
 	return &Job{
-		ID:          primitive.NewObjectID(),
 		Type:        "share",
 		Queue:       "gallery",
 		Status:      JobStatusActive,
@@ -76,7 +75,6 @@ func NewGalleryCleanupJob(payload GalleryCleanupPayload, scheduledAt time.Time) 
 	}
 
 	return &Job{
-		ID:          primitive.NewObjectID(),
 		Type:        "cleanup",
 		Queue:       "gallery",
 		Status:      JobStatusActive,

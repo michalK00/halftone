@@ -29,7 +29,7 @@ var photoPutObjectConditions = []interface{}{
 
 // @Summary Upload photos to a gallery
 // @Description Creates new photo entries in a gallery and returns pre-signed URLs for uploading the actual photo files
-// @Tags photos,gallery
+// @Tags photos
 // @Accept json
 // @Produce json
 // @Param galleryId path string true "Gallery ID" format(objectId)

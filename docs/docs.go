@@ -577,8 +577,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "photos",
-                    "gallery"
+                    "photos"
                 ],
                 "summary": "Upload photos to a gallery",
                 "parameters": [
@@ -634,6 +633,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/galleries/{galleryId}/reschedule": {
+            "put": {
+                "description": "Updates the expiry date for a shared gallery and disables sharing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gallery sharing"
+                ],
+                "summary": "Reschedule gallery sharing expiry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectId",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reschedule sharing request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.rescheduleGallerySharingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sharing successfully rescheduled",
+                        "schema": {
+                            "$ref": "#/definitions/api.shareGalleryResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Gallery not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Sharing already inactive",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/galleries/{galleryId}/share": {
             "post": {
                 "description": "Create a shareable link for a gallery with an expiration date",
@@ -644,7 +712,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Gallery"
+                    "gallery sharing"
                 ],
                 "summary": "Share Gallery",
                 "parameters": [
@@ -847,72 +915,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/galleries/{galleryId}/sharing/reschedule": {
-            "put": {
-                "description": "Updates the expiry date for a shared gallery and disables sharing",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "gallery"
-                ],
-                "summary": "Reschedule gallery sharing expiry",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "objectId",
-                        "description": "Gallery ID",
-                        "name": "galleryId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Reschedule sharing request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.rescheduleGallerySharingRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sharing successfully rescheduled"
-                    },
-                    "404": {
-                        "description": "Gallery not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "405": {
-                        "description": "Sharing already inactive",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -994,7 +996,7 @@ const docTemplate = `{
         "api.rescheduleGallerySharingRequest": {
             "type": "object",
             "properties": {
-                "expiryDate": {
+                "sharingExpiry": {
                     "description": "example: \"2024-12-31T23:59:59Z\"",
                     "type": "string"
                 }
@@ -1004,6 +1006,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "sharingExpiry": {
+                    "description": "example: \"2024-12-31T23:59:59Z\"",
                     "type": "string"
                 }
             }
