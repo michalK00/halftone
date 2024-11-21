@@ -68,11 +68,11 @@ export default function GalleryPage() {
                                 <CardTitle>{galleryQuery.data.name}</CardTitle>
                                 <CardDescription className="flex flex-col sm:flex-row sm:gap-2">
                                     Created on {new Date(galleryQuery.data.createdAt).toLocaleDateString()}
-                                    {galleryQuery.data.sharingEnabled ? (
+                                    {galleryQuery.data.sharingOptions.sharingEnabled ? (
                                         <div className="flex gap-1">
                                             <Share2 className="w-4 h-4 text-green-500"/>
                                             <span className="text-sm">
-                                                    Until {new Date(galleryQuery.data.sharingExpiryDate).toLocaleDateString()}
+                                                    Until {new Date(galleryQuery.data.sharingOptions.sharingExpiryDate).toLocaleDateString()}
                                                 </span>
                                         </div>
                                     ) : (
