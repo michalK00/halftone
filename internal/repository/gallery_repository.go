@@ -79,7 +79,9 @@ func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive
 		{"name", name},
 		{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
-		{"sharingEnabled", false},
+		{"sharingOptions", bson.D{
+			{"sharingEnabled", false},
+		}},
 	}
 	_, err := galleriesColl.InsertOne(ctx, gallery)
 	if err != nil {

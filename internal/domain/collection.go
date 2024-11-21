@@ -3,13 +3,14 @@ package domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type CollectionDB struct {
 	ID        primitive.ObjectID `bson:"_id" json:"id"`
 	Name      string             `bson:"name" json:"name"`
-	CreatedAt primitive.DateTime `bson:"createdAt" json:"createdAt"`
-	UpdatedAt primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
+	CreatedAt time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt time.Time          `bson:"updatedAt" json:"updatedAt"`
 }
 
 type CollectionRepository interface {

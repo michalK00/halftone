@@ -10,19 +10,20 @@ import (
 )
 
 type GalleryDB struct {
-	ID                primitive.ObjectID `bson:"_id" json:"id"`
-	CollectionId      primitive.ObjectID `bson:"collectionId" json:"collectionId"`
-	Name              string             `bson:"name" json:"name"`
-	CreatedAt         primitive.DateTime `bson:"createdAt" json:"createdAt"`
-	UpdatedAt         primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
-	AccessToken       string             `bson:"accessToken" json:"accessToken"`
-	SharingEnabled    bool               `bson:"sharingEnabled" json:"sharingEnabled"`
-	SharingExpiryDate primitive.DateTime `bson:"sharingExpiryDate" json:"sharingExpiryDate"`
+	ID             primitive.ObjectID `bson:"_id" json:"id"`
+	CollectionId   primitive.ObjectID `bson:"collectionId" json:"collectionId"`
+	Name           string             `bson:"name" json:"name"`
+	CreatedAt      time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt      time.Time          `bson:"updatedAt" json:"updatedAt"`
+	SharingOptions SharingOptions     `bson:"sharingOptions" json:"sharingOptions"`
 }
 
 type SharingOptions struct {
-	Watermark bool `bson:"watermark" json:"watermark"`
-	Downsize  bool `bson:"downsize" json:"downsize"`
+	SharingEnabled    bool               `bson:"sharingEnabled" json:"sharingEnabled"`
+	AccessToken       string             `bson:"accessToken" json:"accessToken"`
+	SharingExpiryDate time.Time          `bson:"sharingExpiryDate" json:"sharingExpiryDate"`
+	SharingUrl        string             `bson:"sharingUrl" json:"sharingUrl"`
+	SharingCleanupJob primitive.ObjectID `bson:"sharingCleanupJob" json:"sharingCleanupJob"`
 }
 
 type GalleryRepository interface {
@@ -55,29 +56,21 @@ func WithName(name string) GalleryUpdateOption {
 	}
 }
 
-func WithAccessToken(accessToken string) GalleryUpdateOption {
+func WithSharingOptions(sharingOptions SharingOptions) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "accessToken", Value: accessToken})
+		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingOptions", Value: bson.D{
+			{Key: "sharingEnabled", Value: sharingOptions.SharingEnabled},
+			{Key: "accessToken", Value: sharingOptions.AccessToken},
+			{Key: "sharingExpiryDate", Value: sharingOptions.SharingExpiryDate},
+			{Key: "sharingUrl", Value: sharingOptions.SharingUrl},
+			{Key: "sharingCleanupJob", Value: sharingOptions.SharingCleanupJob},
+		}})
 	}
 }
-
-func WithSharingEnabled(enabled bool) GalleryUpdateOption {
+func WithSharingEnabled(sharingEnabled bool) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingEnabled", Value: enabled})
-	}
-}
-
-func WithSharingExpiryDate(date primitive.DateTime) GalleryUpdateOption {
-	return func(opts *GalleryUpdateOptions) {
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingExpiryDate", Value: date})
-	}
-}
-
-func WithValidatedSharingExpiryDate(date primitive.DateTime) GalleryUpdateOption {
-	return func(opts *GalleryUpdateOptions) {
-		if date < primitive.NewDateTimeFromTime(time.Now()) {
-			date = primitive.NewDateTimeFromTime(time.Now().Add(time.Hour * 24 * 7))
-		}
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingExpiryDate", Value: date})
+		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingOptions", Value: bson.D{
+			{Key: "sharingEnabled", Value: sharingEnabled},
+		}})
 	}
 }

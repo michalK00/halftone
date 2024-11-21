@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 type photoUploadRequest struct {
@@ -130,11 +131,11 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 }
 
 type getPhotoResponse struct {
-	Id               string             `json:"id"`
-	OriginalFilename string             `json:"originalFilename"`
-	Url              string             `json:"url"`
-	UpdatedAt        primitive.DateTime `json:"updatedAt"`
-	CreatedAt        primitive.DateTime `json:"createdAt"`
+	Id               string    `json:"id"`
+	OriginalFilename string    `json:"originalFilename"`
+	Url              string    `json:"url"`
+	UpdatedAt        time.Time `json:"updatedAt"`
+	CreatedAt        time.Time `json:"createdAt"`
 }
 
 // @Summary Get gallery photos

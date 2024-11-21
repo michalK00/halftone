@@ -2,6 +2,7 @@ package domain
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type OrderDB struct {
@@ -9,8 +10,8 @@ type OrderDB struct {
 	GalleryId    primitive.ObjectID   `bson:"galleryId" json:"galleryId"`
 	CollectionId primitive.ObjectID   `bson:"collectionId" json:"collectionId"`
 	Status       string               `bson:"status" json:"status"`
-	CreatedAt    primitive.DateTime   `bson:"createdAt" json:"createdAt"`
-	UpdatedAt    primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
+	CreatedAt    time.Time            `bson:"createdAt" json:"createdAt"`
+	UpdatedAt    time.Time            `bson:"updatedAt" json:"updatedAt"`
 	Photos       []primitive.ObjectID `bson:"photos" json:"photos"`
 }
 

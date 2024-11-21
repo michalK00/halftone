@@ -690,6 +690,15 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "405": {
+                        "description": "Sharing already active",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "500": {
                         "description": "Server error",
                         "schema": {
@@ -838,6 +847,72 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/galleries/{galleryId}/sharing/reschedule": {
+            "put": {
+                "description": "Updates the expiry date for a shared gallery and disables sharing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gallery"
+                ],
+                "summary": "Reschedule gallery sharing expiry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectId",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reschedule sharing request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.rescheduleGallerySharingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sharing successfully rescheduled"
+                    },
+                    "404": {
+                        "description": "Gallery not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Sharing already inactive",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -878,7 +953,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "createdAt": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -887,7 +962,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "url": {
                     "type": "string"
@@ -916,13 +991,19 @@ const docTemplate = `{
                 }
             }
         },
+        "api.rescheduleGallerySharingRequest": {
+            "type": "object",
+            "properties": {
+                "expiryDate": {
+                    "description": "example: \"2024-12-31T23:59:59Z\"",
+                    "type": "string"
+                }
+            }
+        },
         "api.shareGalleryRequest": {
             "type": "object",
             "properties": {
                 "sharingExpiry": {
-                    "type": "string"
-                },
-                "sharingStart": {
                     "type": "string"
                 }
             }
@@ -953,13 +1034,19 @@ const docTemplate = `{
             }
         },
         "api.updateGalleryRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Example Gallery"
+                }
+            }
         },
         "domain.CollectionDB": {
             "type": "object",
             "properties": {
                 "createdAt": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -968,21 +1055,18 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
         "domain.GalleryDB": {
             "type": "object",
             "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
                 "collectionId": {
                     "type": "string"
                 },
                 "createdAt": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -990,14 +1074,11 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "sharingEnabled": {
-                    "type": "boolean"
-                },
-                "sharingExpiryDate": {
-                    "type": "integer"
+                "sharingOptions": {
+                    "$ref": "#/definitions/domain.SharingOptions"
                 },
                 "updatedAt": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -1008,7 +1089,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "createdAt": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "galleryId": {
                     "type": "string"
@@ -1026,7 +1107,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/domain.PhotoStatus"
                 },
                 "updatedAt": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -1040,6 +1121,26 @@ const docTemplate = `{
                 "Pending",
                 "Uploaded"
             ]
+        },
+        "domain.SharingOptions": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "sharingCleanupJob": {
+                    "type": "string"
+                },
+                "sharingEnabled": {
+                    "type": "boolean"
+                },
+                "sharingExpiryDate": {
+                    "type": "string"
+                },
+                "sharingUrl": {
+                    "type": "string"
+                }
+            }
         },
         "fiber.Map": {
             "type": "object",

@@ -24,10 +24,32 @@ func queueKey(queueType string) string {
 func (s *RedisJobQueue) PushJob(ctx context.Context, job domain.Job) error {
 	pipe := s.rdb.Pipeline()
 
-	jobKey := fmt.Sprintf("job:%s", job.ID)
-	pipe.HSet(ctx, jobKey, job)
+	jobKey := fmt.Sprintf("job:%s", job.ID.Hex())
+	jobMap := map[string]interface{}{
+		"id":           job.ID.Hex(),
+		"type":         job.Type,
+		"queue":        job.Queue,
+		"status":       string(job.Status),
+		"payload":      string(job.Payload),
+		"created_at":   job.CreatedAt,
+		"scheduled_at": job.ScheduledAt,
+		"retries":      job.Retries,
+	}
+	if job.StartedAt != nil {
+		jobMap["started_at"] = job.StartedAt
+	}
+	if job.CompletedAt != nil {
+		jobMap["completed_at"] = job.CompletedAt
+	}
+	if !job.WorkerID.IsZero() {
+		jobMap["worker_id"] = job.WorkerID.Hex()
+	}
+	if job.Error != "" {
+		jobMap["error"] = job.Error
+	}
+	pipe.HSet(ctx, jobKey, jobMap)
 
-	pipe.LPush(ctx, queueKey(job.Queue), job)
+	pipe.LPush(ctx, queueKey(job.Queue), jobKey)
 
 	_, err := pipe.Exec(ctx)
 	return err

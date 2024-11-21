@@ -23,13 +23,13 @@ definitions:
   api.getPhotoResponse:
     properties:
       createdAt:
-        type: integer
+        type: string
       id:
         type: string
       originalFilename:
         type: string
       updatedAt:
-        type: integer
+        type: string
       url:
         type: string
     type: object
@@ -47,11 +47,15 @@ definitions:
       presignedPostRequest:
         $ref: '#/definitions/s3.PresignedPostRequest'
     type: object
+  api.rescheduleGallerySharingRequest:
+    properties:
+      expiryDate:
+        description: 'example: "2024-12-31T23:59:59Z"'
+        type: string
+    type: object
   api.shareGalleryRequest:
     properties:
       sharingExpiry:
-        type: string
-      sharingStart:
         type: string
     type: object
   api.shareGalleryResponse:
@@ -71,43 +75,43 @@ definitions:
         type: string
     type: object
   api.updateGalleryRequest:
+    properties:
+      name:
+        example: Example Gallery
+        type: string
     type: object
   domain.CollectionDB:
     properties:
       createdAt:
-        type: integer
+        type: string
       id:
         type: string
       name:
         type: string
       updatedAt:
-        type: integer
+        type: string
     type: object
   domain.GalleryDB:
     properties:
-      accessToken:
-        type: string
       collectionId:
         type: string
       createdAt:
-        type: integer
+        type: string
       id:
         type: string
       name:
         type: string
-      sharingEnabled:
-        type: boolean
-      sharingExpiryDate:
-        type: integer
+      sharingOptions:
+        $ref: '#/definitions/domain.SharingOptions'
       updatedAt:
-        type: integer
+        type: string
     type: object
   domain.PhotoDB:
     properties:
       collectionId:
         type: string
       createdAt:
-        type: integer
+        type: string
       galleryId:
         type: string
       id:
@@ -119,7 +123,7 @@ definitions:
       status:
         $ref: '#/definitions/domain.PhotoStatus'
       updatedAt:
-        type: integer
+        type: string
     type: object
   domain.PhotoStatus:
     enum:
@@ -129,6 +133,19 @@ definitions:
     x-enum-varnames:
     - Pending
     - Uploaded
+  domain.SharingOptions:
+    properties:
+      accessToken:
+        type: string
+      sharingCleanupJob:
+        type: string
+      sharingEnabled:
+        type: boolean
+      sharingExpiryDate:
+        type: string
+      sharingUrl:
+        type: string
+    type: object
   fiber.Map:
     additionalProperties: true
     type: object
@@ -599,6 +616,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "405":
+          description: Sharing already active
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Server error
           schema:
@@ -700,4 +723,48 @@ paths:
       summary: Generate QR code image from URL
       tags:
       - QR
+  /galleries/{galleryId}/sharing/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Updates the expiry date for a shared gallery and disables sharing
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Reschedule sharing request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.rescheduleGallerySharingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sharing successfully rescheduled
+        "404":
+          description: Gallery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Sharing already inactive
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reschedule gallery sharing expiry
+      tags:
+      - gallery
 swagger: "2.0"

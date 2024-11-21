@@ -16,9 +16,7 @@ type createGalleryResponse struct {
 }
 
 type updateGalleryRequest struct {
-	Name              string             `json:"name" example:"Example Gallery"`
-	SharingEnabled    bool               `json:"sharingEnabled,omitempty" example:"false"`
-	SharingExpiryDate primitive.DateTime `json:"sharingExpiryDate,omitempty" example:"2022-01-01T00:00:00"`
+	Name string `json:"name" example:"Example Gallery"`
 }
 
 // @Summary Get all galleries of a collection.
@@ -152,8 +150,6 @@ func (a *api) updateGalleryHandler(ctx *fiber.Ctx) error {
 
 	gallery, err := a.galleryRepo.UpdateGallery(ctx.Context(), galleryId,
 		domain.WithName(req.Name),
-		domain.WithSharingEnabled(req.SharingEnabled),
-		domain.WithSharingExpiryDate(req.SharingExpiryDate),
 	)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")
