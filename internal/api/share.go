@@ -33,7 +33,7 @@ type shareGalleryResponse struct {
 // @Failure 404 {object} map[string]string "Gallery not found"
 // @Failure 405 {object} map[string]string "Sharing already active"
 // @Failure 500 {object} map[string]string "Server error"
-// @Router /api/v1/galleries/{galleryId}/share [post]
+// @Router /api/v1/galleries/{galleryId}/sharing/share [post]
 func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
@@ -113,7 +113,7 @@ type rescheduleGallerySharingRequest struct {
 // @Failure 404 {object} map[string]string "Gallery not found"
 // @Failure 405 {object} map[string]string "Sharing already inactive"
 // @Failure 500 {object} map[string]string "Server error"
-// @Router /api/v1/galleries/{galleryId}/reschedule [put]
+// @Router /api/v1/galleries/{galleryId}/sharing/reschedule [put]
 func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
@@ -122,6 +122,9 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 	var req rescheduleGallerySharingRequest
 	if err := ctx.BodyParser(&req); err != nil {
 		return BadRequest(ctx, err)
+	}
+	if !validateSharingExpiryDate(req.SharingExpiry) {
+		return BadRequest(ctx, fmt.Errorf("sharing expiry date invalid"))
 	}
 
 	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
@@ -155,6 +158,47 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 		ShareUrl:      fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.SharingOptions.AccessToken),
 		SharingExpiry: req.SharingExpiry,
 	})
+}
+
+// @Summary Stop gallery sharing
+// @Description Immediately stops sharing a gallery and updates sharing options
+// @Tags gallery sharing
+// @Accept json
+// @Produce json
+// @Param galleryId path string true "Gallery ID" format(objectId)
+// @Success 200 {object} domain.GalleryDB "Gallery with updated sharing status"
+// @Failure 404 {object} map[string]string "Gallery not found"
+// @Failure 405 {object} map[string]string "Sharing already inactive"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/v1/galleries/{galleryId}/sharing/stop [put]
+func (a *api) stopSharingGalleryHandler(ctx *fiber.Ctx) error {
+	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
+	if err != nil {
+		return NotFound(ctx, err)
+	}
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
+	if err != nil {
+		return NotFound(ctx, err)
+	}
+
+	if !gallery.SharingOptions.SharingEnabled {
+		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{"message": "Sharing already inactive"})
+	}
+
+	_, err = a.jobRepo.RescheduleJob(ctx.Context(), gallery.SharingOptions.SharingCleanupJob, time.Now())
+	if err != nil {
+		return ServerError(ctx, err, "Failed to reschedule job")
+	}
+
+	gallery, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharingOptions(
+		domain.SharingOptions{
+			SharingEnabled: false,
+		}))
+	if err != nil {
+		return ServerError(ctx, err, "Failed to update gallery")
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(gallery)
 }
 
 func validateSharingExpiryDate(expiryDate time.Time) bool {

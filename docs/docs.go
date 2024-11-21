@@ -633,7 +633,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/galleries/{galleryId}/reschedule": {
+        "/api/v1/galleries/{galleryId}/sharing/reschedule": {
             "put": {
                 "description": "Updates the expiry date for a shared gallery and disables sharing",
                 "consumes": [
@@ -702,7 +702,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/galleries/{galleryId}/share": {
+        "/api/v1/galleries/{galleryId}/sharing/share": {
             "post": {
                 "description": "Create a shareable link for a gallery with an expiration date",
                 "consumes": [
@@ -760,6 +760,66 @@ const docTemplate = `{
                     },
                     "405": {
                         "description": "Sharing already active",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/galleries/{galleryId}/sharing/stop": {
+            "put": {
+                "description": "Immediately stops sharing a gallery and updates sharing options",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gallery sharing"
+                ],
+                "summary": "Stop gallery sharing",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "objectId",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Gallery with updated sharing status",
+                        "schema": {
+                            "$ref": "#/definitions/domain.GalleryDB"
+                        }
+                    },
+                    "404": {
+                        "description": "Gallery not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Sharing already inactive",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

@@ -580,7 +580,7 @@ paths:
       summary: Upload photos to a gallery
       tags:
       - photos
-  /api/v1/galleries/{galleryId}/reschedule:
+  /api/v1/galleries/{galleryId}/sharing/reschedule:
     put:
       consumes:
       - application/json
@@ -626,7 +626,7 @@ paths:
       summary: Reschedule gallery sharing expiry
       tags:
       - gallery sharing
-  /api/v1/galleries/{galleryId}/share:
+  /api/v1/galleries/{galleryId}/sharing/share:
     post:
       consumes:
       - application/json
@@ -675,6 +675,46 @@ paths:
               type: string
             type: object
       summary: Share Gallery
+      tags:
+      - gallery sharing
+  /api/v1/galleries/{galleryId}/sharing/stop:
+    put:
+      consumes:
+      - application/json
+      description: Immediately stops sharing a gallery and updates sharing options
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Gallery with updated sharing status
+          schema:
+            $ref: '#/definitions/domain.GalleryDB'
+        "404":
+          description: Gallery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Sharing already inactive
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Stop gallery sharing
       tags:
       - gallery sharing
   /api/v1/photos/{photoId}:
