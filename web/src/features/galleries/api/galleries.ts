@@ -4,8 +4,14 @@ export type Gallery = {
     name: string
     createdAt: string
     updatedAt: string
-    sharingEnabled: boolean
+    sharingOptions: SharingOptions
+}
+export type SharingOptions = {
+    sharingEnabled:    boolean
+    accessToken:       string
     sharingExpiryDate: string
+    sharingUrl:        string
+    sharingCleanupJob: string
 }
 
 export async function getGalleries(collectionId: string): Promise<Gallery[]> {

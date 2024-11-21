@@ -15,9 +15,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {getGallery} from "@/features/galleries/api/galleries.ts";
 import PhotoGallery from "@/features/galleries/components/photo-gallery.tsx";
 import {Lock, Share2} from "lucide-react";
-import {Button} from "@/components/ui/button.tsx";
 import {EditGalleryDialog} from "@/features/galleries/components/edit-gallery-dialog.tsx";
 import {DeleteGalleryDialog} from "@/features/galleries/components/delete-gallery-dialog.tsx";
+import ImageShareModal from "@/features/galleries/components/image-share-modal.tsx";
 
 
 export default function GalleryPage() {
@@ -85,13 +85,12 @@ export default function GalleryPage() {
                             </div>
 
                             <div className="flex gap-2 justify-end">
-                                <Button variant="outline" size="icon">
-                                    {galleryQuery.data.sharingEnabled ? (
-                                        <Lock className="w-4 h-4" />
-                                    ) : (
-                                        <Share2 className="w-4 h-4" />
-                                    )}
-                                </Button>
+                                <ImageShareModal
+                                    galleryId={galleryQuery.data.id}
+                                    sharingEnabled={galleryQuery.data.sharingOptions.sharingEnabled}
+                                    sharingExpiryDate={new Date(galleryQuery.data.sharingOptions.sharingExpiryDate)}
+                                    sharingUrl={galleryQuery.data.sharingOptions.sharingUrl}
+                                />
                                 <EditGalleryDialog gallery={galleryQuery.data}/>
                                 <DeleteGalleryDialog gallery={galleryQuery.data} onDelete={() => {navigate(`/collections/${collectionId}`)}}/>
                             </div>
