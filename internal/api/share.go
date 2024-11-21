@@ -61,6 +61,7 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 	}
 
 	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId,
+		domain.WithSharingEnabled(true),
 		domain.WithValidatedSharingExpiryDate(primitive.NewDateTimeFromTime(req.SharingExpiry)),
 		domain.WithAccessToken(accessToken),
 	)

@@ -63,7 +63,7 @@ func WithAccessToken(accessToken string) GalleryUpdateOption {
 
 func WithSharingEnabled(enabled bool) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "enabled", Value: enabled})
+		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingEnabled", Value: enabled})
 	}
 }
 

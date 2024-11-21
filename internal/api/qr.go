@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/michalK00/sg-qr/internal/qr"
 )
@@ -12,28 +13,32 @@ type generateQrRequest struct {
 
 const qrSize int = 256
 
-// @Summary Generate QR code
-// @Description Generate a QR code from a given URL
+// @Summary Generate QR code image from URL
+// @Description Generates a QR code image in PNG format from a provided URL
 // @Tags QR
 // @Accept json
 // @Produce image/png
-// @Param request body generateQrRequest true "QR Generation Request"
+// @Param url query string true "URL to encode in QR code"
 // @Success 200 {file} byte[] "QR code image in PNG format"
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/v1/qr [post]
+// @Failure 400 {object} map[string]string "Invalid or missing URL parameter"
+// @Failure 500 {object} map[string]string "Internal server error during QR generation"
+// @Router /api/v1/qr [get]
 func (a *api) generateQrHandler(ctx *fiber.Ctx) error {
 
-	var req generateQrRequest
-	if err := ctx.BodyParser(&req); err != nil {
-		return BadRequest(ctx, err)
+	url := ctx.Query("url")
+	if url == "" {
+		return BadRequest(ctx, fmt.Errorf("url query parameter is required"))
 	}
 
-	body, err := qr.GenerateQr(qr.QrCode{Content: req.Url, Size: qrSize})
+	body, err := qr.GenerateQr(qr.QrCode{
+		Content: url,
+		Size:    qrSize,
+	})
 	if err != nil {
 		return ServerError(ctx, err, "Failed to generate qr code")
 	}
 
-	return ctx.Status(fiber.StatusOK).Type("image/png").Send(body)
+	return ctx.Status(fiber.StatusOK).
+		Type("image/png").
+		Send(body)
 }

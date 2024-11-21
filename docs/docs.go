@@ -790,8 +790,8 @@ const docTemplate = `{
             }
         },
         "/api/v1/qr": {
-            "post": {
-                "description": "Generate a QR code from a given URL",
+            "get": {
+                "description": "Generates a QR code image in PNG format from a provided URL",
                 "consumes": [
                     "application/json"
                 ],
@@ -801,16 +801,14 @@ const docTemplate = `{
                 "tags": [
                     "QR"
                 ],
-                "summary": "Generate QR code",
+                "summary": "Generate QR code image from URL",
                 "parameters": [
                     {
-                        "description": "QR Generation Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.generateQrRequest"
-                        }
+                        "type": "string",
+                        "description": "URL to encode in QR code",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -821,16 +819,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
+                        "description": "Invalid or missing URL parameter",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -839,7 +828,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error during QR generation",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -882,17 +871,6 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string"
-                }
-            }
-        },
-        "api.generateQrRequest": {
-            "description": "Request body for generating a QR code",
-            "type": "object",
-            "properties": {
-                "url": {
-                    "description": "URL to be encoded in the QR code",
-                    "type": "string",
-                    "example": "https://example.com"
                 }
             }
         },

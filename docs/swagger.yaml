@@ -20,14 +20,6 @@ definitions:
       id:
         type: string
     type: object
-  api.generateQrRequest:
-    description: Request body for generating a QR code
-    properties:
-      url:
-        description: URL to be encoded in the QR code
-        example: https://example.com
-        type: string
-    type: object
   api.getPhotoResponse:
     properties:
       createdAt:
@@ -676,17 +668,16 @@ paths:
       tags:
       - photos
   /api/v1/qr:
-    post:
+    get:
       consumes:
       - application/json
-      description: Generate a QR code from a given URL
+      description: Generates a QR code image in PNG format from a provided URL
       parameters:
-      - description: QR Generation Request
-        in: body
-        name: request
+      - description: URL to encode in QR code
+        in: query
+        name: url
         required: true
-        schema:
-          $ref: '#/definitions/api.generateQrRequest'
+        type: string
       produces:
       - image/png
       responses:
@@ -695,24 +686,18 @@ paths:
           schema:
             type: file
         "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
+          description: Invalid or missing URL parameter
           schema:
             additionalProperties:
               type: string
             type: object
         "500":
-          description: Internal Server Error
+          description: Internal server error during QR generation
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Generate QR code
+      summary: Generate QR code image from URL
       tags:
       - QR
 swagger: "2.0"
