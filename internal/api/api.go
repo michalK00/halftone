@@ -3,9 +3,9 @@ package api
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
-	"github.com/michalK00/sg-qr/internal/domain"
-	"github.com/michalK00/sg-qr/internal/middleware"
-	"github.com/michalK00/sg-qr/internal/repository"
+	"github.com/michalK00/halftone/internal/domain"
+	"github.com/michalK00/halftone/internal/middleware"
+	"github.com/michalK00/halftone/internal/repository"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 )

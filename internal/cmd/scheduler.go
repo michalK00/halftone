@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/michalK00/sg-qr/internal/cmdutil"
+	"github.com/michalK00/halftone/internal/cmdutil"
 	"github.com/spf13/cobra"
 )
 

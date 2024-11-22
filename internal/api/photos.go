@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/aws"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/aws"
+	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"path"
 	"path/filepath"
@@ -119,6 +119,8 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return NotFound(ctx, err)
 	}
+
+	//TODO add job to copy the photo into client folder
 
 	if _, err := aws.ObjectExists(photo.ObjectKey); err != nil {
 		return NotFound(ctx, err)

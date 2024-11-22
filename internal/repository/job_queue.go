@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/domain"
 	"github.com/redis/go-redis/v9"
 )
 

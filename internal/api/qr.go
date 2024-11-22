@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/qr"
+	"github.com/michalK00/halftone/internal/qr"
 )
 
 // @Description Request body for generating a QR code

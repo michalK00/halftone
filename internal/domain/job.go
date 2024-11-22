@@ -34,7 +34,7 @@ type Job struct {
 type JobRepository interface {
 	GetJobsDue(ctx context.Context) ([]Job, error)
 	CreateJob(ctx context.Context, job *Job) (primitive.ObjectID, error)
-	DeleteJob(ctx context.Context, jobId primitive.ObjectID) error
+	DeleteJob(ctx context.Context, jobId primitive.ObjectID) (Job, error)
 	RescheduleJob(ctx context.Context, jobId primitive.ObjectID, updatedScheduledAt time.Time) (Job, error)
 }
 
@@ -43,15 +43,17 @@ type JobQueue interface {
 	PullJob(ctx context.Context, queueType string) (*Job, error)
 }
 
-type GallerySharePayload struct {
+type PhotoSharePayload struct {
 	GalleryId primitive.ObjectID `bson:"galleryId"`
+	PhotoId   primitive.ObjectID `bson:"photoId"`
 }
 
-type GalleryCleanupPayload struct {
+type PhotoCleanupPayload struct {
 	GalleryId primitive.ObjectID `bson:"galleryId"`
+	PhotoId   primitive.ObjectID `bson:"photoId"`
 }
 
-func NewGalleryShareJob(payload GallerySharePayload, scheduledAt time.Time) (*Job, error) {
+func NewPhotoShareJob(payload PhotoSharePayload, scheduledAt time.Time) (*Job, error) {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -63,13 +65,13 @@ func NewGalleryShareJob(payload GallerySharePayload, scheduledAt time.Time) (*Jo
 		Queue:       "gallery",
 		Status:      JobStatusActive,
 		Payload:     jsonPayload,
-		CreatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
 		ScheduledAt: scheduledAt,
 		Retries:     3,
 	}, nil
 }
 
-func NewGalleryCleanupJob(payload GalleryCleanupPayload, scheduledAt time.Time) (*Job, error) {
+func NewPhotoCleanupJob(payload PhotoCleanupPayload, scheduledAt time.Time) (*Job, error) {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -81,7 +83,7 @@ func NewGalleryCleanupJob(payload GalleryCleanupPayload, scheduledAt time.Time) 
 		Queue:       "gallery",
 		Status:      JobStatusActive,
 		Payload:     jsonPayload,
-		CreatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
 		ScheduledAt: scheduledAt,
 		Retries:     3,
 	}, nil

@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"os"
 	"time"
@@ -51,42 +51,21 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	if gallery.SharingOptions.SharingEnabled {
+	if !sharingExpiryDatePastDue(gallery.Sharing.SharingExpiryDate) {
 		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{"message": "Sharing already active"})
 	}
 
 	accessToken, err := domain.GenerateAccessToken()
-	shareJob, err := domain.NewGalleryShareJob(domain.GallerySharePayload{GalleryId: galleryId}, time.Now())
-	if err != nil {
-		return ServerError(ctx, err, "Failed to create job")
-	}
-	shareExpiry := time.Date(req.SharingExpiry.Year(), req.SharingExpiry.Month(), req.SharingExpiry.Day()+1, 0, 0, 1, 0, time.UTC)
-	cleanupJob, err := domain.NewGalleryCleanupJob(domain.GalleryCleanupPayload{GalleryId: galleryId}, shareExpiry)
-	if err != nil {
-		return ServerError(ctx, err, "Failed to create job")
-	}
-
-	cleanupJobId, err := a.jobRepo.CreateJob(ctx.Context(), cleanupJob)
-	if err != nil {
-		return ServerError(ctx, err, "Failed to create cleanup job")
-	}
 
 	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId,
-		domain.WithSharingOptions(domain.SharingOptions{
-			SharingEnabled:    true,
-			AccessToken:       accessToken,
+		domain.WithSharing(domain.Sharing{
 			SharingExpiryDate: req.SharingExpiry,
+			AccessToken:       accessToken,
 			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), accessToken),
-			SharingCleanupJob: cleanupJobId,
 		}),
 	)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")
-	}
-
-	err = a.jobQueue.PushJob(ctx.Context(), *shareJob)
-	if err != nil {
-		return ServerError(ctx, err, "Failed to create share job")
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(shareGalleryResponse{
@@ -131,22 +110,15 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	if !gallery.SharingOptions.SharingEnabled {
+	if sharingExpiryDatePastDue(gallery.Sharing.SharingExpiryDate) {
 		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{"message": "Sharing already inactive"})
 	}
 
-	_, err = a.jobRepo.RescheduleJob(ctx.Context(), gallery.SharingOptions.SharingCleanupJob, time.Date(req.SharingExpiry.Year(), req.SharingExpiry.Month(), req.SharingExpiry.Day()+1, 0, 0, 1, 0, time.UTC))
-	if err != nil {
-		return ServerError(ctx, err, "Failed to reschedule job")
-	}
-
-	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharingOptions(
-		domain.SharingOptions{
-			SharingEnabled:    true,
-			AccessToken:       gallery.SharingOptions.AccessToken,
+	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharing(
+		domain.Sharing{
 			SharingExpiryDate: req.SharingExpiry,
-			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.SharingOptions.AccessToken),
-			SharingCleanupJob: gallery.SharingOptions.SharingCleanupJob,
+			AccessToken:       gallery.Sharing.AccessToken,
+			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.Sharing.AccessToken),
 		}))
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")
@@ -154,8 +126,8 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(shareGalleryResponse{
 		GalleryId:     galleryId.Hex(),
-		AccessToken:   gallery.SharingOptions.AccessToken,
-		ShareUrl:      fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.SharingOptions.AccessToken),
+		AccessToken:   gallery.Sharing.AccessToken,
+		ShareUrl:      fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.Sharing.AccessToken),
 		SharingExpiry: req.SharingExpiry,
 	})
 }
@@ -181,18 +153,13 @@ func (a *api) stopSharingGalleryHandler(ctx *fiber.Ctx) error {
 		return NotFound(ctx, err)
 	}
 
-	if !gallery.SharingOptions.SharingEnabled {
+	if sharingExpiryDatePastDue(gallery.Sharing.SharingExpiryDate) {
 		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{"message": "Sharing already inactive"})
 	}
 
-	_, err = a.jobRepo.RescheduleJob(ctx.Context(), gallery.SharingOptions.SharingCleanupJob, time.Now())
-	if err != nil {
-		return ServerError(ctx, err, "Failed to reschedule job")
-	}
-
-	gallery, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharingOptions(
-		domain.SharingOptions{
-			SharingEnabled: false,
+	gallery, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharing(
+		domain.Sharing{
+			SharingExpiryDate: time.Now().UTC().Add(time.Duration(-1) * time.Hour * 24),
 		}))
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")
@@ -202,5 +169,15 @@ func (a *api) stopSharingGalleryHandler(ctx *fiber.Ctx) error {
 }
 
 func validateSharingExpiryDate(expiryDate time.Time) bool {
-	return !expiryDate.IsZero() && !expiryDate.Before(time.Now())
+	return !expiryDate.IsZero() && !expiryDate.Before(time.Now().UTC())
+}
+
+func sharingExpiryDatePastDue(expiryDate time.Time) bool {
+	now := time.Now().UTC()
+	expiryUTC := expiryDate.UTC()
+
+	expiryMidday := time.Date(expiryUTC.Year(), expiryUTC.Month(), expiryUTC.Day(), 12, 0, 0, 0, time.UTC)
+	nowMidday := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.UTC)
+
+	return expiryMidday.Before(nowMidday)
 }

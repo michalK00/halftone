@@ -2,7 +2,7 @@ package qr
 
 import (
 	"context"
-	custom_aws_wrapper "github.com/michalK00/sg-qr/internal/aws"
+	custom_aws_wrapper "github.com/michalK00/halftone/internal/aws"
 	"github.com/michalK00/sg-qr/platform/cloud/aws"
 	"log"
 

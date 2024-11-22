@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	_ "github.com/michalK00/sg-qr/docs"
-	"github.com/michalK00/sg-qr/internal/cmd"
+	_ "github.com/michalK00/halftone/docs"
+	"github.com/michalK00/halftone/internal/cmd"
 	"os"
 	"os/signal"
 )

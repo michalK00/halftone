@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -85,8 +85,8 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 		{"collectionId", collectionId},
 		{"galleryId", galleryId},
 		{"originalFilename", originalFilename},
-		{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
-		{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
+		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
+		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"status", "pending"},
 		{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
 	}
@@ -115,8 +115,8 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 			{"collectionId", collectionId},
 			{"galleryId", galleryId},
 			{"originalFilename", filename},
-			{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
-			{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
+			{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
+			{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 			{"status", domain.PhotoStatus(0)},
 			{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
 		}

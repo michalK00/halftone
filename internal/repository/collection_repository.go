@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -64,8 +64,8 @@ func (s *MongoCollection) CreateCollection(ctx context.Context, name string) (st
 
 	col := bson.D{
 		{"name", name},
-		{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
-		{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
+		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
+		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 	}
 	result, err := collection.InsertOne(ctx, col)
 	if err != nil {

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,7 +23,7 @@ func NewMongoJob(db *mongo.Database) *MongoJob {
 func (s *MongoJob) GetJobsDue(ctx context.Context) ([]domain.Job, error) {
 	collection := s.db.Collection("jobs")
 	filter := bson.D{
-		{"scheduled_at", bson.D{{"$lte", time.Now()}}},
+		{"scheduled_at", bson.D{{"$lte", time.Now().UTC()}}},
 	}
 
 	var result []domain.Job
@@ -63,8 +63,11 @@ func (s *MongoJob) RescheduleJob(ctx context.Context, jobId primitive.ObjectID, 
 	return job, err
 }
 
-func (s *MongoJob) DeleteJob(ctx context.Context, jobId primitive.ObjectID) error {
+func (s *MongoJob) DeleteJob(ctx context.Context, jobId primitive.ObjectID) (domain.Job, error) {
 	coll := s.db.Collection("jobs")
-	_, err := coll.DeleteOne(ctx, bson.D{{"_id", jobId}})
-	return err
+
+	var job domain.Job
+	err := coll.FindOneAndDelete(ctx, bson.D{{"_id", jobId}}).Decode(&job)
+
+	return job, err
 }

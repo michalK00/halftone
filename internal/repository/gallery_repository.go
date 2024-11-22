@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/michalK00/sg-qr/internal/domain"
+	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -77,8 +77,8 @@ func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive
 		{"_id", galleryID},
 		{"collectionId", collectionId},
 		{"name", name},
-		{"createdAt", primitive.NewDateTimeFromTime(time.Now())},
-		{"updatedAt", primitive.NewDateTimeFromTime(time.Now())},
+		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
+		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"sharingOptions", bson.D{
 			{"sharingEnabled", false},
 		}},

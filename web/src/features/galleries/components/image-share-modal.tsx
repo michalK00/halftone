@@ -7,6 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import {useToast} from "@/hooks/use-toast.ts";
+import {shareGallery, stopGallerySharing} from "@/features/galleries/api/share.ts";
+import {useQueryClient} from "@tanstack/react-query";
 
 type ImageShareModalProps = {
     galleryId: string;
@@ -27,19 +30,46 @@ function ImageShareModal({
     const [endDate, setEndDate] = useState<Date | undefined>(displayDate);
     const [copied, setCopied] = useState(false);
 
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
     const closeModal = () => {
         setIsOpen(false);
-        setEndDate(sharingExpiryDate);
     };
 
     const handleShare = async () => {
         if (!endDate) return;
 
+
         try {
             setIsLoading(true);
-            closeModal();
+            if (sharingEnabled) {
+                const response = await stopGallerySharing(galleryId)
+                sharingEnabled = response.sharingOptions.sharingEnabled
+
+                toast({
+                    title: "Success",
+                    description: `Gallery sharing stopped successfully`,
+                });
+            } else {
+                const response = await shareGallery(galleryId, { sharingExpiry: endDate })
+                sharingEnabled = true
+                sharingUrl = response.shareUrl
+                sharingExpiryDate = response.sharingExpiry
+                toast({
+                    title: "Success",
+                    description: `Gallery shared successfully`,
+                });
+            }
+            queryClient.invalidateQueries({ queryKey: ['gallery', galleryId] });
+
         } catch (error) {
-            console.error('Failed to share gallery:', error);
+            toast({
+                title: "Error",
+                description: `Failed to ${sharingEnabled ? "stop sharing" : "share"} gallery`,
+                variant: "destructive",
+            });
+            console.error(`Failed to ${sharingEnabled ? "stop sharing" : "share"} gallery:`, error);
         } finally {
             setIsLoading(false);
         }

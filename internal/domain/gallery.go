@@ -15,15 +15,19 @@ type GalleryDB struct {
 	Name           string             `bson:"name" json:"name"`
 	CreatedAt      time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt      time.Time          `bson:"updatedAt" json:"updatedAt"`
+	Sharing        Sharing            `bson:"sharing" json:"sharing"`
 	SharingOptions SharingOptions     `bson:"sharingOptions" json:"sharingOptions"`
 }
 
+type Sharing struct {
+	SharingExpiryDate time.Time `bson:"sharingExpiryDate" json:"sharingExpiryDate"`
+	AccessToken       string    `bson:"accessToken" json:"accessToken"`
+	SharingUrl        string    `bson:"sharingUrl" json:"sharingUrl"`
+}
+
 type SharingOptions struct {
-	SharingEnabled    bool               `bson:"sharingEnabled" json:"sharingEnabled"`
-	AccessToken       string             `bson:"accessToken" json:"accessToken"`
-	SharingExpiryDate time.Time          `bson:"sharingExpiryDate" json:"sharingExpiryDate"`
-	SharingUrl        string             `bson:"sharingUrl" json:"sharingUrl"`
-	SharingCleanupJob primitive.ObjectID `bson:"sharingCleanupJob" json:"sharingCleanupJob"`
+	Downsize  bool `bson:"downsize" json:"downsize"`
+	Watermark bool `bson:"watermark" json:"watermark"`
 }
 
 type GalleryRepository interface {
@@ -56,21 +60,12 @@ func WithName(name string) GalleryUpdateOption {
 	}
 }
 
-func WithSharingOptions(sharingOptions SharingOptions) GalleryUpdateOption {
+func WithSharing(sharing Sharing) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingOptions", Value: bson.D{
-			{Key: "sharingEnabled", Value: sharingOptions.SharingEnabled},
-			{Key: "accessToken", Value: sharingOptions.AccessToken},
-			{Key: "sharingExpiryDate", Value: sharingOptions.SharingExpiryDate},
-			{Key: "sharingUrl", Value: sharingOptions.SharingUrl},
-			{Key: "sharingCleanupJob", Value: sharingOptions.SharingCleanupJob},
-		}})
-	}
-}
-func WithSharingEnabled(sharingEnabled bool) GalleryUpdateOption {
-	return func(opts *GalleryUpdateOptions) {
-		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharingOptions", Value: bson.D{
-			{Key: "sharingEnabled", Value: sharingEnabled},
+		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharing", Value: bson.D{
+			{Key: "accessToken", Value: sharing.AccessToken},
+			{Key: "sharingExpiryDate", Value: sharing.SharingExpiryDate},
+			{Key: "sharingUrl", Value: sharing.SharingUrl},
 		}})
 	}
 }

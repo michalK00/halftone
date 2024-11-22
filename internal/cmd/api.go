@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/michalK00/sg-qr/internal/api"
-	"github.com/michalK00/sg-qr/internal/cmdutil"
+	"github.com/michalK00/halftone/internal/api"
+	"github.com/michalK00/halftone/internal/cmdutil"
 	"github.com/spf13/cobra"
 	"os"
 )
