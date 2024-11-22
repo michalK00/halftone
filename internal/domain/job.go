@@ -58,6 +58,7 @@ func NewGalleryShareJob(payload GallerySharePayload, scheduledAt time.Time) (*Jo
 	}
 
 	return &Job{
+		ID:          primitive.NewObjectID(),
 		Type:        "share",
 		Queue:       "gallery",
 		Status:      JobStatusActive,
@@ -75,6 +76,7 @@ func NewGalleryCleanupJob(payload GalleryCleanupPayload, scheduledAt time.Time) 
 	}
 
 	return &Job{
+		ID:          primitive.NewObjectID(),
 		Type:        "cleanup",
 		Queue:       "gallery",
 		Status:      JobStatusActive,

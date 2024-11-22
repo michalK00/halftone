@@ -40,15 +40,12 @@ func (s *MongoJob) GetJobsDue(ctx context.Context) ([]domain.Job, error) {
 
 func (s *MongoJob) CreateJob(ctx context.Context, job *domain.Job) (primitive.ObjectID, error) {
 	collection := s.db.Collection("jobs")
-	jobID := primitive.NewObjectID()
-
-	job.ID = jobID
 
 	_, err := collection.InsertOne(ctx, job)
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
-	return jobID, nil
+	return job.ID, nil
 }
 
 func (s *MongoJob) RescheduleJob(ctx context.Context, jobId primitive.ObjectID, updatedScheduledAt time.Time) (domain.Job, error) {
