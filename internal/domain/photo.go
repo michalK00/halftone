@@ -22,6 +22,8 @@ type PhotoStatus int64
 const (
 	Pending PhotoStatus = iota
 	Uploaded
+	Shared
+	PendingDeletion
 )
 
 type PhotoRepository interface {
@@ -32,6 +34,7 @@ type PhotoRepository interface {
 	CreatePhoto(ctx context.Context, collectionId primitive.ObjectID, galleryId primitive.ObjectID, originalFilename string) (primitive.ObjectID, error)
 	CreatePhotos(ctx context.Context, collectionId primitive.ObjectID, galleryId primitive.ObjectID, originalFilename []string) ([]primitive.ObjectID, error)
 	DeletePhoto(ctx context.Context, photoId primitive.ObjectID) error
+	SoftDeletePhoto(ctx context.Context, photoId primitive.ObjectID) error
 	DeletePhotos(ctx context.Context, photoIds []primitive.ObjectID) error
 	UpdatePhoto(ctx context.Context, photoId primitive.ObjectID, status PhotoStatus) (PhotoDB, error)
 }

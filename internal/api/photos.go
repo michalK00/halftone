@@ -133,11 +133,12 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 }
 
 type getPhotoResponse struct {
-	Id               string    `json:"id"`
-	OriginalFilename string    `json:"originalFilename"`
-	Url              string    `json:"url"`
-	UpdatedAt        time.Time `json:"updatedAt"`
-	CreatedAt        time.Time `json:"createdAt"`
+	Id               string             `json:"id"`
+	OriginalFilename string             `json:"originalFilename"`
+	Url              string             `json:"url"`
+	Status           domain.PhotoStatus `json:"status"`
+	UpdatedAt        time.Time          `json:"updatedAt"`
+	CreatedAt        time.Time          `json:"createdAt"`
 }
 
 // @Summary Get gallery photos
@@ -172,6 +173,7 @@ func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
 			Id:               photo.ID.Hex(),
 			OriginalFilename: photo.OriginalFilename,
 			Url:              url,
+			Status:           photo.Status,
 			UpdatedAt:        photo.UpdatedAt,
 			CreatedAt:        photo.CreatedAt,
 		}
@@ -181,7 +183,7 @@ func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
 }
 
 // @Summary Delete photo
-// @Description Deletes a specific photo by ID (Note: AWS cleanup pending implementation)
+// @Description Soft delete a given photo
 // @Tags photos
 // @Accept json
 // @Produce json
@@ -195,16 +197,8 @@ func (a *api) deletePhotoHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	photo, err := a.photoRepo.GetPhoto(ctx.Context(), photoId)
-	if err != nil {
-		return ServerError(ctx, err, "Failed to get photo")
-	}
 
-	err = aws.DeleteObject(photo.ObjectKey)
-	if err != nil {
-		return ServerError(ctx, err, "Failed to delete photo")
-	}
-	err = a.photoRepo.DeletePhoto(ctx.Context(), photoId)
+	err = a.photoRepo.SoftDeletePhoto(ctx.Context(), photoId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to delete photo")
 	}

@@ -46,8 +46,12 @@ func (s *MongoPhoto) GetPhotos(ctx context.Context, galleryId primitive.ObjectID
 	coll := s.db.Collection("photos")
 
 	var result []domain.PhotoDB
-	// returns only uploaded
-	cursor, err := coll.Find(ctx, bson.D{{"galleryId", galleryId}, {"status", 1}})
+	// returns only uploaded and shared
+	cursor, err := coll.Find(ctx, bson.D{
+		{"galleryId", galleryId},
+		{"status", bson.D{{"$in", primitive.A{1, 2}}}},
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +134,21 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 	}
 
 	return photoIds, nil
+}
+
+func (s *MongoPhoto) SoftDeletePhoto(ctx context.Context, photoId primitive.ObjectID) error {
+	coll := s.db.Collection("photos")
+	filter := bson.D{{"_id", photoId}}
+	update := bson.D{
+		{"$set", bson.D{
+			{"status", domain.PhotoStatus(3)},
+		}},
+		{"$currentDate", bson.D{
+			{"updatedAt", true},
+		}},
+	}
+	opts := options.FindOneAndUpdate()
+	return coll.FindOneAndUpdate(ctx, filter, update, opts).Err()
 }
 
 func (s *MongoPhoto) DeletePhoto(ctx context.Context, photoId primitive.ObjectID) error {
