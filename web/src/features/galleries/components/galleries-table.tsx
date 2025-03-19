@@ -68,11 +68,11 @@ export function GalleriesTable({ galleries, isLoading, error, onEdit }: Gallerie
                         </TableCell>
                         <TableCell>
                             <div className="flex items-center gap-2">
-                                {gallery.sharingEnabled ? (
+                                {gallery.sharing.sharingEnabled ? (
                                     <>
                                         <Share2 className="w-4 h-4 text-green-500" />
                                         <span className="text-sm">
-                                            Until {new Date(gallery.sharingExpiryDate).toLocaleDateString()}
+                                            Until {new Date(gallery.sharing.sharingExpiryDate).toLocaleDateString()}
                                         </span>
                                     </>
                                 ) : (
@@ -90,7 +90,7 @@ export function GalleriesTable({ galleries, isLoading, error, onEdit }: Gallerie
                                 variant="outline"
                                 size="icon"
                             >
-                                {gallery.sharingEnabled ? (
+                                {gallery.sharing.sharingEnabled ? (
                                     <Lock className="w-4 h-4" />
                                 ) : (
                                     <Share2 className="w-4 h-4" />

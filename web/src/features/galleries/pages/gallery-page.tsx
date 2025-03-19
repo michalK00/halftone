@@ -68,11 +68,11 @@ export default function GalleryPage() {
                                 <CardTitle>{galleryQuery.data.name}</CardTitle>
                                 <CardDescription className="flex flex-col sm:flex-row sm:gap-2">
                                     Created on {new Date(galleryQuery.data.createdAt).toLocaleDateString()}
-                                    {galleryQuery.data.sharingOptions.sharingEnabled ? (
+                                    {galleryQuery.data.sharing.sharingEnabled ? (
                                         <div className="flex gap-1">
                                             <Share2 className="w-4 h-4 text-green-500"/>
                                             <span className="text-sm">
-                                                    Until {new Date(galleryQuery.data.sharingOptions.sharingExpiryDate).toLocaleDateString()}
+                                                    Until {new Date(galleryQuery.data.sharing.sharingExpiryDate).toLocaleDateString()}
                                                 </span>
                                         </div>
                                     ) : (
@@ -87,9 +87,9 @@ export default function GalleryPage() {
                             <div className="flex gap-2 justify-end">
                                 <ImageShareModal
                                     galleryId={galleryQuery.data.id}
-                                    sharingEnabled={galleryQuery.data.sharingOptions.sharingEnabled}
-                                    sharingExpiryDate={new Date(galleryQuery.data.sharingOptions.sharingExpiryDate)}
-                                    sharingUrl={galleryQuery.data.sharingOptions.sharingUrl}
+                                    sharingEnabled={galleryQuery.data.sharing.sharingEnabled}
+                                    sharingExpiryDate={new Date(galleryQuery.data.sharing.sharingExpiryDate)}
+                                    sharingUrl={galleryQuery.data.sharing.sharingUrl}
                                 />
                                 <EditGalleryDialog gallery={galleryQuery.data}/>
                                 <DeleteGalleryDialog gallery={galleryQuery.data} onDelete={() => {navigate(`/collections/${collectionId}`)}}/>

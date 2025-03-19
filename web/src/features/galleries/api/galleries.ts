@@ -4,14 +4,13 @@ export type Gallery = {
     name: string
     createdAt: string
     updatedAt: string
-    sharingOptions: SharingOptions
+    sharing: Sharing
 }
-export type SharingOptions = {
-    sharingEnabled:    boolean
+export type Sharing = {
+    sharingEnabled: boolean
     accessToken:       string
     sharingExpiryDate: string
     sharingUrl:        string
-    sharingCleanupJob: string
 }
 
 export async function getGalleries(collectionId: string): Promise<Gallery[]> {

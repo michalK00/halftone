@@ -10,22 +10,23 @@ import (
 )
 
 type GalleryDB struct {
-	ID             primitive.ObjectID `bson:"_id" json:"id"`
-	CollectionId   primitive.ObjectID `bson:"collectionId" json:"collectionId"`
-	Name           string             `bson:"name" json:"name"`
-	CreatedAt      time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt      time.Time          `bson:"updatedAt" json:"updatedAt"`
-	Sharing        Sharing            `bson:"sharing" json:"sharing"`
-	SharingOptions SharingOptions     `bson:"sharingOptions" json:"sharingOptions"`
+	ID           primitive.ObjectID `bson:"_id" json:"id"`
+	CollectionId primitive.ObjectID `bson:"collectionId" json:"collectionId"`
+	Name         string             `bson:"name" json:"name"`
+	CreatedAt    time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt    time.Time          `bson:"updatedAt" json:"updatedAt"`
+	Sharing      Sharing            `bson:"sharing" json:"sharing"`
+	PhotoOptions PhotoOptions       `bson:"photoOptions" json:"photoOptions"`
 }
 
 type Sharing struct {
+	SharingEnabled    bool      `bson:"sharingEnabled" json:"sharingEnabled"`
 	SharingExpiryDate time.Time `bson:"sharingExpiryDate" json:"sharingExpiryDate"`
 	AccessToken       string    `bson:"accessToken" json:"accessToken"`
 	SharingUrl        string    `bson:"sharingUrl" json:"sharingUrl"`
 }
 
-type SharingOptions struct {
+type PhotoOptions struct {
 	Downsize  bool `bson:"downsize" json:"downsize"`
 	Watermark bool `bson:"watermark" json:"watermark"`
 }
@@ -63,6 +64,7 @@ func WithName(name string) GalleryUpdateOption {
 func WithSharing(sharing Sharing) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
 		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharing", Value: bson.D{
+			{Key: "sharingEnabled", Value: true},
 			{Key: "accessToken", Value: sharing.AccessToken},
 			{Key: "sharingExpiryDate", Value: sharing.SharingExpiryDate},
 			{Key: "sharingUrl", Value: sharing.SharingUrl},

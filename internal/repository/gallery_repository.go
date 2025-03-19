@@ -79,7 +79,7 @@ func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive
 		{"name", name},
 		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
-		{"sharingOptions", bson.D{
+		{"sharing", bson.D{
 			{"sharingEnabled", false},
 		}},
 	}
