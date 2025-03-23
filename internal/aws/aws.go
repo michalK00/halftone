@@ -3,7 +3,7 @@ package aws
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/michalK00/sg-qr/platform/cloud/aws"
+	"github.com/michalK00/halftone/platform/cloud/aws"
 	"log"
 	"path"
 	"strings"
@@ -13,12 +13,12 @@ const lifetimeSecs int64 = 60 * 10
 
 func DeleteObject(key string) error {
 
-	client, err := aws.GetAWSClient()
+	client, err := aws.GetClient()
 	if err != nil {
 		log.Printf("Failed GetAWSClient, %v \n", err)
 		return err
 	}
-	err = client.DeleteObject(context.Background(), key)
+	err = client.S3.DeleteObject(context.Background(), key)
 	if err != nil {
 		log.Printf("Failed DeleteObject, %v \n", err)
 		return err
@@ -28,12 +28,12 @@ func DeleteObject(key string) error {
 }
 
 func ObjectExists(key string) (bool, error) {
-	client, err := aws.GetAWSClient()
+	client, err := aws.GetClient()
 	if err != nil {
 		log.Printf("Failed GetAWSClient, %v \n", err)
 		return false, err
 	}
-	_, err = client.HeadObject(context.Background(), key)
+	_, err = client.S3.HeadObject(context.Background(), key)
 	if err != nil {
 		log.Printf("Failed ObjectExists, %v \n", err)
 		return false, err
@@ -43,13 +43,12 @@ func ObjectExists(key string) (bool, error) {
 
 func GetObjectUrl(key string) (string, error) {
 
-	client, err := aws.GetAWSClient()
+	client, err := aws.GetClient()
 	if err != nil {
 		log.Printf("Failed GetAWSClient, %v \n", err)
 		return "", err
 	}
-	presignerClient := aws.NewPresignClient(client)
-	request, err := presignerClient.GetObjectUrl(context.Background(), key, lifetimeSecs)
+	request, err := client.S3.GetObjectUrl(context.Background(), key, lifetimeSecs)
 	if err != nil {
 		log.Printf("Failed GetObjectUrl, %v \n", err)
 		return "", nil
@@ -60,13 +59,12 @@ func GetObjectUrl(key string) (string, error) {
 
 func PostObjectRequest(key string, conditions []interface{}) (*s3.PresignedPostRequest, error) {
 
-	client, err := aws.GetAWSClient()
+	client, err := aws.GetClient()
 	if err != nil {
 		log.Printf("Failed GetAWSClient, %v \n", err)
 		return nil, err
 	}
-	presignerClient := aws.NewPresignClient(client)
-	request, err := presignerClient.PostObjectRequest(context.Background(), key, lifetimeSecs, conditions)
+	request, err := client.S3.PostObjectRequest(context.Background(), key, lifetimeSecs, conditions)
 	if err != nil {
 		log.Printf("Failed PutObjectUrl, %v \n", err)
 		return nil, err
