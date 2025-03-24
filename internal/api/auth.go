@@ -5,11 +5,10 @@ import (
 	awsClient "github.com/michalK00/halftone/platform/cloud/aws"
 )
 
-func SignUp(c *fiber.Ctx) error {
+func (a *api) SignUp(c *fiber.Ctx) error {
 	var input struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
 		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	if err := c.BodyParser(&input); err != nil {
@@ -23,7 +22,7 @@ func SignUp(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get aws client"})
 	}
 
-	_, err = client.Cognito.SignUp(c.Context(), input.Username, input.Email, input.Password, map[string]string{})
+	_, err = client.Cognito.SignUp(c.Context(), input.Email, input.Password, map[string]string{})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -35,9 +34,9 @@ func SignUp(c *fiber.Ctx) error {
 	})
 }
 
-func SignIn(c *fiber.Ctx) error {
+func (a *api) SignIn(c *fiber.Ctx) error {
 	var input struct {
-		Username string `json:"username"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
@@ -53,7 +52,7 @@ func SignIn(c *fiber.Ctx) error {
 		})
 	}
 
-	resp, err := client.Cognito.InitiateAuth(c.Context(), input.Username, input.Password)
+	resp, err := client.Cognito.InitiateAuth(c.Context(), input.Email, input.Password)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -68,7 +67,7 @@ func SignIn(c *fiber.Ctx) error {
 	})
 }
 
-func VerifyAccount(c *fiber.Ctx) error {
+func (a *api) VerifyAccount(c *fiber.Ctx) error {
 	var input struct {
 		Username string `json:"username"`
 		Code     string `json:"code"`
@@ -98,7 +97,7 @@ func VerifyAccount(c *fiber.Ctx) error {
 	})
 }
 
-func RefreshToken(c *fiber.Ctx) error {
+func (a *api) RefreshToken(c *fiber.Ctx) error {
 	var input struct {
 		RefreshToken string `json:"refresh_token"`
 	}

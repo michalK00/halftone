@@ -2,8 +2,8 @@ package qr
 
 import (
 	"context"
-	custom_aws_wrapper "github.com/michalK00/halftone/internal/aws"
-	"github.com/michalK00/sg-qr/platform/cloud/aws"
+	s3Utils "github.com/michalK00/halftone/internal/aws"
+	"github.com/michalK00/halftone/platform/cloud/aws"
 	"log"
 
 	"github.com/skip2/go-qrcode"
@@ -32,15 +32,15 @@ func GenerateQr(qrParams QrCode) ([]byte, error) {
 
 func UploadQr(collectionId, galleryId string, file *File) (string, error) {
 
-	client, err := aws.GetAWSClient()
+	client, err := aws.GetClient()
 	if err != nil {
 		log.Printf("Failed GetAwsClient, %v \n", err)
 		return "", err
 	}
 
-	objectKey := custom_aws_wrapper.BuildObjectKey([]string{collectionId, galleryId}, file.Name, file.Ext)
+	objectKey := s3Utils.BuildObjectKey([]string{collectionId, galleryId}, file.Name, file.Ext)
 
-	result, err := client.UploadObject(context.Background(), &aws.S3Object{Key: objectKey, Body: &file.Body})
+	result, err := client.S3.UploadObject(context.Background(), &aws.S3Object{Key: objectKey, Body: &file.Body})
 	if err != nil {
 		log.Printf("Failed UploadObject, %v \n", err)
 		return "", err

@@ -44,11 +44,11 @@ func (c *CognitoClient) ComputeSecretHash(username string) string {
 	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func (c *CognitoClient) SignUp(ctx context.Context, username, email, password string, attributes map[string]string) (*cognitoidentityprovider.SignUpOutput, error) {
+func (c *CognitoClient) SignUp(ctx context.Context, username, password string, attributes map[string]string) (*cognitoidentityprovider.SignUpOutput, error) {
 	userAttributes := []types.AttributeType{
 		{
-			Name:  aws.String("email"),
-			Value: aws.String(email),
+			Name:  aws.String("username"),
+			Value: aws.String(username),
 		},
 	}
 
@@ -60,7 +60,7 @@ func (c *CognitoClient) SignUp(ctx context.Context, username, email, password st
 	}
 
 	input := &cognitoidentityprovider.SignUpInput{
-		ClientId:       aws.String(c.userPoolID),
+		ClientId:       aws.String(c.appClientID),
 		Username:       aws.String(username),
 		Password:       aws.String(password),
 		UserAttributes: userAttributes,
@@ -87,7 +87,7 @@ func (c *CognitoClient) InitiateAuth(ctx context.Context, username string, passw
 
 	input := &cognitoidentityprovider.InitiateAuthInput{
 		AuthFlow:       types.AuthFlowTypeUserPasswordAuth,
-		ClientId:       aws.String(c.userPoolID),
+		ClientId:       aws.String(c.appClientID),
 		AuthParameters: authParams,
 	}
 
@@ -97,7 +97,7 @@ func (c *CognitoClient) InitiateAuth(ctx context.Context, username string, passw
 func (c *CognitoClient) RefreshToken(ctx context.Context, refreshToken string) (*cognitoidentityprovider.InitiateAuthOutput, error) {
 	input := &cognitoidentityprovider.InitiateAuthInput{
 		AuthFlow: types.AuthFlowTypeRefreshTokenAuth,
-		ClientId: aws.String(c.userPoolID),
+		ClientId: aws.String(c.appClientID),
 		AuthParameters: map[string]string{
 			"REFRESH_TOKEN": refreshToken,
 		},
