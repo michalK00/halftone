@@ -39,9 +39,14 @@ func NewApi(db *mongo.Database, rdb *redis.Client) *api {
 }
 
 func (a *api) Routes(app *fiber.App) {
-	// authMiddleware := auth.NewAuthMiddleware(config)
 
-	collections := app.Group("/api/v1")
+	auth := app.Group("/auth")
+	auth.Post("/signup", a.SignUp)
+	auth.Post("/signin", a.SignIn)
+	auth.Post("/verify", a.VerifyAccount)
+	auth.Post("/refresh-token", a.RefreshToken)
+
+	collections := app.Group("/api/v1", middleware.Protected())
 	collections.Get("/collections", a.getCollectionsHandler)
 	collections.Post("/collections", a.createCollectionHandler)
 	collections.Get("/collections/:collectionId", a.getCollectionHandler)
