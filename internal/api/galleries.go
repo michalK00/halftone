@@ -76,12 +76,15 @@ func (a *api) getGalleryCountHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/collections/{collectionId}/galleries [post]
 func (a *api) createGalleryHandler(ctx *fiber.Ctx) error {
+
+	userId := ctx.Locals("userId").(string)
+
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		NotFound(ctx, err)
 	}
 
-	exists, err := a.collectionRepo.CollectionExists(ctx.Context(), collectionId)
+	exists, err := a.collectionRepo.CollectionExists(ctx.Context(), collectionId, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to check if collection exists")
 	}

@@ -19,16 +19,16 @@ var (
 )
 
 func Protected() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		authHeader := c.Get("Authorization")
+	return func(ctx *fiber.Ctx) error {
+		authHeader := ctx.Get("Authorization")
 		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Missing authorization header",
 			})
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid authorization header format",
 			})
 		}
@@ -37,30 +37,29 @@ func Protected() fiber.Handler {
 
 		token, err := parseAndValidateToken(tokenString)
 		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
 
 		if !token.Valid {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid token",
 			})
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid token claims",
 			})
 		}
 
-		c.Locals("userId", claims["sub"])
-		c.Locals("username", claims["username"])
-		c.Locals("email", claims["email"])
-		c.Locals("cognitoClaims", claims)
+		ctx.Locals("userId", claims["sub"])
+		ctx.Locals("username", claims["username"])
+		ctx.Locals("cognitoClaims", claims)
 
-		return c.Next()
+		return ctx.Next()
 	}
 }
 

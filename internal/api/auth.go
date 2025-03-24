@@ -69,8 +69,8 @@ func (a *api) SignIn(c *fiber.Ctx) error {
 
 func (a *api) VerifyAccount(c *fiber.Ctx) error {
 	var input struct {
-		Username string `json:"username"`
-		Code     string `json:"code"`
+		Email string `json:"email"`
+		Code  string `json:"code"`
 	}
 
 	if err := c.BodyParser(&input); err != nil {
@@ -85,7 +85,7 @@ func (a *api) VerifyAccount(c *fiber.Ctx) error {
 			"error": "Failed to get aws client",
 		})
 	}
-	_, err = client.Cognito.ConfirmSignUp(c.Context(), input.Username, input.Code)
+	_, err = client.Cognito.ConfirmSignUp(c.Context(), input.Email, input.Code)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),

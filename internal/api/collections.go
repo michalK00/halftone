@@ -1,8 +1,10 @@
 package api
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type createCollectionRequest struct {
@@ -26,12 +28,14 @@ type createCollectionResponse struct {
 // @Router /api/v1/collections [post]
 func (a *api) createCollectionHandler(ctx *fiber.Ctx) error {
 
+	userId := ctx.Locals("userId").(string)
+
 	var req createCollectionRequest
 	if err := ctx.BodyParser(&req); err != nil {
 		return BadRequest(ctx, err)
 	}
 
-	id, err := a.collectionRepo.CreateCollection(ctx.Context(), req.Name)
+	id, err := a.collectionRepo.CreateCollection(ctx.Context(), req.Name, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to create collection")
 	}
@@ -52,7 +56,9 @@ func (a *api) createCollectionHandler(ctx *fiber.Ctx) error {
 // @Router /api/v1/collections [get]
 func (a *api) getCollectionsHandler(ctx *fiber.Ctx) error {
 
-	collections, err := a.collectionRepo.GetCollections(ctx.Context())
+	userId := ctx.Locals("userId").(string)
+
+	collections, err := a.collectionRepo.GetCollections(ctx.Context(), userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to get collections")
 	}
@@ -72,13 +78,18 @@ func (a *api) getCollectionsHandler(ctx *fiber.Ctx) error {
 // @Router /api/v1/collections/{collectionId} [get]
 func (a *api) getCollectionHandler(ctx *fiber.Ctx) error {
 
+	userId := ctx.Locals("userId").(string)
+
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
 
-	collection, err := a.collectionRepo.GetCollection(ctx.Context(), collectionId)
+	collection, err := a.collectionRepo.GetCollection(ctx.Context(), collectionId, userId)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return NotFound(ctx, err)
+		}
 		return ServerError(ctx, err, "Failed to get collection")
 	}
 
@@ -104,6 +115,8 @@ type updateCollectionRequest struct {
 // @Router /api/v1/collections/{collectionId} [put]
 func (a *api) updateCollectionHandler(ctx *fiber.Ctx) error {
 
+	userId := ctx.Locals("userId").(string)
+
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		return NotFound(ctx, err)
@@ -115,8 +128,11 @@ func (a *api) updateCollectionHandler(ctx *fiber.Ctx) error {
 		return BadRequest(ctx, err)
 	}
 
-	collection, err := a.collectionRepo.UpdateCollection(ctx.Context(), collectionId, req.Name)
+	collection, err := a.collectionRepo.UpdateCollection(ctx.Context(), collectionId, req.Name, userId)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return NotFound(ctx, err)
+		}
 		return ServerError(ctx, err, "Failed to update collection")
 	}
 
@@ -135,13 +151,18 @@ func (a *api) updateCollectionHandler(ctx *fiber.Ctx) error {
 // @Router /api/v1/collections/{collectionId} [delete]
 func (a *api) deleteCollectionHandler(ctx *fiber.Ctx) error {
 
+	userId := ctx.Locals("userId").(string)
+
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusNoContent)
 	}
 
-	err = a.collectionRepo.DeleteCollection(ctx.Context(), collectionId)
+	err = a.collectionRepo.DeleteCollection(ctx.Context(), collectionId, userId)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return ctx.SendStatus(fiber.StatusNoContent)
+		}
 		return ServerError(ctx, err, "Failed to delete collection")
 	}
 
