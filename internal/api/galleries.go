@@ -1,10 +1,12 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/michalK00/halftone/internal/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type createGalleryRequest struct {
@@ -29,12 +31,13 @@ type updateGalleryRequest struct {
 // @Router /api/v1/collections/{collectionId}/galleries [get]
 func (a *api) getGalleriesHandler(ctx *fiber.Ctx) error {
 
+	userId := ctx.Locals("userId").(string)
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
 
-	galleries, err := a.galleryRepo.GetGalleries(ctx.Context(), collectionId)
+	galleries, err := a.galleryRepo.GetGalleries(ctx.Context(), collectionId, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to fetch galleries")
 	}
@@ -53,11 +56,12 @@ func (a *api) getGalleriesHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map "Server error"
 // @Router /api/v1/collections/{collectionId}/galleryCount [get]
 func (a *api) getGalleryCountHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	count, err := a.galleryRepo.CollectionGalleryCount(ctx.Context(), collectionId)
+	count, err := a.galleryRepo.CollectionGalleryCount(ctx.Context(), collectionId, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to fetch gallery count")
 	}
@@ -81,7 +85,7 @@ func (a *api) createGalleryHandler(ctx *fiber.Ctx) error {
 
 	collectionId, err := primitive.ObjectIDFromHex(ctx.Params("collectionId"))
 	if err != nil {
-		NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
 
 	exists, err := a.collectionRepo.CollectionExists(ctx.Context(), collectionId, userId)
@@ -94,10 +98,10 @@ func (a *api) createGalleryHandler(ctx *fiber.Ctx) error {
 
 	var req createGalleryRequest
 	if err := ctx.BodyParser(&req); err != nil {
-		BadRequest(ctx, err)
+		return BadRequest(ctx, err)
 	}
 
-	id, err := a.galleryRepo.CreateGallery(ctx.Context(), collectionId, req.Name)
+	id, err := a.galleryRepo.CreateGallery(ctx.Context(), collectionId, req.Name, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to create galleries")
 	}
@@ -118,13 +122,17 @@ func (a *api) createGalleryHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/galleries/{galleryId} [get]
 func (a *api) getGalleryHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
-		NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
-	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId, userId)
 	if err != nil {
-		ServerError(ctx, err, "Failed to fetch gallery")
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return NotFound(ctx, err)
+		}
+		return ServerError(ctx, err, "Failed to fetch gallery")
 	}
 	return ctx.JSON(gallery)
 }
@@ -142,19 +150,23 @@ func (a *api) getGalleryHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/galleries/{galleryId} [put]
 func (a *api) updateGalleryHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
-		NotFound(ctx, err)
+		return NotFound(ctx, err)
 	}
 	var req updateGalleryRequest
 	if err := ctx.BodyParser(&req); err != nil {
-		BadRequest(ctx, err)
+		return BadRequest(ctx, err)
 	}
 
-	gallery, err := a.galleryRepo.UpdateGallery(ctx.Context(), galleryId,
+	gallery, err := a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId,
 		domain.WithName(req.Name),
 	)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return NotFound(ctx, err)
+		}
 		return ServerError(ctx, err, "Failed to update gallery")
 	}
 	return ctx.Status(fiber.StatusOK).JSON(gallery)
@@ -170,13 +182,18 @@ func (a *api) updateGalleryHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map
 // @Router /api/v1/galleries/{galleryId} [delete]
 func (a *api) deleteGalleryHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
+
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
-		return ctx.SendStatus(fiber.StatusOK)
+		return ctx.SendStatus(fiber.StatusNoContent)
 	}
-	err = a.galleryRepo.DeleteGallery(ctx.Context(), galleryId)
+	err = a.galleryRepo.DeleteGallery(ctx.Context(), galleryId, userId)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return ctx.SendStatus(fiber.StatusNoContent)
+		}
 		return ServerError(ctx, err, "Failed to delete gallery")
 	}
-	return ctx.SendStatus(fiber.StatusOK)
+	return ctx.SendStatus(fiber.StatusNoContent)
 }

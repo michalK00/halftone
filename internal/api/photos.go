@@ -40,11 +40,12 @@ var photoPutObjectConditions = []interface{}{
 // @Failure 500 {object} fiber.Map "Internal server error"
 // @Router /api/v1/galleries/{galleryId}/photos [post]
 func (a *api) uploadPhotosHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Server error while retrieving gallery")
 	}
