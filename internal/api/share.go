@@ -60,6 +60,7 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 
 	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId,
 		domain.WithSharing(domain.Sharing{
+			SharingEnabled:    true,
 			SharingExpiryDate: req.SharingExpiry,
 			AccessToken:       accessToken,
 			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), accessToken),
@@ -118,6 +119,7 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 
 	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId, domain.WithSharing(
 		domain.Sharing{
+			SharingEnabled:    true,
 			SharingExpiryDate: req.SharingExpiry,
 			AccessToken:       gallery.Sharing.AccessToken,
 			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.Sharing.AccessToken),
@@ -162,7 +164,8 @@ func (a *api) stopSharingGalleryHandler(ctx *fiber.Ctx) error {
 
 	gallery, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId, domain.WithSharing(
 		domain.Sharing{
-			SharingExpiryDate: time.Now().UTC().Add(time.Duration(-1) * time.Hour * 24),
+			SharingEnabled:    false,
+			SharingExpiryDate: time.Time{},
 		}))
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")

@@ -65,7 +65,7 @@ func WithName(name string) GalleryUpdateOption {
 func WithSharing(sharing Sharing) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
 		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharing", Value: bson.D{
-			{Key: "sharingEnabled", Value: true},
+			{Key: "sharingEnabled", Value: sharing.SharingEnabled},
 			{Key: "accessToken", Value: sharing.AccessToken},
 			{Key: "sharingExpiryDate", Value: sharing.SharingExpiryDate},
 			{Key: "sharingUrl", Value: sharing.SharingUrl},

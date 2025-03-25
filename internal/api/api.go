@@ -46,7 +46,6 @@ func (a *api) Routes(app *fiber.App) {
 	auth.Post("/verify", a.VerifyAccount)
 	auth.Post("/refresh-token", a.RefreshToken)
 
-	//public := app.Group("/api/v1")
 	protected := app.Group("/api/v1", middleware.Protected())
 
 	protected.Get("/collections", a.getCollectionsHandler)
@@ -54,8 +53,6 @@ func (a *api) Routes(app *fiber.App) {
 	protected.Get("/collections/:collectionId", a.getCollectionHandler)
 	protected.Put("/collections/:collectionId", a.updateCollectionHandler)
 	protected.Delete("/collections/:collectionId", a.deleteCollectionHandler)
-
-	protected.Get("/qr", a.generateQrHandler)
 
 	protected.Get("/collections/:collectionId/galleries", a.getGalleriesHandler)
 	protected.Get("/collections/:collectionId/galleryCount", a.getGalleryCountHandler)
@@ -66,16 +63,9 @@ func (a *api) Routes(app *fiber.App) {
 	protected.Put("/galleries/:galleryId", a.updateGalleryHandler)
 	protected.Delete("/galleries/:galleryId", a.deleteGalleryHandler)
 
-	protected.Post("galleries/:galleryId/sharing/share", a.shareGalleryHandler)
-	protected.Put("galleries/:galleryId/sharing/reschedule", a.rescheduleGallerySharingHandler)
-	protected.Put("galleries/:galleryId/sharing/stop", a.stopSharingGalleryHandler)
-
-	// THOSE WON'T BE PROTECTED
-	//client := public.Group("/api/v1/client")
-	//client.Get("/galleries/:galleryId")
-	//client.Post("/galleries/:galleryId")
-	//client.Get("/galleries/:galleryId/photos")
-	//client.Get("/galleries/:galleryId/photos/:photoId")
+	protected.Post("/galleries/:galleryId/sharing/share", a.shareGalleryHandler)
+	protected.Put("/galleries/:galleryId/sharing/reschedule", a.rescheduleGallerySharingHandler)
+	protected.Put("/galleries/:galleryId/sharing/stop", a.stopSharingGalleryHandler)
 
 	protected.Get("/galleries/:galleryId/photos", a.getPhotosHandler)
 	protected.Post("/galleries/:galleryId/photos", a.uploadPhotosHandler)
@@ -87,6 +77,15 @@ func (a *api) Routes(app *fiber.App) {
 	//protected.Get("/orders/:orderId")
 	//protected.Put("/orders/:orderId")
 	//protected.Delete("/orders/:orderId")
+
+	public := app.Group("/api/v1")
+	public.Get("/qr", a.generateQrHandler)
+	//client := public.Group("/api/v1/client")
+	//client.Get("/galleries/:galleryId")
+	//client.Post("/galleries/:galleryId")
+	//client.Get("/galleries/:galleryId/photos")
+	//client.Get("/galleries/:galleryId/photos/:photoId")
+
 }
 
 func (a *api) Server() *fiber.App {

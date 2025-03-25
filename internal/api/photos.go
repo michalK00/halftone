@@ -69,7 +69,7 @@ func (a *api) uploadPhotosHandler(ctx *fiber.Ctx) error {
 		filenames[i] = photo.OriginalFilename
 	}
 
-	photoIds, err := a.photoRepo.CreatePhotos(ctx.Context(), gallery.CollectionId, galleryId, filenames)
+	photoIds, err := a.photoRepo.CreatePhotos(ctx.Context(), gallery.CollectionId, galleryId, filenames, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Server error while uploading photos")
 	}
@@ -85,7 +85,7 @@ func (a *api) uploadPhotosHandler(ctx *fiber.Ctx) error {
 
 		postReq, err := aws.PostObjectRequest(objectPath, photoPutObjectConditions)
 		if err != nil {
-			_ = a.photoRepo.DeletePhotos(ctx.Context(), photoIds)
+			_ = a.photoRepo.DeletePhotos(ctx.Context(), photoIds, userId)
 			return ServerError(ctx, err, "Failed to get presigned request")
 		}
 
@@ -111,12 +111,13 @@ func (a *api) uploadPhotosHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map "Server error while confirming upload"
 // @Router /api/v1/photos/{photoId}/confirm [put]
 func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	photoId, err := primitive.ObjectIDFromHex(ctx.Params("photoId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
 
-	photo, err := a.photoRepo.GetPhoto(ctx.Context(), photoId)
+	photo, err := a.photoRepo.GetPhoto(ctx.Context(), photoId, userId)
 	if err != nil {
 		return NotFound(ctx, err)
 	}
@@ -126,7 +127,7 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 	if _, err := aws.ObjectExists(photo.ObjectKey); err != nil {
 		return NotFound(ctx, err)
 	}
-	photo, err = a.photoRepo.UpdatePhoto(ctx.Context(), photoId, domain.PhotoStatus(1))
+	photo, err = a.photoRepo.UpdatePhoto(ctx.Context(), photoId, domain.PhotoStatus(1), userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to confirm photo upload")
 	}
@@ -153,12 +154,14 @@ type getPhotoResponse struct {
 // @Failure 500 {object} fiber.Map "Server error while retrieving photos"
 // @Router /api/v1/galleries/{galleryId}/photos [get]
 // @Response 200 {object} getPhotoResponse
+// TODO add thumbnail logic
 func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	photos, err := a.photoRepo.GetPhotos(ctx.Context(), galleryId)
+	photos, err := a.photoRepo.GetPhotos(ctx.Context(), galleryId, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to get photos")
 	}
@@ -194,12 +197,13 @@ func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} fiber.Map "Server error while deleting photo"
 // @Router /api/v1/photos/{photoId} [delete]
 func (a *api) deletePhotoHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	photoId, err := primitive.ObjectIDFromHex(ctx.Params("photoId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
 
-	err = a.photoRepo.SoftDeletePhoto(ctx.Context(), photoId)
+	err = a.photoRepo.SoftDeletePhoto(ctx.Context(), photoId, userId)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to delete photo")
 	}

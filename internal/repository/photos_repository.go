@@ -22,10 +22,10 @@ func NewMongoPhoto(db *mongo.Database) *MongoPhoto {
 	}
 }
 
-func (s *MongoPhoto) PhotoExists(ctx context.Context, photoId primitive.ObjectID) (bool, error) {
+func (s *MongoPhoto) PhotoExists(ctx context.Context, photoId primitive.ObjectID, userId string) (bool, error) {
 	coll := s.db.Collection("photos")
 
-	count, err := coll.CountDocuments(ctx, bson.D{{"_id", photoId}}, options.Count().SetLimit(1))
+	count, err := coll.CountDocuments(ctx, bson.M{"_id": photoId, "userId": userId}, options.Count().SetLimit(1))
 	if err != nil {
 		return false, err
 	}
@@ -33,23 +33,24 @@ func (s *MongoPhoto) PhotoExists(ctx context.Context, photoId primitive.ObjectID
 	return count > 0, nil
 }
 
-func (s *MongoPhoto) GalleryPhotoCount(ctx context.Context, galleryId primitive.ObjectID) (int64, error) {
+func (s *MongoPhoto) GalleryPhotoCount(ctx context.Context, galleryId primitive.ObjectID, userId string) (int64, error) {
 	coll := s.db.Collection("photos")
-	count, err := coll.CountDocuments(ctx, bson.D{{"galleryId", galleryId}})
+	count, err := coll.CountDocuments(ctx, bson.M{"galleryId": galleryId, "userId": userId})
 	if err != nil {
 		return 0, err
 	}
 	return count, nil
 }
 
-func (s *MongoPhoto) GetPhotos(ctx context.Context, galleryId primitive.ObjectID) ([]domain.PhotoDB, error) {
+func (s *MongoPhoto) GetPhotos(ctx context.Context, galleryId primitive.ObjectID, userId string) ([]domain.PhotoDB, error) {
 	coll := s.db.Collection("photos")
 
 	var result []domain.PhotoDB
 	// returns only uploaded and shared
-	cursor, err := coll.Find(ctx, bson.D{
-		{"galleryId", galleryId},
-		{"status", bson.D{{"$in", primitive.A{1, 2}}}},
+	cursor, err := coll.Find(ctx, bson.M{
+		"galleryId": galleryId,
+		"status":    bson.D{{"$in", primitive.A{1, 2}}},
+		"userId":    userId,
 	})
 
 	if err != nil {
@@ -63,11 +64,11 @@ func (s *MongoPhoto) GetPhotos(ctx context.Context, galleryId primitive.ObjectID
 	return result, nil
 }
 
-func (s *MongoPhoto) GetPhoto(ctx context.Context, galleryId primitive.ObjectID) (domain.PhotoDB, error) {
+func (s *MongoPhoto) GetPhoto(ctx context.Context, photoId primitive.ObjectID, userId string) (domain.PhotoDB, error) {
 	coll := s.db.Collection("photos")
 
 	var result domain.PhotoDB
-	err := coll.FindOne(ctx, bson.D{{"_id", galleryId}}).Decode(&result)
+	err := coll.FindOne(ctx, bson.M{"_id": photoId, "userId": userId}).Decode(&result)
 	if err != nil {
 		return domain.PhotoDB{}, err
 	}
@@ -75,7 +76,7 @@ func (s *MongoPhoto) GetPhoto(ctx context.Context, galleryId primitive.ObjectID)
 	return result, nil
 }
 
-func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.ObjectID, galleryId primitive.ObjectID, originalFilename string) (primitive.ObjectID, error) {
+func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.ObjectID, galleryId primitive.ObjectID, originalFilename string, userId string) (primitive.ObjectID, error) {
 
 	coll := s.db.Collection("photos")
 	photoId := primitive.NewObjectID()
@@ -88,6 +89,7 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 		{"_id", photoId},
 		{"collectionId", collectionId},
 		{"galleryId", galleryId},
+		{"userId", userId},
 		{"originalFilename", originalFilename},
 		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
@@ -102,7 +104,7 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 	return photoId, nil
 }
 
-func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.ObjectID, galleryId primitive.ObjectID, originalFilenames []string) ([]primitive.ObjectID, error) {
+func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.ObjectID, galleryId primitive.ObjectID, originalFilenames []string, userId string) ([]primitive.ObjectID, error) {
 
 	coll := s.db.Collection("photos")
 
@@ -118,6 +120,7 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 			{"_id", photoId},
 			{"collectionId", collectionId},
 			{"galleryId", galleryId},
+			{"userId", userId},
 			{"originalFilename", filename},
 			{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 			{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
@@ -136,9 +139,9 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 	return photoIds, nil
 }
 
-func (s *MongoPhoto) SoftDeletePhoto(ctx context.Context, photoId primitive.ObjectID) error {
+func (s *MongoPhoto) SoftDeletePhoto(ctx context.Context, photoId primitive.ObjectID, userId string) error {
 	coll := s.db.Collection("photos")
-	filter := bson.D{{"_id", photoId}}
+	filter := bson.M{"_id": photoId, "userId": userId}
 	update := bson.D{
 		{"$set", bson.D{
 			{"status", domain.PhotoStatus(3)},
@@ -151,22 +154,22 @@ func (s *MongoPhoto) SoftDeletePhoto(ctx context.Context, photoId primitive.Obje
 	return coll.FindOneAndUpdate(ctx, filter, update, opts).Err()
 }
 
-func (s *MongoPhoto) DeletePhoto(ctx context.Context, photoId primitive.ObjectID) error {
+func (s *MongoPhoto) DeletePhoto(ctx context.Context, photoId primitive.ObjectID, userId string) error {
 	coll := s.db.Collection("photos")
-	_, err := coll.DeleteOne(ctx, bson.D{{"_id", photoId}})
+	_, err := coll.DeleteOne(ctx, bson.M{"_id": photoId, "userId": userId})
 	return err
 }
 
-func (s *MongoPhoto) DeletePhotos(ctx context.Context, photoIds []primitive.ObjectID) error {
+func (s *MongoPhoto) DeletePhotos(ctx context.Context, photoIds []primitive.ObjectID, userId string) error {
 	coll := s.db.Collection("photos")
-	filter := bson.M{"_id": bson.M{"$in": photoIds}}
+	filter := bson.M{"_id": bson.M{"$in": photoIds}, "userId": userId}
 	_, err := coll.DeleteMany(ctx, filter)
 	return err
 }
 
-func (s *MongoPhoto) UpdatePhoto(ctx context.Context, photoId primitive.ObjectID, status domain.PhotoStatus) (domain.PhotoDB, error) {
+func (s *MongoPhoto) UpdatePhoto(ctx context.Context, photoId primitive.ObjectID, status domain.PhotoStatus, userId string) (domain.PhotoDB, error) {
 	coll := s.db.Collection("photos")
-	filter := bson.D{{"_id", photoId}}
+	filter := bson.M{"_id": photoId, "userId": userId}
 	update := bson.D{
 		{"$set", bson.D{
 			{"status", status},
