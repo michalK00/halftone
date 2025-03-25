@@ -1,4 +1,4 @@
-import {Gallery} from "@/features/galleries/api/galleries.ts";
+import {Gallery} from "@/api/galleries.ts";
 import {useEffect, useState} from "react";
 import {
     Carousel,
@@ -8,7 +8,7 @@ import {
     CarouselNext,
     CarouselPrevious
 } from "@/components/ui/carousel.tsx";
-import {deletePhoto, getPhotos, Photo} from "@/features/galleries/api/photos.ts";
+import {deletePhoto, getPhotos, Photo} from "@/api/photos.ts";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import ImageCard from "@/features/galleries/components/image-card.tsx";
 import {Dialog, DialogContent, DialogTitle} from "@/components/ui/dialog.tsx";

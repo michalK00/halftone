@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ImageUp, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {toast} from "@/hooks/use-toast.ts";
-import {confirmUpload, getUploadUrls, UploadRequestBody, uploadToAWS} from "@/features/galleries/api/photos.ts";
+import {confirmUpload, getUploadUrls, UploadRequestBody, uploadToAWS} from "@/api/photos.ts";
 import {useQueryClient} from "@tanstack/react-query";
 
 type FileWithPreview = {

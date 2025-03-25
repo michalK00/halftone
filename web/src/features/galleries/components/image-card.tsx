@@ -1,5 +1,5 @@
 import {Card, CardFooter} from "@/components/ui/card.tsx";
-import {Photo} from "@/features/galleries/api/photos.ts";
+import {Photo} from "@/api/photos.ts";
 import {AlertCircle, Check} from "lucide-react";
 import {useState} from "react";
 import {LoadingSpinner} from "@/components/ui/loading-spinner.tsx";

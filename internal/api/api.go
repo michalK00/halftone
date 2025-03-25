@@ -46,6 +46,8 @@ func (a *api) Routes(app *fiber.App) {
 	auth.Post("/verify", a.VerifyAccount)
 	auth.Post("/refresh-token", a.RefreshToken)
 
+	public := app.Group("/api/v1")
+	public.Get("/qr", a.generateQrHandler)
 	protected := app.Group("/api/v1", middleware.Protected())
 
 	protected.Get("/collections", a.getCollectionsHandler)
@@ -78,8 +80,6 @@ func (a *api) Routes(app *fiber.App) {
 	//protected.Put("/orders/:orderId")
 	//protected.Delete("/orders/:orderId")
 
-	public := app.Group("/api/v1")
-	public.Get("/qr", a.generateQrHandler)
 	//client := public.Group("/api/v1/client")
 	//client.Get("/galleries/:galleryId")
 	//client.Post("/galleries/:galleryId")

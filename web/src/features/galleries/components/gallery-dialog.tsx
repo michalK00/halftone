@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {useEffect, useState} from "react";
-import {createGallery, Gallery, updateGallery} from "../api/galleries";
+import {createGallery, Gallery, updateGallery} from "../../../api/galleries";
 import {useToast} from "@/hooks/use-toast.ts";
 
 type GalleryDialogProps = {
