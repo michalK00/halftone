@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button.tsx";
 import { PlusCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import {Gallery, getGalleries} from "../api/galleries.ts";
+import {Gallery, getGalleries} from "../../../api/galleries.ts";
 import { GalleriesTable } from "./galleries-table.tsx";
 import {GalleryDialog} from "@/features/galleries/components/gallery-dialog.tsx";
 import {useState} from "react";

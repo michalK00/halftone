@@ -3,7 +3,7 @@ import {LoadingSpinner} from "@/components/ui/loading-spinner";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Pencil} from "lucide-react";
 import {Link} from "react-router-dom";
-import {Collection, GalleryCount} from "../api/collections";
+import {Collection, GalleryCount} from "../../../api/collections";
 import {DeleteCollectionDialog} from "./delete-collection-dialog";
 import {ShareCollectionDialog} from "@/features/collections/components/share-collections-dialog.tsx";
 

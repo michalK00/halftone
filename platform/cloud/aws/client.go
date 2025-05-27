@@ -8,50 +8,92 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-type AWSClient struct {
-	S3Client *s3.Client
+type Config struct {
+	Region          string
+	Config          aws.Config
+	CredentialScope string
+}
+
+type ServiceClient interface {
+	Initialize(ctx context.Context, cfg *Config) error
+}
+
+type Client struct {
+	Config  *Config
+	S3      *S3Client
+	Cognito *CognitoClient
 }
 
 var (
-	awsClient    *AWSClient
-	awsClientErr error
-	once         sync.Once
+	client    *Client
+	clientErr error
+	once      sync.Once
 )
 
-func GetAWSClient() (*AWSClient, error) {
+func GetClient() (*Client, error) {
 	once.Do(func() {
-		awsClient = &AWSClient{}
-		awsClientErr = initAWSClient(context.Background(), awsClient)
+		client = &Client{}
+		clientErr = initClient(context.Background(), client)
 	})
 
-	return awsClient, awsClientErr
+	return client, clientErr
 }
 
-func initAWSClient(ctx context.Context, client *AWSClient) error {
-	var cfg aws.Config
-	var err error
-
-	if os.Getenv("GO_ENV") == "production" {
-		cfg, err = config.LoadDefaultConfig(ctx)
-	} else {
-		cfg, err = loadDevConfig(ctx)
-	}
-
+func initClient(ctx context.Context, client *Client) error {
+	config, err := loadAWSConfig(ctx)
 	if err != nil {
 		return err
 	}
 
-	client.S3Client = s3.NewFromConfig(cfg)
+	client.Config = config
+
+	client.S3 = NewS3Client()
+	if err := client.S3.Initialize(ctx, config); err != nil {
+		return err
+	}
+
+	client.Cognito = NewCognitoClient()
+	if err := client.Cognito.Initialize(ctx, config); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func loadDevConfig(ctx context.Context) (aws.Config, error) {
+func loadAWSConfig(ctx context.Context) (*Config, error) {
+	region := os.Getenv("AWS_REGION")
+	var cfg aws.Config
+	var err error
 
-	provider := credentials.NewStaticCredentialsProvider(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "")
+	if os.Getenv("GO_ENV") == "production" {
+		cfg, err = config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	} else {
+		cfg, err = loadDevConfig(ctx, region)
+	}
 
-	return config.LoadDefaultConfig(ctx, config.WithCredentialsProvider(provider), config.WithDefaultRegion(os.Getenv("AWS_REGION")))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Config{
+		Region: region,
+		Config: cfg,
+	}, nil
+}
+
+func loadDevConfig(ctx context.Context, region string) (aws.Config, error) {
+
+	provider := credentials.NewStaticCredentialsProvider(
+		os.Getenv("AWS_ACCESS_KEY_ID"),
+		os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		"",
+	)
+
+	return config.LoadDefaultConfig(
+		ctx,
+		config.WithCredentialsProvider(provider),
+		config.WithDefaultRegion(region),
+	)
 }

@@ -20,10 +20,10 @@ func NewMongoGallery(db *mongo.Database) *MongoGallery {
 	}
 }
 
-func (s *MongoGallery) GalleryExists(ctx context.Context, galleryId primitive.ObjectID) (bool, error) {
+func (s *MongoGallery) GalleryExists(ctx context.Context, galleryId primitive.ObjectID, userId string) (bool, error) {
 	coll := s.db.Collection("galleries")
 
-	count, err := coll.CountDocuments(ctx, bson.D{{"_id", galleryId}}, options.Count().SetLimit(1))
+	count, err := coll.CountDocuments(ctx, bson.M{"_id": galleryId, "userId": userId}, options.Count().SetLimit(1))
 	if err != nil {
 		return false, err
 	}
@@ -31,36 +31,35 @@ func (s *MongoGallery) GalleryExists(ctx context.Context, galleryId primitive.Ob
 	return count > 0, nil
 }
 
-func (s *MongoGallery) CollectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID) (int64, error) {
+func (s *MongoGallery) CollectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID, userId string) (int64, error) {
 	coll := s.db.Collection("galleries")
-	count, err := coll.CountDocuments(ctx, bson.D{{"collectionId", collectionId}})
+	count, err := coll.CountDocuments(ctx, bson.M{"collectionId": collectionId, "userId": userId})
 	if err != nil {
 		return 0, err
 	}
 	return count, nil
 }
 
-func (s *MongoGallery) GetGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]domain.GalleryDB, error) {
+func (s *MongoGallery) GetGalleries(ctx context.Context, collectionId primitive.ObjectID, userId string) ([]domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 
-	var result []domain.GalleryDB
-	cursor, err := coll.Find(ctx, bson.D{{"collectionId", collectionId}})
+	cursor, err := coll.Find(ctx, bson.M{"collectionId": collectionId, "userId": userId})
 	if err != nil {
 		return nil, err
 	}
 
-	err = cursor.All(ctx, &result)
-	if err != nil {
+	result := make([]domain.GalleryDB, 0)
+	if err = cursor.All(ctx, &result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (s *MongoGallery) GetGallery(ctx context.Context, galleryId primitive.ObjectID) (domain.GalleryDB, error) {
+func (s *MongoGallery) GetGallery(ctx context.Context, galleryId primitive.ObjectID, userId string) (domain.GalleryDB, error) {
 	coll := s.db.Collection("galleries")
 
 	var result domain.GalleryDB
-	err := coll.FindOne(ctx, bson.D{{"_id", galleryId}}).Decode(&result)
+	err := coll.FindOne(ctx, bson.M{"_id": galleryId, "userId": userId}).Decode(&result)
 	if err != nil {
 		return domain.GalleryDB{}, err
 	}
@@ -68,7 +67,7 @@ func (s *MongoGallery) GetGallery(ctx context.Context, galleryId primitive.Objec
 	return result, nil
 }
 
-func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive.ObjectID, name string) (string, error) {
+func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive.ObjectID, name, userId string) (string, error) {
 
 	galleriesColl := s.db.Collection("galleries")
 	galleryID := primitive.NewObjectID()
@@ -77,6 +76,7 @@ func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive
 		{"_id", galleryID},
 		{"collectionId", collectionId},
 		{"name", name},
+		{"userId", userId},
 		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"sharing", bson.D{
@@ -91,13 +91,13 @@ func (s *MongoGallery) CreateGallery(ctx context.Context, collectionId primitive
 	return galleryID.Hex(), nil
 }
 
-func (s *MongoGallery) DeleteGallery(ctx context.Context, galleryId primitive.ObjectID) error {
+func (s *MongoGallery) DeleteGallery(ctx context.Context, galleryId primitive.ObjectID, userId string) error {
 	coll := s.db.Collection("galleries")
-	_, err := coll.DeleteOne(ctx, bson.D{{"_id", galleryId}})
+	_, err := coll.DeleteOne(ctx, bson.M{"_id": galleryId, "userId": userId})
 	return err
 }
 
-func (s *MongoGallery) UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, opts ...domain.GalleryUpdateOption) (domain.GalleryDB, error) {
+func (s *MongoGallery) UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, userId string, opts ...domain.GalleryUpdateOption) (domain.GalleryDB, error) {
 
 	updateOptions := &domain.GalleryUpdateOptions{
 		SetFields: bson.D{},
@@ -107,7 +107,7 @@ func (s *MongoGallery) UpdateGallery(ctx context.Context, galleryId primitive.Ob
 	}
 
 	coll := s.db.Collection("galleries")
-	filter := bson.D{{"_id", galleryId}}
+	filter := bson.M{"_id": galleryId, "userId": userId}
 	update := bson.D{
 		{"$set", updateOptions.SetFields},
 		{"$currentDate", bson.D{

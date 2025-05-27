@@ -4,7 +4,7 @@ import {Input} from "@/components/ui/input";
 import {LoadingSpinner} from "@/components/ui/loading-spinner";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {useState} from "react";
-import {Collection, createCollection, updateCollection} from "../api/collections";
+import {Collection, createCollection, updateCollection} from "../../../api/collections";
 import {useToast} from "@/hooks/use-toast.ts";
 
 type CollectionDialogProps = {

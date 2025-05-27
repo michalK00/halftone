@@ -13,7 +13,7 @@ import {LoadingSpinner} from "@/components/ui/loading-spinner";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Trash2} from "lucide-react";
 import {useState} from "react";
-import {Collection, deleteCollection} from "../api/collections";
+import {Collection, deleteCollection} from "../../../api/collections";
 import {useToast} from "@/hooks/use-toast.ts";
 
 type DeleteCollectionDialogProps = {

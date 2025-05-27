@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Gallery, updateGallery } from "../api/galleries";
+import { Gallery, updateGallery } from "../../../api/galleries";
 import { useToast } from "@/hooks/use-toast.ts";
 import { Pencil } from "lucide-react";
 

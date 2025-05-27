@@ -35,6 +35,7 @@ type shareGalleryResponse struct {
 // @Failure 500 {object} map[string]string "Server error"
 // @Router /api/v1/galleries/{galleryId}/sharing/share [post]
 func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
 		return NotFound(ctx, err)
@@ -47,7 +48,7 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 		return BadRequest(ctx, fmt.Errorf("sharing expiry date invalid"))
 	}
 
-	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId, userId)
 	if err != nil {
 		return NotFound(ctx, err)
 	}
@@ -57,8 +58,9 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 
 	accessToken, err := domain.GenerateAccessToken()
 
-	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId,
+	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId,
 		domain.WithSharing(domain.Sharing{
+			SharingEnabled:    true,
 			SharingExpiryDate: req.SharingExpiry,
 			AccessToken:       accessToken,
 			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), accessToken),
@@ -94,6 +96,7 @@ type rescheduleGallerySharingRequest struct {
 // @Failure 500 {object} map[string]string "Server error"
 // @Router /api/v1/galleries/{galleryId}/sharing/reschedule [put]
 func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
 		return NotFound(ctx, err)
@@ -106,7 +109,7 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 		return BadRequest(ctx, fmt.Errorf("sharing expiry date invalid"))
 	}
 
-	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId, userId)
 	if err != nil {
 		return NotFound(ctx, err)
 	}
@@ -114,8 +117,9 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{"message": "Sharing already inactive"})
 	}
 
-	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharing(
+	_, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId, domain.WithSharing(
 		domain.Sharing{
+			SharingEnabled:    true,
 			SharingExpiryDate: req.SharingExpiry,
 			AccessToken:       gallery.Sharing.AccessToken,
 			SharingUrl:        fmt.Sprintf("%s/galleries/%s?token=%s", os.Getenv("FRONTEND_ORIGIN"), galleryId.Hex(), gallery.Sharing.AccessToken),
@@ -144,11 +148,12 @@ func (a *api) rescheduleGallerySharingHandler(ctx *fiber.Ctx) error {
 // @Failure 500 {object} map[string]string "Server error"
 // @Router /api/v1/galleries/{galleryId}/sharing/stop [put]
 func (a *api) stopSharingGalleryHandler(ctx *fiber.Ctx) error {
+	userId := ctx.Locals("userId").(string)
 	galleryId, err := primitive.ObjectIDFromHex(ctx.Params("galleryId"))
 	if err != nil {
 		return NotFound(ctx, err)
 	}
-	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId)
+	gallery, err := a.galleryRepo.GetGallery(ctx.Context(), galleryId, userId)
 	if err != nil {
 		return NotFound(ctx, err)
 	}
@@ -157,9 +162,10 @@ func (a *api) stopSharingGalleryHandler(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(fiber.Map{"message": "Sharing already inactive"})
 	}
 
-	gallery, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, domain.WithSharing(
+	gallery, err = a.galleryRepo.UpdateGallery(ctx.Context(), galleryId, userId, domain.WithSharing(
 		domain.Sharing{
-			SharingExpiryDate: time.Now().UTC().Add(time.Duration(-1) * time.Hour * 24),
+			SharingEnabled:    false,
+			SharingExpiryDate: time.Time{},
 		}))
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")

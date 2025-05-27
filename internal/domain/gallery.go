@@ -13,6 +13,7 @@ type GalleryDB struct {
 	ID           primitive.ObjectID `bson:"_id" json:"id"`
 	CollectionId primitive.ObjectID `bson:"collectionId" json:"collectionId"`
 	Name         string             `bson:"name" json:"name"`
+	UserId       string             `bson:"userId" json:"userId"`
 	CreatedAt    time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt    time.Time          `bson:"updatedAt" json:"updatedAt"`
 	Sharing      Sharing            `bson:"sharing" json:"sharing"`
@@ -32,13 +33,13 @@ type PhotoOptions struct {
 }
 
 type GalleryRepository interface {
-	GalleryExists(ctx context.Context, galleryId primitive.ObjectID) (bool, error)
-	CollectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID) (int64, error)
-	GetGalleries(ctx context.Context, collectionId primitive.ObjectID) ([]GalleryDB, error)
-	GetGallery(ctx context.Context, galleryId primitive.ObjectID) (GalleryDB, error)
-	CreateGallery(ctx context.Context, collectionId primitive.ObjectID, name string) (string, error)
-	DeleteGallery(ctx context.Context, galleryId primitive.ObjectID) error
-	UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, opts ...GalleryUpdateOption) (GalleryDB, error)
+	GalleryExists(ctx context.Context, galleryId primitive.ObjectID, userId string) (bool, error)
+	CollectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID, userId string) (int64, error)
+	GetGalleries(ctx context.Context, collectionId primitive.ObjectID, userId string) ([]GalleryDB, error)
+	GetGallery(ctx context.Context, galleryId primitive.ObjectID, userId string) (GalleryDB, error)
+	CreateGallery(ctx context.Context, collectionId primitive.ObjectID, name, userId string) (string, error)
+	DeleteGallery(ctx context.Context, galleryId primitive.ObjectID, userId string) error
+	UpdateGallery(ctx context.Context, galleryId primitive.ObjectID, userId string, opts ...GalleryUpdateOption) (GalleryDB, error)
 }
 
 func GenerateAccessToken() (string, error) {
@@ -64,7 +65,7 @@ func WithName(name string) GalleryUpdateOption {
 func WithSharing(sharing Sharing) GalleryUpdateOption {
 	return func(opts *GalleryUpdateOptions) {
 		opts.SetFields = append(opts.SetFields, bson.E{Key: "sharing", Value: bson.D{
-			{Key: "sharingEnabled", Value: true},
+			{Key: "sharingEnabled", Value: sharing.SharingEnabled},
 			{Key: "accessToken", Value: sharing.AccessToken},
 			{Key: "sharingExpiryDate", Value: sharing.SharingExpiryDate},
 			{Key: "sharingUrl", Value: sharing.SharingUrl},

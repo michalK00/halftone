@@ -7,31 +7,25 @@ import {
 } from "@/components/ui/breadcrumb";
 import {Link} from "react-router-dom";
 import {ModeToggle} from "@/components/mode-toggle";
-import {useQueries, useQuery} from "@tanstack/react-query";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {PlusCircle} from "lucide-react";
 import {LoadingSpinner} from "@/components/ui/loading-spinner";
 import {useState} from "react";
-import {Collection, getCollections, getGalleryCount} from "../api/collections";
+import {Collection} from "@/api/collections";
 import {CollectionDialog} from "../components/collection-dialog";
 import {CollectionsTable} from "../components/collections-table";
+import {useCollections, getGalleryCountOptions} from "@/hooks/useCollections.ts";
+import {useQueries} from "@tanstack/react-query";
 
 function CollectionsQuery() {
     const [editCollection, setEditCollection] = useState<Collection | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-    const collectionsQuery = useQuery({
-        queryKey: ['collections'],
-        queryFn: getCollections
-    });
-
+    const collectionsQuery = useCollections()
     const galleryCountQueries = useQueries({
-        queries: (collectionsQuery.data ?? []).map((collection) => ({
-            queryKey: ['galleryCount', collection.id],
-            queryFn: () => getGalleryCount(collection.id),
-            enabled: !!collectionsQuery.data,
-        })),
+        queries: (collectionsQuery.data ?? []).map((collection) =>
+            getGalleryCountOptions(collection.id)
+        ),
     });
 
     if (collectionsQuery.status === 'pending') {

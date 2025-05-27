@@ -36,7 +36,7 @@ func NewMongoClient() (*mongo.Database, error) {
 }
 
 func NewRedisClient(ctx context.Context) (*redis.Client, error) {
-	opt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
+	opt, err := redis.ParseURL(os.Getenv("REDIS_URI"))
 	if err != nil {
 		return nil, err
 	}

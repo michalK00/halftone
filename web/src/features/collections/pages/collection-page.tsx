@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import {Collection, getCollection} from "@/features/collections/api/collections.ts";
+import {Collection, getCollection} from "@/api/collections.ts";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";

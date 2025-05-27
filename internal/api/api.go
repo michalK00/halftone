@@ -39,50 +39,53 @@ func NewApi(db *mongo.Database, rdb *redis.Client) *api {
 }
 
 func (a *api) Routes(app *fiber.App) {
-	// authMiddleware := auth.NewAuthMiddleware(config)
 
-	collections := app.Group("/api/v1")
-	collections.Get("/collections", a.getCollectionsHandler)
-	collections.Post("/collections", a.createCollectionHandler)
-	collections.Get("/collections/:collectionId", a.getCollectionHandler)
-	collections.Put("/collections/:collectionId", a.updateCollectionHandler)
-	collections.Delete("/collections/:collectionId", a.deleteCollectionHandler)
+	auth := app.Group("/auth")
+	auth.Post("/signup", a.SignUp)
+	auth.Post("/signin", a.SignIn)
+	auth.Post("/verify", a.VerifyAccount)
+	auth.Post("/refresh-token", a.RefreshToken)
 
-	qr := app.Group("/api/v1")
-	qr.Get("/qr", a.generateQrHandler)
+	public := app.Group("/api/v1")
+	public.Get("/qr", a.generateQrHandler)
+	protected := app.Group("/api/v1", middleware.Protected())
 
-	gallery := app.Group("/api/v1")
-	gallery.Get("/collections/:collectionId/galleries", a.getGalleriesHandler)
-	gallery.Get("/collections/:collectionId/galleryCount", a.getGalleryCountHandler)
-	gallery.Post("/collections/:collectionId/galleries", a.createGalleryHandler)
-	//gallery.Post("/:collectionId/galleries/batch")
-	//gallery.Delete("/:collectionId/galleries/batch")
-	gallery.Get("/galleries/:galleryId", a.getGalleryHandler)
-	gallery.Put("/galleries/:galleryId", a.updateGalleryHandler)
-	gallery.Delete("/galleries/:galleryId", a.deleteGalleryHandler)
+	protected.Get("/collections", a.getCollectionsHandler)
+	protected.Post("/collections", a.createCollectionHandler)
+	protected.Get("/collections/:collectionId", a.getCollectionHandler)
+	protected.Put("/collections/:collectionId", a.updateCollectionHandler)
+	protected.Delete("/collections/:collectionId", a.deleteCollectionHandler)
 
-	gallery.Post("galleries/:galleryId/sharing/share", a.shareGalleryHandler)
-	gallery.Put("galleries/:galleryId/sharing/reschedule", a.rescheduleGallerySharingHandler)
-	gallery.Put("galleries/:galleryId/sharing/stop", a.stopSharingGalleryHandler)
+	protected.Get("/collections/:collectionId/galleries", a.getGalleriesHandler)
+	protected.Get("/collections/:collectionId/galleryCount", a.getGalleryCountHandler)
+	protected.Post("/collections/:collectionId/galleries", a.createGalleryHandler)
+	//protected.Post("/:collectionId/galleries/batch")
+	//protected.Delete("/:collectionId/galleries/batch")
+	protected.Get("/galleries/:galleryId", a.getGalleryHandler)
+	protected.Put("/galleries/:galleryId", a.updateGalleryHandler)
+	protected.Delete("/galleries/:galleryId", a.deleteGalleryHandler)
 
-	//client := app.Group("/api/v1/client")
+	protected.Post("/galleries/:galleryId/sharing/share", a.shareGalleryHandler)
+	protected.Put("/galleries/:galleryId/sharing/reschedule", a.rescheduleGallerySharingHandler)
+	protected.Put("/galleries/:galleryId/sharing/stop", a.stopSharingGalleryHandler)
+
+	protected.Get("/galleries/:galleryId/photos", a.getPhotosHandler)
+	protected.Post("/galleries/:galleryId/photos", a.uploadPhotosHandler)
+	//protected.Delete("/galleries/:galleryId/photos")
+	//protected.Get("/photos/:photoId")
+	protected.Put("/photos/:photoId/confirm", a.confirmPhotoUploadHandler)
+	protected.Delete("/photos/:photoId", a.deletePhotoHandler)
+
+	//protected.Get("/orders/:orderId")
+	//protected.Put("/orders/:orderId")
+	//protected.Delete("/orders/:orderId")
+
+	//client := public.Group("/api/v1/client")
 	//client.Get("/galleries/:galleryId")
 	//client.Post("/galleries/:galleryId")
 	//client.Get("/galleries/:galleryId/photos")
 	//client.Get("/galleries/:galleryId/photos/:photoId")
 
-	photos := app.Group("/api/v1")
-	photos.Get("/galleries/:galleryId/photos", a.getPhotosHandler)
-	photos.Post("/galleries/:galleryId/photos", a.uploadPhotosHandler)
-	//photos.Delete("/galleries/:galleryId/photos")
-	//photos.Get("/photos/:photoId")
-	photos.Put("/photos/:photoId/confirm", a.confirmPhotoUploadHandler)
-	photos.Delete("/photos/:photoId", a.deletePhotoHandler)
-
-	//order := app.Group("/api/v1")
-	//order.Get("/orders/:orderId")
-	//order.Put("/orders/:orderId")
-	//order.Delete("/orders/:orderId")
 }
 
 func (a *api) Server() *fiber.App {

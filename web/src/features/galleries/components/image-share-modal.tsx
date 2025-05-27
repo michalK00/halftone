@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {useToast} from "@/hooks/use-toast.ts";
-import {shareGallery, stopGallerySharing} from "@/features/galleries/api/share.ts";
+import {shareGallery, stopGallerySharing} from "@/api/share.ts";
 import {useQueryClient} from "@tanstack/react-query";
 
 type ImageShareModalProps = {
@@ -45,7 +45,7 @@ function ImageShareModal({
             setIsLoading(true);
             if (sharingEnabled) {
                 const response = await stopGallerySharing(galleryId)
-                sharingEnabled = response.sharingOptions.sharingEnabled
+                sharingEnabled = response.sharing.sharingEnabled
 
                 toast({
                     title: "Success",
@@ -165,7 +165,7 @@ function ImageShareModal({
                                 <CardContent className="p-4 space-y-4">
                                     <div className="flex justify-center bg-white rounded-lg p-2">
                                         <img
-                                            src={`${import.meta.env.VITE_BACKEND_URL}/api/v1/qr?url=${sharingUrl}`}
+                                            src={`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/qr?url=${sharingUrl}`}
                                             alt="QR Code"
                                             className="w-48 h-48 object-contain"
                                         />

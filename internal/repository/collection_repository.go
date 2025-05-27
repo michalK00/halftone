@@ -15,15 +15,29 @@ type MongoCollection struct {
 }
 
 func NewMongoCollection(db *mongo.Database) *MongoCollection {
+	collection := db.Collection("collections")
+
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{"userId", 1}},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		panic(err)
+	}
+
 	return &MongoCollection{
 		db: db,
 	}
 }
 
-func (s *MongoCollection) CollectionExists(ctx context.Context, collectionId primitive.ObjectID) (bool, error) {
+func (s *MongoCollection) CollectionExists(ctx context.Context, collectionId primitive.ObjectID, userId string) (bool, error) {
 	coll := s.db.Collection("collections")
 
-	count, err := coll.CountDocuments(ctx, bson.D{{"_id", collectionId}}, options.Count().SetLimit(1))
+	count, err := coll.CountDocuments(ctx, bson.M{"_id": collectionId, "userId": userId}, options.Count().SetLimit(1))
 	if err != nil {
 		return false, err
 	}
@@ -31,11 +45,11 @@ func (s *MongoCollection) CollectionExists(ctx context.Context, collectionId pri
 	return count > 0, nil
 }
 
-func (s *MongoCollection) GetCollection(ctx context.Context, collectionId primitive.ObjectID) (domain.CollectionDB, error) {
+func (s *MongoCollection) GetCollection(ctx context.Context, collectionId primitive.ObjectID, userId string) (domain.CollectionDB, error) {
 	coll := s.db.Collection("collections")
 
 	var collection domain.CollectionDB
-	err := coll.FindOne(ctx, bson.D{{"_id", collectionId}}).Decode(&collection)
+	err := coll.FindOne(ctx, bson.M{"_id": collectionId, "userId": userId}).Decode(&collection)
 	if err != nil {
 		return domain.CollectionDB{}, err
 	}
@@ -43,10 +57,10 @@ func (s *MongoCollection) GetCollection(ctx context.Context, collectionId primit
 	return collection, nil
 }
 
-func (s *MongoCollection) GetCollections(ctx context.Context) ([]domain.CollectionDB, error) {
+func (s *MongoCollection) GetCollections(ctx context.Context, userId string) ([]domain.CollectionDB, error) {
 	collection := s.db.Collection("collections")
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	cursor, err := collection.Find(ctx, bson.D{{"userId", userId}})
 	if err != nil {
 		return nil, err
 	}
@@ -59,11 +73,12 @@ func (s *MongoCollection) GetCollections(ctx context.Context) ([]domain.Collecti
 	return collections, nil
 }
 
-func (s *MongoCollection) CreateCollection(ctx context.Context, name string) (string, error) {
+func (s *MongoCollection) CreateCollection(ctx context.Context, name string, userId string) (string, error) {
 	collection := s.db.Collection("collections")
 
 	col := bson.D{
 		{"name", name},
+		{"userId", userId},
 		{"createdAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 	}
@@ -75,16 +90,16 @@ func (s *MongoCollection) CreateCollection(ctx context.Context, name string) (st
 	return result.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (s *MongoCollection) DeleteCollection(ctx context.Context, collectionId primitive.ObjectID) error {
+func (s *MongoCollection) DeleteCollection(ctx context.Context, collectionId primitive.ObjectID, userId string) error {
 	collection := s.db.Collection("collections")
-	_, err := collection.DeleteOne(ctx, bson.D{{"_id", collectionId}})
+	_, err := collection.DeleteOne(ctx, bson.M{"_id": collectionId, "userId": userId})
 	return err
 }
 
-func (s *MongoCollection) UpdateCollection(ctx context.Context, collectionId primitive.ObjectID, name string) (domain.CollectionDB, error) {
+func (s *MongoCollection) UpdateCollection(ctx context.Context, collectionId primitive.ObjectID, name string, userId string) (domain.CollectionDB, error) {
 	coll := s.db.Collection("collections")
 
-	filter := bson.D{{"_id", collectionId}}
+	filter := bson.M{"_id": collectionId, "userId": userId}
 	update := bson.D{
 		{"$set", bson.D{
 			{"name", name},

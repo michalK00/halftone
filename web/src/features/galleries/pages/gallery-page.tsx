@@ -8,11 +8,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import { getCollection } from "@/features/collections/api/collections.ts";
+import { getCollection } from "@/api/collections.ts";
 import { useQuery } from "@tanstack/react-query";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import {getGallery} from "@/features/galleries/api/galleries.ts";
+import {getGallery} from "@/api/galleries.ts";
 import PhotoGallery from "@/features/galleries/components/photo-gallery.tsx";
 import {Lock, Share2} from "lucide-react";
 import {EditGalleryDialog} from "@/features/galleries/components/edit-gallery-dialog.tsx";

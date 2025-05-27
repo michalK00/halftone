@@ -1,6 +1,6 @@
 import {Button} from "@/components/ui/button";
 import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
-import {Collection} from "../api/collections";
+import {Collection} from "../../../api/collections";
 import {Share} from "lucide-react";
 
 type CollectionDialogProps = {

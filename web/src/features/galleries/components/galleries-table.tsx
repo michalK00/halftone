@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Pencil, Lock, Share2 } from "lucide-react";
-import {Gallery} from "@/features/galleries/api/galleries.ts";
+import {Gallery} from "@/api/galleries.ts";
 import {DeleteGalleryDialog} from "@/features/galleries/components/delete-gallery-dialog.tsx";
 
 type GalleriesTableProps = {
