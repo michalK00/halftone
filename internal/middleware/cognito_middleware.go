@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"math/big"
 	"net/http"
 	"os"
