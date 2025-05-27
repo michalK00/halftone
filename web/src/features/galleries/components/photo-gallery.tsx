@@ -68,7 +68,7 @@ function PhotoGallery({gallery}: GalleryContentProps) {
 
                 toast({
                     title: "Success",
-                    description: `Deleted ${indexesToDelete.length} photos`,
+                    description: `Deleted ${indexesToDelete.length} photo(s)`,
                 });
 
 

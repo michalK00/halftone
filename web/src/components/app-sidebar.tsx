@@ -33,7 +33,7 @@ const items = [
 ];
 
 export function AppSidebar() {
-    const { user, signOut } = useAuth(); // Get user and signOut function from auth context
+    const { signOut } = useAuth(); // Get user and signOut function from auth context
 
     const handleSignOut = async () => {
         signOut();
@@ -68,8 +68,8 @@ export function AppSidebar() {
                                 <SidebarMenuButton className="w-full flex items-center">
                                     <User2 className="mr-2 h-5 w-5" />
                                     <span className="flex-grow text-left">
-                    {user?.name || user?.username || "Account"}
-                  </span>
+                                    Account
+                                    </span>
                                     <ChevronUp className="ml-auto h-4 w-4" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>

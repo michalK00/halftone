@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL,
+    baseURL: import.meta.env.VITE_API_BACKEND_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -9,6 +9,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
+        console.log(import.meta.env.VITE_API_BACKEND_URL)
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -32,8 +33,8 @@ api.interceptors.response.use(
 
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
-                const response = await axios.post(
-                    `${import.meta.env.VITE_BACKEND_URL}/auth/refresh-token`,
+                const response = await api.post(
+                    '/auth/refresh-token',
                     { refresh_token: refreshToken }
                 );
 

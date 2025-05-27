@@ -5,10 +5,11 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func Execute(ctx context.Context) int {
-	_ = godotenv.Load("app.env")
+	_ = godotenv.Load(".env")
 
 	rootCmd := &cobra.Command{
 		Use:   "halftone",
@@ -19,6 +20,7 @@ func Execute(ctx context.Context) int {
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Error("command failed ", err)
+		log.Error(os.Getenv("MONGODB_URI"))
 		return 1
 	}
 	return 0

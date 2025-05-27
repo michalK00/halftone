@@ -1,0 +1,16 @@
+/web
+
+Taskfile.yml
+docker-compose.yml
+
+.git
+.gitignore
+
+
+Dockerfile
+.dockerignore
+
+.env
+*.env
+
+secrets.txt
