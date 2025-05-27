@@ -45,12 +45,7 @@ func (c *CognitoClient) ComputeSecretHash(username string) string {
 }
 
 func (c *CognitoClient) SignUp(ctx context.Context, username, password string, attributes map[string]string) (*cognitoidentityprovider.SignUpOutput, error) {
-	userAttributes := []types.AttributeType{
-		{
-			Name:  aws.String("username"),
-			Value: aws.String(username),
-		},
-	}
+	var userAttributes []types.AttributeType
 
 	for name, value := range attributes {
 		userAttributes = append(userAttributes, types.AttributeType{

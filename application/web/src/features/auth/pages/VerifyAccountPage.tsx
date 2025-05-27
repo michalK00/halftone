@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast.ts";
 
 const VerifyAccountPage = () => {
     const location = useLocation();
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [code, setCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isResending, setIsResending] = useState(false);
@@ -20,9 +20,9 @@ const VerifyAccountPage = () => {
     const { toast } = useToast();
 
     useEffect(() => {
-        // Get username from state if available
-        if (location.state && location.state.username) {
-            setUsername(location.state.username);
+        // Get email from state if available
+        if (location.state && location.state.email) {
+            setEmail(location.state.email);
         }
     }, [location]);
 
@@ -32,7 +32,7 @@ const VerifyAccountPage = () => {
         setError(null);
 
         try {
-            await verifyAccount(username, code);
+            await verifyAccount(email, code);
 
             toast({
                 title: "Account verified",
@@ -50,8 +50,8 @@ const VerifyAccountPage = () => {
     };
 
     const handleResendCode = async () => {
-        if (!username) {
-            setError("Username is required to resend verification code");
+        if (!email) {
+            setError("Email is required to resend verification code");
             return;
         }
 
@@ -59,7 +59,7 @@ const VerifyAccountPage = () => {
         setError(null);
 
         try {
-            await resendVerificationCode(username);
+            await resendVerificationCode(email);
 
             toast({
                 title: "Code resent",
@@ -89,13 +89,13 @@ const VerifyAccountPage = () => {
                     )}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="email">Email</Label>
                             <Input
-                                id="username"
+                                id="email"
                                 type="text"
-                                placeholder="Enter your username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                                 disabled={isLoading || isResending}
                             />

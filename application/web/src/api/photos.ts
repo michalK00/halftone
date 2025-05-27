@@ -54,19 +54,15 @@ export async function uploadToAWS(file: File, uploadData: UploadResponseBody): P
     try {
         const formData = new FormData();
 
-        // Add all fields from the pre-signed request
         Object.entries(uploadData.presignedPostRequest.Values).forEach(([key, value]) => {
             formData.append(key, value);
         });
 
-        // Add content type and file
         const contentType = await getMimeType(file);
         formData.append('Content-Type', contentType);
         formData.append('file', file);
 
-        // Use axios directly for the S3 upload
         await axios.post(uploadData.presignedPostRequest.URL, formData, {
-            // Don't add auth headers for S3 uploads
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

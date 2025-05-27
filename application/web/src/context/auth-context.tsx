@@ -13,8 +13,8 @@ const authApi = {
         return response.data;
     },
 
-    verifyAccount: async (username: string, code: string) => {
-        const response = await api.post("/auth/verify", { username, code });
+    verifyAccount: async (email: string, code: string) => {
+        const response = await api.post("/auth/verify", { email, code });
         return response.data;
     },
 
@@ -51,7 +51,7 @@ interface AuthContextType {
     isLoading: boolean;
     signIn: (email: string, password: string) => Promise<any>;
     signUp: (email: string, password: string) => Promise<any>;
-    verifyAccount: (username: string, code: string) => Promise<any>;
+    verifyAccount: (email: string, code: string) => Promise<any>;
     resendVerificationCode: (username: string) => Promise<any>;
     forgotPassword: (username: string) => Promise<any>;
     resetPassword: (username: string, code: string, newPassword: string) => Promise<any>;
@@ -108,8 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     const verifyAccountMutation = useMutation({
-        mutationFn: ({ username, code }: { username: string; code: string }) =>
-            authApi.verifyAccount(username, code),
+        mutationFn: ({ email, code }: { email: string; code: string }) =>
+            authApi.verifyAccount(email, code),
         onSuccess: () => {
             setError(null);
         },
@@ -161,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading: isInitializing || signInMutation.isPending,
         signIn: (email, password) => signInMutation.mutateAsync({ email, password }),
         signUp: (email, password) => signUpMutation.mutateAsync({ email, password }),
-        verifyAccount: (username, code) => verifyAccountMutation.mutateAsync({ username, code }),
+        verifyAccount: (email, code) => verifyAccountMutation.mutateAsync({ email, code }),
         resendVerificationCode: (username) => resendCodeMutation.mutateAsync(username),
         forgotPassword: (username) => forgotPasswordMutation.mutateAsync(username),
         resetPassword: (username, code, newPassword) => resetPasswordMutation.mutateAsync({ username, code, newPassword }),

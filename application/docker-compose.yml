@@ -18,7 +18,7 @@ services:
 #      - api-secrets
 #  scheduler:
   client:
-    image: halftone-client
+    image: halftone-client:latest
     build: ./web
     container_name: halftone-client
     ports:
