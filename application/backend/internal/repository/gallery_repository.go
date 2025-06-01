@@ -20,6 +20,18 @@ func NewMongoGallery(db *mongo.Database) *MongoGallery {
 	}
 }
 
+func (s *MongoGallery) GetGalleryByID(ctx context.Context, galleryId primitive.ObjectID) (domain.GalleryDB, error) {
+	coll := s.db.Collection("galleries")
+
+	var result domain.GalleryDB
+	err := coll.FindOne(ctx, bson.M{"_id": galleryId}).Decode(&result)
+	if err != nil {
+		return domain.GalleryDB{}, err
+	}
+
+	return result, nil
+}
+
 func (s *MongoGallery) GalleryExists(ctx context.Context, galleryId primitive.ObjectID, userId string) (bool, error) {
 	coll := s.db.Collection("galleries")
 

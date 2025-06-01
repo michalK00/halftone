@@ -3,7 +3,7 @@ version: "3"
 tasks:
   docs:
     cmds:
-      - swag i -d ./cmd/halftone,./internal/api --parseDependency --parseInternal
+      - swag i -d ./backend/cmd/halftone,./backend/internal/api --parseDependency --parseInternal
   api:
     cmds:
       - go run ./cmd/halftone/main.go api
@@ -21,4 +21,3 @@ tasks:
     dir: "lambdas"
     cmds:
       - cd imgd; go mod tidy; GOARCH=amd64 GOOS=linux go build -o bootstrap main.go; zip deployment.zip bootstrap; cd ..
-# TODO add dockerfiles, docker compose and add a task cmd to handle it all

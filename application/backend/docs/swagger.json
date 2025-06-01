@@ -8,6 +8,257 @@
         "version": "0.1"
     },
     "paths": {
+        "/api/v1/client/galleries/{galleryId}": {
+            "get": {
+                "description": "Gets gallery information for clients with valid access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client"
+                ],
+                "summary": "Get gallery information (client access)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Access token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.GalleryDB"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new order for a gallery with valid access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client"
+                ],
+                "summary": "Create order (client access)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Access token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Order creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.createOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.createOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client/galleries/{galleryId}/photos": {
+            "get": {
+                "description": "Gets all photos in a gallery for clients with valid access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client"
+                ],
+                "summary": "Get gallery photos (client access)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Access token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.PhotoDB"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client/galleries/{galleryId}/photos/{photoId}": {
+            "get": {
+                "description": "Gets a specific photo from a gallery for clients with valid access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client"
+                ],
+                "summary": "Get specific photo (client access)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Gallery ID",
+                        "name": "galleryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Photo ID",
+                        "name": "photoId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Access token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.PhotoDB"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/collections": {
             "get": {
                 "description": "Gets all collections",
@@ -830,9 +1081,175 @@
                 }
             }
         },
+        "/api/v1/orders": {
+            "get": {
+                "description": "Gets all orders for galleries owned by the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get all orders",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.OrderDB"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{orderId}": {
+            "get": {
+                "description": "Gets a specific order if it belongs to a gallery owned by the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get order by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.OrderDB"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an order's status or comment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Update order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Order update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.updateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.OrderDB"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Delete order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fiber.Map"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/photos/{photoId}": {
             "delete": {
-                "description": "Deletes a specific photo by ID (Note: AWS cleanup pending implementation)",
+                "description": "Soft delete a given photo",
                 "consumes": [
                     "application/json"
                 ],
@@ -1002,6 +1419,41 @@
                 }
             }
         },
+        "api.createOrderRequest": {
+            "type": "object",
+            "required": [
+                "clientEmail",
+                "photoIds"
+            ],
+            "properties": {
+                "clientEmail": {
+                    "type": "string",
+                    "example": "client@example.com"
+                },
+                "comment": {
+                    "type": "string",
+                    "example": "Please print all photos in 10x15cm format"
+                },
+                "photoIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"671442a11fd0c5eb46b5a3fa\"]"
+                    ]
+                }
+            }
+        },
+        "api.createOrderResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.getPhotoResponse": {
             "type": "object",
             "properties": {
@@ -1013,6 +1465,9 @@
                 },
                 "originalFilename": {
                     "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.PhotoStatus"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -1096,6 +1551,19 @@
                 }
             }
         },
+        "api.updateOrderRequest": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "example": "Updated comment"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "completed"
+                }
+            }
+        },
         "domain.CollectionDB": {
             "type": "object",
             "properties": {
@@ -1109,6 +1577,9 @@
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
                     "type": "string"
                 }
             }
@@ -1128,13 +1599,70 @@
                 "name": {
                     "type": "string"
                 },
-                "sharingOptions": {
-                    "$ref": "#/definitions/domain.SharingOptions"
+                "photoOptions": {
+                    "$ref": "#/definitions/domain.PhotoOptions"
+                },
+                "sharing": {
+                    "$ref": "#/definitions/domain.Sharing"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.OrderDB": {
+            "type": "object",
+            "properties": {
+                "clientEmail": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "galleryId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "photos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.OrderPhoto"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.OrderStatus"
                 },
                 "updatedAt": {
                     "type": "string"
                 }
             }
+        },
+        "domain.OrderPhoto": {
+            "type": "object",
+            "properties": {
+                "photoId": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.OrderStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "completed"
+            ],
+            "x-enum-varnames": [
+                "OrderStatusPending",
+                "OrderStatusCompleted"
+            ]
         },
         "domain.PhotoDB": {
             "type": "object",
@@ -1162,6 +1690,20 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.PhotoOptions": {
+            "type": "object",
+            "properties": {
+                "downsize": {
+                    "type": "boolean"
+                },
+                "watermark": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1169,20 +1711,21 @@
             "type": "integer",
             "enum": [
                 0,
-                1
+                1,
+                2,
+                3
             ],
             "x-enum-varnames": [
                 "Pending",
-                "Uploaded"
+                "Uploaded",
+                "Shared",
+                "PendingDeletion"
             ]
         },
-        "domain.SharingOptions": {
+        "domain.Sharing": {
             "type": "object",
             "properties": {
                 "accessToken": {
-                    "type": "string"
-                },
-                "sharingCleanupJob": {
                     "type": "string"
                 },
                 "sharingEnabled": {

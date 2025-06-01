@@ -8,14 +8,18 @@ import (
 )
 
 func FiberMiddleware(a *fiber.App) {
-	frontendOrigin := os.Getenv("FRONTEND_ORIGIN")
-	if frontendOrigin == "" {
-		frontendOrigin = "*"
+	clientFrontendOrigin := os.Getenv("CLIENT_FRONTEND_ORIGIN")
+	adminFrontendOrigin := os.Getenv("ADMIN_FRONTEND_ORIGIN")
+	allowOrigins := ""
+	if clientFrontendOrigin == "" || adminFrontendOrigin == "" {
+		allowOrigins = "*"
+	} else {
+		allowOrigins = clientFrontendOrigin + "," + adminFrontendOrigin
 	}
 
 	a.Use(
 		cors.New(cors.Config{
-			AllowOrigins: frontendOrigin,
+			AllowOrigins: allowOrigins,
 			AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 			AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		}),

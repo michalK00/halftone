@@ -16,12 +16,20 @@ services:
       - redis
 #    secrets:
 #      - api-secrets
-  client:
+  admin:
     image: halftone-admin:latest
     build: ./frontend-admin
     container_name: halftone-admin
     ports:
       - "80:80"
+    env_file:
+      - "./backend/.env"
+  client:
+    image: halftone-client:latest
+    build: ./frontend-client
+    container_name: halftone-client
+    ports:
+      - "81:80"
     env_file:
       - "./backend/.env"
 

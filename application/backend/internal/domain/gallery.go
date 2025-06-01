@@ -33,6 +33,7 @@ type PhotoOptions struct {
 }
 
 type GalleryRepository interface {
+	GetGalleryByID(ctx context.Context, galleryId primitive.ObjectID) (GalleryDB, error)
 	GalleryExists(ctx context.Context, galleryId primitive.ObjectID, userId string) (bool, error)
 	CollectionGalleryCount(ctx context.Context, collectionId primitive.ObjectID, userId string) (int64, error)
 	GetGalleries(ctx context.Context, collectionId primitive.ObjectID, userId string) ([]GalleryDB, error)

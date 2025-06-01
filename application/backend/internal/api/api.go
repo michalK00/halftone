@@ -43,6 +43,14 @@ func (a *api) Routes(app *fiber.App) {
 
 	public := app.Group("/api/v1")
 	public.Get("/qr", a.generateQrHandler)
+
+	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
+	client := app.Group("/api/v1/client/galleries/:galleryId", middleware.AuthenticateClient(a.galleryRepo))
+	client.Get("", a.clientGetGalleryHandler)
+	client.Post("", a.clientCreateOrderHandler)
+	client.Get("/photos", a.clientGetGalleryPhotosHandler)
+	client.Get("/photos/:photoId", a.clientGetPhotoHandler)
+
 	protected := app.Group("/api/v1", middleware.Protected())
 
 	protected.Get("/collections", a.getCollectionsHandler)
@@ -72,17 +80,10 @@ func (a *api) Routes(app *fiber.App) {
 	protected.Delete("/photos/:photoId", a.deletePhotoHandler)
 
 	// user endpoints to browse and handle client orders
-	//protected.Get("/orders")
-	//protected.Get("/orders/:orderId")
-	//protected.Put("/orders/:orderId")
-	//protected.Delete("/orders/:orderId")
-
-	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
-	//client := public.Group("/api/v1/client")
-	//client.Get("/galleries/:galleryId")
-	//client.Post("/galleries/:galleryId") - create an order
-	//client.Get("/galleries/:galleryId/photos")
-	//client.Get("/galleries/:galleryId/photos/:photoId")
+	protected.Get("/orders", a.getOrdersHandler)
+	protected.Get("/orders/:orderId", a.getOrderHandler)
+	protected.Put("/orders/:orderId", a.updateOrderHandler)
+	protected.Delete("/orders/:orderId", a.deleteOrderHandler)
 
 }
 

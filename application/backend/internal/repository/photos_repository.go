@@ -22,6 +22,51 @@ func NewMongoPhoto(db *mongo.Database) *MongoPhoto {
 	}
 }
 
+func (s *MongoPhoto) GetSharedPhotosByGallery(ctx context.Context, galleryId primitive.ObjectID) ([]domain.PhotoDB, error) {
+	coll := s.db.Collection("photos")
+
+	cursor, err := coll.Find(ctx, bson.M{"galleryId": galleryId, "status": domain.Uploaded})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	photos := make([]domain.PhotoDB, 0)
+	if err = cursor.All(ctx, &photos); err != nil {
+		return nil, err
+	}
+
+	return photos, nil
+}
+
+func (s *MongoPhoto) GetSharedPhotoById(ctx context.Context, photoId primitive.ObjectID) (domain.PhotoDB, error) {
+	coll := s.db.Collection("photos")
+
+	var photo domain.PhotoDB
+	err := coll.FindOne(ctx, bson.M{"_id": photoId, "status": domain.Uploaded}).Decode(&photo)
+	if err != nil {
+		return domain.PhotoDB{}, err
+	}
+
+	return photo, nil
+}
+
+func (s *MongoPhoto) VerifyPhotosInGallery(ctx context.Context, galleryId primitive.ObjectID, photoIds []primitive.ObjectID) (bool, error) {
+	coll := s.db.Collection("photos")
+
+	// Count photos that match both galleryId and are in the photoIds list
+	count, err := coll.CountDocuments(ctx, bson.M{
+		"galleryId": galleryId,
+		"_id":       bson.M{"$in": photoIds},
+	})
+	if err != nil {
+		return false, err
+	}
+
+	// All provided photo IDs should match
+	return count == int64(len(photoIds)), nil
+}
+
 func (s *MongoPhoto) PhotoExists(ctx context.Context, photoId primitive.ObjectID, userId string) (bool, error) {
 	coll := s.db.Collection("photos")
 
@@ -95,6 +140,7 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"status", "pending"},
 		{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
+		{"clientObjectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
 	}
 	_, err := coll.InsertOne(ctx, photo)
 	if err != nil {

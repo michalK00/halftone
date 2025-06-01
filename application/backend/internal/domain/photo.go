@@ -16,6 +16,7 @@ type PhotoDB struct {
 	UpdatedAt        time.Time          `bson:"updatedAt" json:"updatedAt"`
 	OriginalFilename string             `bson:"originalFilename" json:"originalFilename"`
 	ObjectKey        string             `bson:"objectKey" json:"objectKey"`
+	ClientObjectKey  string             `bson:"clientObjectKey" json:"clientObjectKey"`
 }
 
 type PhotoStatus int64
@@ -38,4 +39,7 @@ type PhotoRepository interface {
 	SoftDeletePhoto(ctx context.Context, photoId primitive.ObjectID, userId string) error
 	DeletePhotos(ctx context.Context, photoIds []primitive.ObjectID, userId string) error
 	UpdatePhoto(ctx context.Context, photoId primitive.ObjectID, status PhotoStatus, userId string) (PhotoDB, error)
+	GetSharedPhotosByGallery(ctx context.Context, galleryId primitive.ObjectID) ([]PhotoDB, error)
+	GetSharedPhotoById(ctx context.Context, photoId primitive.ObjectID) (PhotoDB, error)
+	VerifyPhotosInGallery(ctx context.Context, galleryId primitive.ObjectID, photoIds []primitive.ObjectID) (bool, error)
 }
