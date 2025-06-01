@@ -2,7 +2,7 @@
 services:
   api:
     image: halftone-api
-    build: .
+    build: ./backend
     container_name: halftone-api
     ports:
       - "8080:8080"
@@ -10,21 +10,20 @@ services:
 #      AWS_SECRET_ACCESS_KEY: /run/secrets/secrets
 #      AWS_APP_CLIENT_SECRET: /run/secrets/secrets
     env_file:
-      - ".env"
+      - "./backend/.env"
     depends_on:
       - mongodb
       - redis
 #    secrets:
 #      - api-secrets
-#  scheduler:
   client:
-    image: halftone-client:latest
-    build: ./web
-    container_name: halftone-client
+    image: halftone-admin:latest
+    build: ./frontend-admin
+    container_name: halftone-admin
     ports:
       - "80:80"
     env_file:
-      - ".env"
+      - "./backend/.env"
 
 
   mongodb:

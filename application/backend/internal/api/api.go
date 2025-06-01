@@ -6,7 +6,6 @@ import (
 	"github.com/michalK00/halftone/internal/domain"
 	"github.com/michalK00/halftone/internal/middleware"
 	"github.com/michalK00/halftone/internal/repository"
-	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -16,17 +15,14 @@ type api struct {
 	photoRepo      domain.PhotoRepository
 	orderRepo      domain.OrderRepository
 	jobRepo        domain.JobRepository
-	jobQueue       domain.JobQueue
 }
 
-func NewApi(db *mongo.Database, rdb *redis.Client) *api {
+func NewApi(db *mongo.Database) *api {
 	collectionRepo := repository.NewMongoCollection(db)
 	galleryRepo := repository.NewMongoGallery(db)
 	photoRepo := repository.NewMongoPhoto(db)
 	orderRepo := repository.NewMongoOrder(db)
 	jobRepo := repository.NewMongoJob(db)
-
-	jobQueue := repository.NewRedisJob(rdb)
 
 	return &api{
 		collectionRepo: collectionRepo,
@@ -34,7 +30,6 @@ func NewApi(db *mongo.Database, rdb *redis.Client) *api {
 		photoRepo:      photoRepo,
 		orderRepo:      orderRepo,
 		jobRepo:        jobRepo,
-		jobQueue:       jobQueue,
 	}
 }
 
@@ -76,13 +71,16 @@ func (a *api) Routes(app *fiber.App) {
 	protected.Put("/photos/:photoId/confirm", a.confirmPhotoUploadHandler)
 	protected.Delete("/photos/:photoId", a.deletePhotoHandler)
 
+	// user endpoints to browse and handle client orders
+	//protected.Get("/orders")
 	//protected.Get("/orders/:orderId")
 	//protected.Put("/orders/:orderId")
 	//protected.Delete("/orders/:orderId")
 
+	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
 	//client := public.Group("/api/v1/client")
 	//client.Get("/galleries/:galleryId")
-	//client.Post("/galleries/:galleryId")
+	//client.Post("/galleries/:galleryId") - create an order
 	//client.Get("/galleries/:galleryId/photos")
 	//client.Get("/galleries/:galleryId/photos/:photoId")
 
