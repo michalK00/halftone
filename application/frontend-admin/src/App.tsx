@@ -3,7 +3,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import {Navigate, Route, Routes} from "react-router-dom";
-import Orders from "./pages/orders.tsx";
+import Orders from "./features/orders/pages/orders-page.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import CollectionsPage from "@/features/collections/pages/collections-page.tsx";
 import {Toaster} from "@/components/ui/toaster.tsx";
