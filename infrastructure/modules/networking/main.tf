@@ -8,6 +8,7 @@ resource "aws_vpc" "main" {
   }
 }
 
+# Internet Gateway - Free
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -16,6 +17,31 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
+# Elastic IPs for NAT Gateways
+resource "aws_eip" "nat" {
+  count  = length(var.availability_zones)
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.environment}-nat-eip-${count.index + 1}"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+resource "aws_nat_gateway" "main" {
+  count         = length(var.availability_zones)
+  subnet_id     = aws_subnet.public[count.index].id
+  allocation_id = aws_eip.nat[count.index].id
+
+  tags = {
+    Name = "${var.environment}-nat-${count.index + 1}"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# Public Subnets
 resource "aws_subnet" "public" {
   count                   = length(var.availability_zones)
   vpc_id                  = aws_vpc.main.id
@@ -54,24 +80,99 @@ resource "aws_route_table" "public" {
   }
 }
 
+resource "aws_route_table" "private" {
+  count  = length(var.availability_zones)
+  vpc_id = aws_vpc.main.id
+
+  dynamic "route" {
+    for_each = [1]
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = aws_nat_gateway.main[count.index].id
+    }
+  }
+
+  tags = {
+    Name = "${var.environment}-private-rt-${count.index + 1}"
+  }
+}
+
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "${var.environment}-private-rt"
-  }
-}
-
 resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index].id
+}
+
+resource "aws_security_group" "alb" {
+  name_prefix = "${var.environment}-alb-"
+  vpc_id      = aws_vpc.main.id
+  description = "Security group for Application Load Balancer"
+
+  ingress {
+    description = "HTTP from Internet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from Internet"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment}-alb-sg"
+  }
+}
+
+resource "aws_security_group" "ecs_tasks" {
+  name_prefix = "${var.environment}-ecs-tasks-"
+  vpc_id      = aws_vpc.main.id
+  description = "Security group for ECS tasks"
+
+  ingress {
+    description     = "All traffic from ALB"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description = "All traffic from ECS tasks"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    self        = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment}-ecs-tasks-sg"
+  }
 }
 
 resource "aws_security_group" "database" {
@@ -80,11 +181,19 @@ resource "aws_security_group" "database" {
   description = "Security group for DocumentDB/MongoDB"
 
   ingress {
-    description = "MongoDB port"
+    description = "MongoDB from VPC"
     from_port   = 27017
     to_port     = 27017
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
+  }
+
+  ingress {
+    description     = "MongoDB port from ECS tasks"
+    from_port       = 27017
+    to_port         = 27017
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_tasks.id]
   }
 
   egress {

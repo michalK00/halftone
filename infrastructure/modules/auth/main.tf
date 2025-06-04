@@ -25,18 +25,16 @@ resource "aws_cognito_user_pool" "main" {
 
   mfa_configuration = "OFF"
 
-  # Tags
   tags = {
     Name        = "${var.project_name}-${var.environment}-user-pool"
     Environment = var.environment
   }
 }
 
-resource "aws_cognito_user_pool_client" "web_client" {
-  name         = "${var.project_name}-${var.environment}-web-client"
+resource "aws_cognito_user_pool_client" "main" {
+  name         = "${var.project_name}-${var.environment}-client"
   user_pool_id = aws_cognito_user_pool.main.id
 
-  # OAuth flows
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
@@ -54,7 +52,7 @@ resource "aws_cognito_user_pool_client" "web_client" {
   }
 
   prevent_user_existence_errors = "ENABLED"
-  enable_token_revocation = true
+  enable_token_revocation      = true
 
   read_attributes = [
     "email",
@@ -63,4 +61,18 @@ resource "aws_cognito_user_pool_client" "web_client" {
   ]
 
   generate_secret = true
+}
+
+resource "aws_secretsmanager_secret" "client_secret" {
+  name = "${var.project_name}-${var.environment}-client-secret"
+
+  recovery_window_in_days = 0
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "client_secret" {
+  secret_id     = aws_secretsmanager_secret.client_secret.id
+  secret_string = aws_cognito_user_pool_client.main.client_secret
 }

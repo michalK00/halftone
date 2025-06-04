@@ -23,12 +23,6 @@ output "user_pool_client_id" {
   value       = module.auth.user_pool_client_id
 }
 
-output "user_pool_client_secret" {
-  description = "Cognito User Pool Client secret"
-  sensitive = true
-  value = module.auth.user_pool_client_secret
-}
-
 # IAM Outputs (sensitive)
 output "developer_access_key_id" {
   description = "Access key ID for developer user"

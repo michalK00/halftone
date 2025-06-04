@@ -28,7 +28,7 @@ interface SelectedPhoto {
     photo: Photo;
 }
 
-const App = () => {
+const ClientPage = () => {
     const [gallery, setGallery] = useState<Gallery | null>(null);
     const [photos, setPhotos] = useState<Photo[]>([]);
     const [selectedPhotos, setSelectedPhotos] = useState<SelectedPhoto[]>([]);
@@ -392,4 +392,4 @@ const App = () => {
     );
 };
 
-export default App;
+export default ClientPage;

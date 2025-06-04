@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from "@/context/auth-context.tsx";
 import SignInPage from "@/features/auth/pages/SignInPage.tsx";
 import SignUpPage from "@/features/auth/pages/SignUpPage.tsx";
 import VerifyAccountPage from "@/features/auth/pages/VerifyAccountPage.tsx";
+import ClientPage from "@/features/client/client-page.tsx";
 const queryClient = new QueryClient()
 
 function AppContent() {
@@ -29,6 +30,7 @@ function AppContent() {
     if (!isAuthenticated) {
         return (
             <Routes>
+                <Route path="/client/*" element={<ClientPage />} />
                 <Route path="/signin" element={<SignInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/verify-account" element={<VerifyAccountPage />} />

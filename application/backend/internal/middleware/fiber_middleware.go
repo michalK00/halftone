@@ -8,13 +8,9 @@ import (
 )
 
 func FiberMiddleware(a *fiber.App) {
-	clientFrontendOrigin := os.Getenv("CLIENT_FRONTEND_ORIGIN")
-	adminFrontendOrigin := os.Getenv("ADMIN_FRONTEND_ORIGIN")
-	allowOrigins := ""
-	if clientFrontendOrigin == "" || adminFrontendOrigin == "" {
+	allowOrigins := os.Getenv("CLIENT_ORIGIN")
+	if allowOrigins == "" {
 		allowOrigins = "*"
-	} else {
-		allowOrigins = clientFrontendOrigin + "," + adminFrontendOrigin
 	}
 
 	a.Use(

@@ -2,12 +2,24 @@ package cmdutil
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"os"
 	"time"
+)
+
+const (
+	// Path to the AWS CA file
+	caFilePath = "/opt/global-bundle.pem"
+
+	// Timeout operations after N seconds
+	connectTimeout = 5
+	queryTimeout   = 30
 )
 
 func NewLogger(service string) *zap.Logger {
@@ -24,8 +36,10 @@ func NewMongoClient() (*mongo.Database, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(os.Getenv("MONGODB_URI")).SetServerAPIOptions(serverAPI)
+	tlsConfig, err := getCustomTLSConfig(caFilePath)
+	opts := options.Client().
+		ApplyURI(os.Getenv("MONGODB_URI")).
+		SetTLSConfig(tlsConfig)
 
 	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
@@ -47,4 +61,22 @@ func NewRedisClient(ctx context.Context) (*redis.Client, error) {
 	}
 
 	return client, nil
+}
+
+func getCustomTLSConfig(caFile string) (*tls.Config, error) {
+	tlsConfig := new(tls.Config)
+	certs, err := os.ReadFile(caFile)
+
+	if err != nil {
+		return tlsConfig, err
+	}
+
+	tlsConfig.RootCAs = x509.NewCertPool()
+	ok := tlsConfig.RootCAs.AppendCertsFromPEM(certs)
+
+	if !ok {
+		return tlsConfig, errors.New("Failed parsing pem file")
+	}
+
+	return tlsConfig, nil
 }

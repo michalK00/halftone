@@ -35,23 +35,24 @@ func NewApi(db *mongo.Database) *api {
 
 func (a *api) Routes(app *fiber.App) {
 
-	auth := app.Group("/auth")
+	apiPrefix := app.Group("/api")
+	auth := apiPrefix.Group("/auth")
 	auth.Post("/signup", a.SignUp)
 	auth.Post("/signin", a.SignIn)
 	auth.Post("/verify", a.VerifyAccount)
 	auth.Post("/refresh-token", a.RefreshToken)
 
-	public := app.Group("/api/v1")
+	public := apiPrefix.Group("/api/v1")
 	public.Get("/qr", a.generateQrHandler)
 
 	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
-	client := app.Group("/api/v1/client/galleries/:galleryId", middleware.AuthenticateClient(a.galleryRepo))
+	client := apiPrefix.Group("/api/v1/client/galleries/:galleryId", middleware.AuthenticateClient(a.galleryRepo))
 	client.Get("", a.clientGetGalleryHandler)
 	client.Post("", a.clientCreateOrderHandler)
 	client.Get("/photos", a.clientGetGalleryPhotosHandler)
 	client.Get("/photos/:photoId", a.clientGetPhotoHandler)
 
-	protected := app.Group("/api/v1", middleware.Protected())
+	protected := apiPrefix.Group("/api/v1", middleware.Protected())
 
 	protected.Get("/collections", a.getCollectionsHandler)
 	protected.Post("/collections", a.createCollectionHandler)

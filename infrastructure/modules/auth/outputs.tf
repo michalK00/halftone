@@ -1,20 +1,19 @@
 output "user_pool_id" {
-  description = "ID of the Cognito User Pool"
+  description = "Cognito User Pool ID"
   value       = aws_cognito_user_pool.main.id
 }
 
 output "user_pool_arn" {
-  description = "ARN of the Cognito User Pool"
+  description = "Cognito User Pool ARN"
   value       = aws_cognito_user_pool.main.arn
 }
 
 output "user_pool_client_id" {
-  description = "ID of the Cognito User Pool Client"
-  value       = aws_cognito_user_pool_client.web_client.id
+  description = "Cognito User Pool Client ID"
+  value       = aws_cognito_user_pool_client.main.id
 }
 
-output "user_pool_client_secret" {
-  description = "ID of the Cognito User Pool Client"
-  sensitive = true
-  value       = aws_cognito_user_pool_client.web_client.client_secret
+output "client_secret_arn" {
+  description = "ARN of the client secret in Secrets Manager"
+  value       = aws_secretsmanager_secret.client_secret.arn
 }

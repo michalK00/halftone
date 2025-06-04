@@ -28,26 +28,53 @@ variable "availability_zones" {
   default     = ["eu-north-1a", "eu-north-1b"]
 }
 
-variable "allowed_origins" {
-  description = "Allowed origins for CORS"
-  type        = list(string)
-  default     = [
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "http://localhost"
-  ]
+# Container versions
+variable "api_image_tag" {
+  description = "API image tag"
+  type        = string
+  default     = "latest"
 }
 
-# DocumentDB variables (for future use)
-variable "docdb_master_username" {
-  description = "Master username for DocumentDB"
+variable "client_image_tag" {
+  description = "Client image tag"
   type        = string
-  default     = "admin"
+  default     = "latest"
+}
+
+variable "admin_image_tag" {
+  description = "Admin image tag"
+  type        = string
+  default     = "latest"
+}
+
+# Service counts
+variable "api_desired_count" {
+  description = "API task count"
+  type        = number
+  default     = 1
+}
+
+variable "frontend_desired_count" {
+  description = "Frontend task count"
+  type        = number
+  default     = 1
+}
+
+# Database
+variable "docdb_master_username" {
+  description = "DocumentDB username"
+  type        = string
   sensitive   = true
 }
 
 variable "docdb_master_password" {
-  description = "Master password for DocumentDB"
+  description = "DocumentDB password"
   type        = string
   sensitive   = true
+}
+
+variable "mongodb_database_name" {
+  description = "Database name"
+  type        = string
+  default     = "halftone"
 }

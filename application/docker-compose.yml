@@ -16,20 +16,12 @@ services:
       - redis
 #    secrets:
 #      - api-secrets
-  admin:
-    image: halftone-admin:latest
-    build: ./frontend-admin
-    container_name: halftone-admin
-    ports:
-      - "80:80"
-    env_file:
-      - "./backend/.env"
   client:
     image: halftone-client:latest
-    build: ./frontend-client
+    build: ./client
     container_name: halftone-client
     ports:
-      - "81:80"
+      - "80:80"
     env_file:
       - "./backend/.env"
 
@@ -41,18 +33,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-
-  redis:
-    image: redis/redis-stack:latest
-    container_name: redis
-    environment:
-      REDIS_ARGS: ""
-    ports:
-      - "6379:6379"
-      - "8001:8001"
-    volumes:
-      - redis-data:/data
-
 
 volumes:
   mongo-data:

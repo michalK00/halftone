@@ -21,3 +21,27 @@ tasks:
     dir: "lambdas"
     cmds:
       - cd imgd; go mod tidy; GOARCH=amd64 GOOS=linux go build -o bootstrap main.go; zip deployment.zip bootstrap; cd ..
+  docker-api:
+    dir: "backend"
+    cmds:
+      - docker build --tag halftone-api:latest .
+  docker-admin:
+    dir: "frontend-admin"
+    cmds:
+      - docker build --tag halftone-admin:latest .
+  docker-client:
+    dir: "frontend-client"
+    cmds:
+      - docker build --tag halftone-client:latest .
+#  docker-api-p:
+#    dir: "../infrastructure/environments/dev"
+#    cmds:
+#
+#  docker-admin-p:
+#    dir: "frontend-admin"
+#    cmds:
+#      - docker build --tag halftone-admin:latest .
+#  docker-client-p:
+#    dir: "frontend-client"
+#    cmds:
+#      - docker build --tag halftone-client:latest .

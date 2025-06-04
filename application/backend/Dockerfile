@@ -19,4 +19,6 @@ COPY --from=build /app/halftone /app/halftone
 
 EXPOSE 8080
 
+ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /opt/global-bundle.pem
+
 ENTRYPOINT ["/app/halftone", "api"]
