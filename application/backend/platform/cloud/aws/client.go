@@ -24,6 +24,8 @@ type Client struct {
 	Config  *Config
 	S3      *S3Client
 	Cognito *CognitoClient
+	SNS     *SNSClient
+	SQS     *SQSClient
 }
 
 var (
@@ -59,6 +61,15 @@ func initClient(ctx context.Context, client *Client) error {
 		return err
 	}
 
+	client.SNS = NewSNSClient()
+	if err := client.SNS.Initialize(ctx, config); err != nil {
+		return err
+	}
+
+	client.SQS = NewSQSClient()
+	if err := client.SQS.Initialize(ctx, config); err != nil {
+		return err
+	}
 	return nil
 }
 

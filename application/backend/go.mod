@@ -6,6 +6,8 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.0
+	github.com/aws/aws-sdk-go-v2/service/sns v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.6
 	github.com/gofiber/fiber/v2 v2.52.8
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/joho/godotenv v1.5.1
