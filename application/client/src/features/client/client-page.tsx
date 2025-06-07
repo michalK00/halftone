@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ShoppingCart, Check, X, Image } from 'lucide-react';
 import axios from 'axios';
-
-// Configure axios base URL
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
-});
+import {api} from "@/api";
 
 // Types
 interface Gallery {

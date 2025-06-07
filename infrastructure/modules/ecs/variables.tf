@@ -28,6 +28,11 @@ variable "alb_security_group_id" {
   type        = string
 }
 
+variable "ecs_tasks_security_group_id" {
+  description = "ECS security group ID"
+  type        = string
+}
+
 # EC2 Configuration
 variable "instance_type" {
   description = "EC2 instance type"
@@ -77,13 +82,7 @@ variable "frontend_desired_count" {
   default     = 1
 }
 
-# Application Configuration
-variable "domain_name" {
-  description = "Domain name (leave empty if not using)"
-  type        = string
-  default     = ""
-}
-
+# App Configuration
 variable "cognito_user_pool_id" {
   description = "Cognito User Pool ID"
   type        = string

@@ -23,7 +23,6 @@ resource "aws_cloudwatch_log_group" "ecs" {
   }
 }
 
-# Get ECS optimized AMI
 data "aws_ami" "ecs_optimized" {
   most_recent = true
   owners      = ["amazon"]
@@ -34,7 +33,6 @@ data "aws_ami" "ecs_optimized" {
   }
 }
 
-# IAM Roles
 resource "aws_iam_role" "ecs_instance" {
   name = "${var.environment}-ecs-instance-role"
 
@@ -146,39 +144,13 @@ resource "aws_iam_role_policy_attachment" "ecs_task_s3" {
   policy_arn = aws_iam_policy.ecs_s3.arn
 }
 
-# Security group for ECS instances
-resource "aws_security_group" "ecs_instances" {
-  name_prefix = "${var.environment}-ecs-"
-  vpc_id      = var.vpc_id
-  description = "Security group for ECS instances"
-
-  ingress {
-    description     = "All traffic from ALB"
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.environment}-ecs-sg"
-  }
-}
-
 # ECS Instances
 resource "aws_instance" "ecs" {
   count                  = var.instance_count
   ami                    = data.aws_ami.ecs_optimized.id
   instance_type          = var.instance_type
   subnet_id              = var.private_subnet_ids[count.index % length(var.private_subnet_ids)]
-  vpc_security_group_ids = [aws_security_group.ecs_instances.id]
+  vpc_security_group_ids = [var.ecs_tasks_security_group_id]
   iam_instance_profile   = aws_iam_instance_profile.ecs_instance.name
 
   associate_public_ip_address = true
@@ -191,6 +163,47 @@ resource "aws_instance" "ecs" {
   tags = {
     Name        = "${var.environment}-ecs-${count.index + 1}"
     Environment = var.environment
+  }
+}
+
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_self_signed_cert" "cert" {
+  private_key_pem = tls_private_key.key.private_key_pem
+
+  subject {
+    common_name  = aws_lb.main.dns_name
+    organization = "Example Organization"
+  }
+
+  validity_period_hours = 8760 # Valid for 1 year
+
+  dns_names = [
+    aws_lb.main.dns_name
+  ]
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+
+  depends_on = [aws_lb.main]
+}
+
+resource "aws_acm_certificate" "self_signed" {
+  private_key      = tls_private_key.key.private_key_pem
+  certificate_body = tls_self_signed_cert.cert.cert_pem
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "self-signed-certificate"
   }
 }
 
@@ -210,7 +223,6 @@ resource "aws_lb" "main" {
   }
 }
 
-# Target Groups
 resource "aws_lb_target_group" "api" {
   name        = "${var.environment}-api-tg"
   port        = 8080
@@ -252,10 +264,12 @@ resource "aws_lb_target_group" "client" {
 }
 
 # ALB Listener
-resource "aws_lb_listener" "http" {
+resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn   = aws_acm_certificate.self_signed.arn
 
   default_action {
     type             = "forward"
@@ -263,7 +277,38 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
 # Listener Rules
+resource "aws_lb_listener_rule" "api_https" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
+  }
+}
+
 resource "aws_lb_listener_rule" "api" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 100
@@ -313,6 +358,10 @@ resource "aws_ecs_task_definition" "api" {
 
     environment = [
       {
+        name  = "ENV"
+        value = var.environment
+      },
+      {
         name  = "PORT"
         value = "8080"
       },
@@ -322,7 +371,7 @@ resource "aws_ecs_task_definition" "api" {
       },
       {
         name  = "CLIENT_ORIGIN"
-        value = "http://${aws_lb.main.dns_name}"
+        value = "https://${aws_lb.main.dns_name}"
       },
       {
         name  = "AWS_USER_POOL_ID"
@@ -377,7 +426,7 @@ resource "aws_ecs_task_definition" "client" {
 
     portMappings = [{
       containerPort = 80
-      hostPort      = 80
+      hostPort      = 0
       protocol      = "tcp"
     }]
 
@@ -393,7 +442,7 @@ resource "aws_ecs_task_definition" "client" {
     environment = [
       {
         name  = "__HALFTONE__API_URL"
-        value = var.domain_name != "" ? "https://${var.domain_name}/api" : "http://${aws_lb.main.dns_name}/api"
+        value = "https://${aws_lb.main.dns_name}/api"
       }
     ]
 

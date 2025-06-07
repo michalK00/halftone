@@ -29,7 +29,7 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 
-# Networking
+
 module "networking" {
   source = "../../modules/networking"
 
@@ -38,7 +38,6 @@ module "networking" {
   availability_zones = var.availability_zones
 }
 
-# Storage
 module "storage" {
   source = "../../modules/storage"
 
@@ -83,7 +82,7 @@ module "database" {
   project_name           = var.project_name
   vpc_id                 = module.networking.vpc_id
   subnet_ids             = module.networking.private_subnet_ids
-  app_security_group_ids = [module.ecs.ecs_security_group_id, module.networking.database_security_group_id]
+  app_security_group_ids = [module.networking.ecs_tasks_security_group_id, module.networking.database_security_group_id]
 
   master_username = var.docdb_master_username
   master_password = var.docdb_master_password
@@ -117,6 +116,7 @@ module "ecs" {
   public_subnet_ids           = module.networking.public_subnet_ids
   private_subnet_ids          = module.networking.private_subnet_ids
   alb_security_group_id       = module.networking.alb_security_group_id
+  ecs_tasks_security_group_id = module.networking.ecs_tasks_security_group_id
 
   # Container configuration
   api_image        = module.ecr.api_repository_url
@@ -125,8 +125,8 @@ module "ecs" {
   client_image_tag = var.client_image_tag
 
   # Cognito
-  cognito_user_pool_id     = module.auth.user_pool_id
-  cognito_app_client_id    = module.auth.user_pool_client_id
+  cognito_user_pool_id          = module.auth.user_pool_id
+  cognito_app_client_id         = module.auth.user_pool_client_id
   cognito_app_client_secret_arn = module.auth.client_secret_arn
 
   # S3
@@ -140,9 +140,6 @@ module "ecs" {
   # Service configuration
   api_desired_count      = var.api_desired_count
   frontend_desired_count = var.frontend_desired_count
-
-  # Since no domain, use ALB DNS
-  domain_name = ""
 }
 
 # Outputs
@@ -154,8 +151,8 @@ output "alb_dns_name" {
 output "application_urls" {
   description = "Application URLs"
   value = {
-    client = "http://${module.ecs.alb_dns_name}"
-    api    = "http://${module.ecs.alb_dns_name}/api"
+    client = "https://${module.ecs.alb_dns_name}"
+    api    = "https://${module.ecs.alb_dns_name}/api"
   }
 }
 

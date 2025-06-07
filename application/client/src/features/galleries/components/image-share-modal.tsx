@@ -172,7 +172,7 @@ function ImageShareModal({
                                     </div>
                                     <div className="flex gap-2">
                                         <Input
-                                            value={sharingUrl}
+                                            value={`${import.meta.env.VITE_API_BACKEND_URL}/client/${sharingUrl}`}
                                             readOnly
                                             className="text-sm bg-background"
                                         />

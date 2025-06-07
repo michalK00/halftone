@@ -67,7 +67,7 @@ func loadAWSConfig(ctx context.Context) (*Config, error) {
 	var cfg aws.Config
 	var err error
 
-	if os.Getenv("GO_ENV") == "production" {
+	if os.Getenv("ENV") == "cloud" {
 		cfg, err = config.LoadDefaultConfig(ctx, config.WithRegion(region))
 	} else {
 		cfg, err = loadDevConfig(ctx, region)
