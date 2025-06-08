@@ -140,7 +140,8 @@ func (s *MongoPhoto) CreatePhoto(ctx context.Context, collectionId primitive.Obj
 		{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 		{"status", "pending"},
 		{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
-		{"clientObjectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
+		{"clientObjectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos_client", photoId.Hex()+ext)},
+		{"thumbnailObjectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos_client", photoId.Hex()+"_thumbnail"+ext)},
 	}
 	_, err := coll.InsertOne(ctx, photo)
 	if err != nil {
@@ -172,6 +173,8 @@ func (s *MongoPhoto) CreatePhotos(ctx context.Context, collectionId primitive.Ob
 			{"updatedAt", primitive.NewDateTimeFromTime(time.Now().UTC())},
 			{"status", domain.PhotoStatus(0)},
 			{"objectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos", photoId.Hex()+ext)},
+			{"clientObjectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos_client", photoId.Hex()+ext)},
+			{"thumbnailObjectKey", path.Join(collectionId.Hex(), galleryId.Hex(), "photos_client", photoId.Hex()+"_thumbnail"+ext)},
 		}
 		documents[i] = photo
 		photoIds[i] = photoId

@@ -18,7 +18,7 @@ tasks:
     cmds:
       - go install github.com/swaggo/swag/cmd/swag@latest
   lambdas:
-    dir: "lambdas"
+    dir: "backend/lambdas"
     cmds:
       - cd imgd; go mod tidy; GOARCH=amd64 GOOS=linux go build -o bootstrap main.go; zip deployment.zip bootstrap; cd ..
   docker-api:

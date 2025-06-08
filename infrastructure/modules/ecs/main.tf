@@ -119,6 +119,31 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+
+# SQS access for photo uploads
+resource "aws_iam_policy" "ecs_sqs" {
+  name = "${var.environment}-ecs-sqs"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ]
+      Resource = var.sqs_queue_arn
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_sqs" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = aws_iam_policy.ecs_sqs.arn
+}
+
 # S3 access for tasks
 resource "aws_iam_policy" "ecs_s3" {
   name = "${var.environment}-ecs-s3"
@@ -392,6 +417,14 @@ resource "aws_ecs_task_definition" "api" {
       {
         name  = "AWS_REGION"
         value = var.aws_region
+      },
+      {
+        name  = "AWS_SQS_QUEUE_NAME"
+        value = var.sqs_queue_name
+      },
+      {
+        name  = "AWS_SQS_QUEUE_URL"
+        value = var.sqs_queue_url
       }
     ]
 
@@ -442,7 +475,7 @@ resource "aws_ecs_task_definition" "client" {
     environment = [
       {
         name  = "__HALFTONE__API_URL"
-        value = "https://${aws_lb.main.dns_name}/api"
+        value = "https://${aws_lb.main.dns_name}"
       }
     ]
 

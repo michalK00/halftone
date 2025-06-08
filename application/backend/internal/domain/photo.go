@@ -7,16 +7,17 @@ import (
 )
 
 type PhotoDB struct {
-	ID               primitive.ObjectID `bson:"_id" json:"id"`
-	GalleryId        primitive.ObjectID `bson:"galleryId" json:"galleryId"`
-	CollectionId     primitive.ObjectID `bson:"collectionId" json:"collectionId"`
-	UserId           string             `bson:"userId" json:"userId"`
-	Status           PhotoStatus        `bson:"status" json:"status"`
-	CreatedAt        time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt        time.Time          `bson:"updatedAt" json:"updatedAt"`
-	OriginalFilename string             `bson:"originalFilename" json:"originalFilename"`
-	ObjectKey        string             `bson:"objectKey" json:"objectKey"`
-	ClientObjectKey  string             `bson:"clientObjectKey" json:"clientObjectKey"`
+	ID                 primitive.ObjectID `bson:"_id" json:"id"`
+	GalleryId          primitive.ObjectID `bson:"galleryId" json:"galleryId"`
+	CollectionId       primitive.ObjectID `bson:"collectionId" json:"collectionId"`
+	UserId             string             `bson:"userId" json:"userId"`
+	Status             PhotoStatus        `bson:"status" json:"status"`
+	CreatedAt          time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt          time.Time          `bson:"updatedAt" json:"updatedAt"`
+	OriginalFilename   string             `bson:"originalFilename" json:"originalFilename"`
+	ObjectKey          string             `bson:"objectKey" json:"objectKey"`
+	ClientObjectKey    string             `bson:"clientObjectKey" json:"clientObjectKey"`
+	ThumbnailObjectKey string             `bson:"thumbnailObjectKey" json:"thumbnailObjectKey"`
 }
 
 type PhotoStatus int64

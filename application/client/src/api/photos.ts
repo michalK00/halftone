@@ -5,6 +5,7 @@ import { getMimeType } from '@/lib/utils';
 export interface Photo {
     id: string;
     url: string;
+    thumbnailUrl: string;
     originalFilename: string;
 }
 

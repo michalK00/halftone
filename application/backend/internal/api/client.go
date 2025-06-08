@@ -94,7 +94,6 @@ func (a *api) clientCreateOrderHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ServerError(ctx, err, "Failed to create order")
 	}
-
 	return ctx.Status(fiber.StatusCreated).JSON(createOrderResponse{
 		ID: orderId,
 	})
@@ -104,6 +103,7 @@ type clientPhotoResponse struct {
 	ID               primitive.ObjectID `bson:"_id" json:"id"`
 	OriginalFilename string             `bson:"originalFilename" json:"originalFilename"`
 	Url              string             `bson:"url" json:"url"`
+	ThumbnailUrl     string             `bson:"thumbnailUrl" json:"thumbnailUrl"`
 }
 
 // @Summary Get gallery photos (client access)
@@ -183,7 +183,11 @@ func (a *api) clientGetPhotoHandler(ctx *fiber.Ctx) error {
 		return NotFound(ctx, errors.New("photo not found in this gallery"))
 	}
 
-	url, err := aws.GetObjectUrl(photo.ObjectKey)
+	url, err := aws.GetObjectUrl(photo.ClientObjectKey)
+	if err != nil {
+		return ServerError(ctx, err, "Failed to get url")
+	}
+	thumbnailUrl, err := aws.GetObjectUrl(photo.ThumbnailObjectKey)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to get url")
 	}
@@ -191,6 +195,7 @@ func (a *api) clientGetPhotoHandler(ctx *fiber.Ctx) error {
 		ID:               photo.ID,
 		OriginalFilename: photo.OriginalFilename,
 		Url:              url,
+		ThumbnailUrl:     thumbnailUrl,
 	}
 
 	return ctx.JSON(clientPhoto)

@@ -119,3 +119,18 @@ variable "mongodb_database_name" {
   description = "MongoDB database name"
   type        = string
 }
+
+variable "sqs_queue_name" {
+  description = "SQS queue name for Lambda triggers"
+  type        = string
+}
+
+variable "sqs_queue_url" {
+  description = "SQS queue url for Lambda triggers"
+  type        = string
+}
+
+variable "sqs_queue_arn" {
+  description = "ARN of the SQS queue for Lambda triggers"
+  type        = string
+}

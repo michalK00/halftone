@@ -37,6 +37,10 @@ export default function GalleryPage() {
         enabled: !!collectionId,
     });
 
+    function createSharingUrl(galleryPath: string) {
+        return `${import.meta.env.VITE_API_BACKEND_URL}/client${galleryPath}`;
+    }
+
     const renderContent = () => {
         if (galleryQuery.status === 'pending') {
             return (
@@ -89,7 +93,7 @@ export default function GalleryPage() {
                                     galleryId={galleryQuery.data.id}
                                     sharingEnabled={galleryQuery.data.sharing.sharingEnabled}
                                     sharingExpiryDate={new Date(galleryQuery.data.sharing.sharingExpiryDate)}
-                                    sharingUrl={galleryQuery.data.sharing.sharingUrl}
+                                    sharingUrl={createSharingUrl(galleryQuery.data.sharing.sharingUrl)}
                                 />
                                 <EditGalleryDialog gallery={galleryQuery.data}/>
                                 <DeleteGalleryDialog gallery={galleryQuery.data} onDelete={() => {navigate(`/collections/${collectionId}`)}}/>
@@ -140,3 +144,4 @@ export default function GalleryPage() {
         </main>
     );
 }
+

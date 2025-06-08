@@ -17,6 +17,7 @@ interface Photo {
     id: string;
     originalFilename: string;
     url: string;
+    thumbnailUrl: string;
 }
 
 interface SelectedPhoto {
@@ -200,7 +201,7 @@ const ClientPage = () => {
                                 {selectedPhotos.map(({ photo }) => (
                                     <div key={photo.id} className="relative group">
                                         <img
-                                            src={photo.url}
+                                            src={photo.thumbnailUrl === "" ? photo.url : photo.thumbnailUrl}
                                             alt={photo.originalFilename}
                                             className="w-full aspect-square object-cover rounded"
                                         />
@@ -327,7 +328,7 @@ const ClientPage = () => {
                                     }`}
                                 >
                                     <img
-                                        src={photo.url}
+                                        src={photo.thumbnailUrl === "" ? photo.url : photo.thumbnailUrl}
                                         alt={photo.originalFilename}
                                         className="w-full aspect-square object-cover"
                                         onClick={() => setSelectedPhotoView(photo)}

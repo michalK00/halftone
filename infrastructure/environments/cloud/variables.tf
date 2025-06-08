@@ -78,3 +78,15 @@ variable "mongodb_database_name" {
   type        = string
   default     = "halftone"
 }
+
+variable "notification_email" {
+  description = "Email for CloudWatch alarms"
+  type        = string
+  default     = "mklemens49@gmail.com"
+}
+
+variable "lambda_source_dir" {
+  description = "Directory containing the Lambda source code"
+  type        = string
+  default     = "../../../application/lambda/image-processing"
+}

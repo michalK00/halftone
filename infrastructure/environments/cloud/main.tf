@@ -76,8 +76,6 @@ module "security" {
 module "database" {
   source = "../../modules/database"
 
-  count = 1
-
   environment            = var.environment
   project_name           = var.project_name
   vpc_id                 = module.networking.vpc_id
@@ -103,7 +101,46 @@ resource "aws_secretsmanager_secret" "mongodb_uri" {
 
 resource "aws_secretsmanager_secret_version" "mongodb_uri" {
   secret_id = aws_secretsmanager_secret.mongodb_uri.id
-  secret_string = "mongodb://${var.docdb_master_username}:${var.docdb_master_password}@${module.database[0].cluster_endpoint}:27017/${var.mongodb_database_name}?authSource=admin&tls=true&tlsCAFile=/opt/global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+  secret_string = "mongodb://${var.docdb_master_username}:${var.docdb_master_password}@${module.database.cluster_endpoint}:27017/${var.mongodb_database_name}?authSource=admin&tls=true&tlsCAFile=/opt/global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+}
+
+module "notifications" {
+  source = "../../modules/notifications"
+
+  project_name      = var.project_name
+  environment       = var.environment
+
+  sns_topic_name = "alert-notifications"
+
+  email_subscriber = var.notification_email
+  sns_display_name = "alert-notifications-${var.environment}"
+}
+
+module "lambda" {
+  source = "../../modules/lambda"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  function_name     = "photo-uploads-handler"
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    Module      = "lambda"
+  }
+  sns_topic_arn      = module.notifications.sns_topic_arn
+  sqs_queue_arn      = module.messaging.sqs_queue_arn
+  photos_bucket_arn  = module.storage.photos_bucket_arn
+  source_dir         = var.lambda_source_dir
+}
+
+module "messaging" {
+  source = "../../modules/messaging"
+
+  aws_sns_topic_arn   = module.notifications.sns_topic_arn
+  environment         = var.environment
+  project_name        = var.project_name
+  sqs_queue_name      = "photo-uploads-queue"
 }
 
 # ECS Module
@@ -140,6 +177,11 @@ module "ecs" {
   # Service configuration
   api_desired_count      = var.api_desired_count
   frontend_desired_count = var.frontend_desired_count
+
+  # SQS
+  sqs_queue_name = module.messaging.sqs_queue_name
+  sqs_queue_url  = module.messaging.sqs_queue_url
+  sqs_queue_arn  = module.messaging.sqs_queue_arn
 }
 
 # Outputs

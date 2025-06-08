@@ -6,7 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/michalK00/halftone/internal/aws"
 	"github.com/michalK00/halftone/internal/domain"
+	awsClient "github.com/michalK00/halftone/platform/cloud/aws"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"time"
@@ -100,6 +103,13 @@ func (a *api) uploadPhotosHandler(ctx *fiber.Ctx) error {
 
 }
 
+type PhotoUploadPayload struct {
+	GalleryId string `json:"galleryId"`
+	PhotoId   string `json:"photoId"`
+	ObjectKey string `json:"objectKey"`
+	Bucket    string `json:"bucket"`
+}
+
 // @Summary Confirm photo upload
 // @Description Confirms that a photo has been successfully uploaded by updating its status
 // @Tags photos
@@ -122,8 +132,6 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 		return NotFound(ctx, err)
 	}
 
-	//TODO add job to copy the photo into client folder
-
 	if _, err := aws.ObjectExists(photo.ObjectKey); err != nil {
 		return NotFound(ctx, err)
 	}
@@ -131,6 +139,32 @@ func (a *api) confirmPhotoUploadHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ServerError(ctx, err, "Failed to confirm photo upload")
 	}
+
+	client, err := awsClient.GetClient()
+	if err != nil {
+		return ServerError(ctx, err, "Failed to get AWS client")
+	}
+	payload := PhotoUploadPayload{
+		GalleryId: photo.GalleryId.Hex(),
+		PhotoId:   photo.ID.Hex(),
+		ObjectKey: photo.ObjectKey,
+		Bucket:    os.Getenv("AWS_S3_NAME"),
+	}
+	lambdaPayload := &awsClient.LambdaPayload{
+		EventType: "photo.uploaded",
+		Payload:   payload,
+		Metadata: map[string]string{
+			"environment": os.Getenv("ENV"),
+		},
+		DelaySeconds: 0,
+	}
+	message, err := client.SQS.SendLambdaPayload(ctx.Context(), lambdaPayload)
+	if err != nil {
+		log.Printf("Failed to trigger photo processing: %v", err)
+		return err
+	}
+	log.Printf("Photo processing triggered. MessageID: %s", *message.MessageId)
+
 	return ctx.Status(fiber.StatusOK).JSON(photo)
 }
 
@@ -138,6 +172,7 @@ type getPhotoResponse struct {
 	Id               string             `json:"id"`
 	OriginalFilename string             `json:"originalFilename"`
 	Url              string             `json:"url"`
+	ThumbnailUrl     string             `json:"thumbnailUrl"`
 	Status           domain.PhotoStatus `json:"status"`
 	UpdatedAt        time.Time          `json:"updatedAt"`
 	CreatedAt        time.Time          `json:"createdAt"`
@@ -168,15 +203,26 @@ func (a *api) getPhotosHandler(ctx *fiber.Ctx) error {
 
 	res := make([]getPhotoResponse, len(photos))
 	for i, photo := range photos {
+		exists, err := aws.ObjectExists(photo.ThumbnailObjectKey)
 
 		url, err := aws.GetObjectUrl(photo.ObjectKey)
 		if err != nil {
 			return ServerError(ctx, err, "Failed to get photo url")
 		}
+
+		var thumbnailUrl string
+		if exists {
+			thumbnailUrl, err = aws.GetObjectUrl(photo.ThumbnailObjectKey)
+			if err != nil {
+				return ServerError(ctx, err, "Failed to get thumbnail url")
+			}
+		}
+
 		res[i] = getPhotoResponse{
 			Id:               photo.ID.Hex(),
 			OriginalFilename: photo.OriginalFilename,
 			Url:              url,
+			ThumbnailUrl:     thumbnailUrl,
 			Status:           photo.Status,
 			UpdatedAt:        photo.UpdatedAt,
 			CreatedAt:        photo.CreatedAt,

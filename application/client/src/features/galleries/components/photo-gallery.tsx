@@ -177,7 +177,7 @@ function PhotoGallery({gallery}: GalleryContentProps) {
                                     </DialogTitle>
                                     <div className="relative w-full aspect-video">
                                         <img
-                                            src={image.url}
+                                            src={image.thumbnailUrl === "" ? image.url : image.thumbnailUrl}
                                             alt={image.originalFilename}
                                             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-full max-h-full object-contain"
                                         />
