@@ -1,0 +1,75 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      client: ${{ steps.changes.outputs.client }}
+      lambdas: ${{ steps.changes.outputs.lambdas }}
+      infrastructure: ${{ steps.changes.outputs.infrastructure }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Filter changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend: 
+                - 'application/backend/**'
+            client: 
+                - 'application/client/**'
+            lambdas: 
+                - 'application/lambdas/**'
+            infrastructure: 
+                - 'infrastructure/**'
+
+  test-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./application/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+      - name: Install dependencies
+        run: go mod download
+      - name: Run tests
+        run: go test ./... -v
+      - name: Run lint
+        uses: golangci/golangci-lint-action@v3
+
+  test-client:
+    needs: changes
+    if: needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./application/client
+    steps:
+      - uses: actions/checkout@v4
+      - name: Not implemented
+        run: echo "Client tests are not implemented yet."
+
+  test-lambdas:
+    needs: changes
+    if: needs.changes.outputs.lambdas == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./application/lambdas
+    steps:
+      - uses: actions/checkout@v4
+      - name: Not implemented
+        run: echo "Lambda tests are not implemented yet."
+
