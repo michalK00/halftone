@@ -39,15 +39,17 @@ jobs:
         working-directory: ./application/backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.24'
       - name: Install dependencies
         run: go mod download
       - name: Run tests
         run: go test ./... -v
-      - name: Run lint
-        uses: golangci/golangci-lint-action@v3
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
 
   test-client:
     needs: changes
