@@ -11,7 +11,7 @@ jobs:
     outputs:
       backend: ${{ steps.changes.outputs.backend }}
       client: ${{ steps.changes.outputs.client }}
-      lambdas: ${{ steps.changes.outputs.lambdas }}
+      lambda: ${{ steps.changes.outputs.lambda }}
       infrastructure: ${{ steps.changes.outputs.infrastructure }}
     steps:
       - name: Checkout code
@@ -26,7 +26,7 @@ jobs:
             client: 
                 - 'application/client/**'
             lambdas: 
-                - 'application/lambdas/**'
+                - 'application/lambda/**'
             infrastructure: 
                 - 'infrastructure/**'
 
@@ -63,11 +63,11 @@ jobs:
 
   test-lambdas:
     needs: changes
-    if: needs.changes.outputs.lambdas == 'true'
+    if: needs.changes.outputs.lambda == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./application/lambdas
+        working-directory: ./application/lambda
     steps:
       - uses: actions/checkout@v4
       - name: Not implemented
