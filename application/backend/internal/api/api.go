@@ -1,0 +1,101 @@
+package api
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
+	"github.com/michalK00/halftone/internal/domain"
+	"github.com/michalK00/halftone/internal/middleware"
+	"github.com/michalK00/halftone/internal/repository"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+type api struct {
+	collectionRepo domain.CollectionRepository
+	galleryRepo    domain.GalleryRepository
+	photoRepo      domain.PhotoRepository
+	orderRepo      domain.OrderRepository
+	jobRepo        domain.JobRepository
+}
+
+func NewApi(db *mongo.Database) *api {
+	collectionRepo := repository.NewMongoCollection(db)
+	galleryRepo := repository.NewMongoGallery(db)
+	photoRepo := repository.NewMongoPhoto(db)
+	orderRepo := repository.NewMongoOrder(db)
+	jobRepo := repository.NewMongoJob(db)
+
+	return &api{
+		collectionRepo: collectionRepo,
+		galleryRepo:    galleryRepo,
+		photoRepo:      photoRepo,
+		orderRepo:      orderRepo,
+		jobRepo:        jobRepo,
+	}
+}
+
+func (a *api) Routes(app *fiber.App) {
+
+	apiPrefix := app.Group("/api")
+	auth := apiPrefix.Group("/auth")
+	auth.Post("/signup", a.SignUp)
+	auth.Post("/signin", a.SignIn)
+	auth.Post("/verify", a.VerifyAccount)
+	auth.Post("/refresh-token", a.RefreshToken)
+
+	public := apiPrefix.Group("/api/v1")
+	public.Get("/qr", a.generateQrHandler)
+
+	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
+	client := apiPrefix.Group("/api/v1/client/galleries/:galleryId", middleware.AuthenticateClient(a.galleryRepo))
+	client.Get("", a.clientGetGalleryHandler)
+	client.Post("", a.clientCreateOrderHandler)
+	client.Get("/photos", a.clientGetGalleryPhotosHandler)
+	client.Get("/photos/:photoId", a.clientGetPhotoHandler)
+
+	protected := apiPrefix.Group("/api/v1", middleware.Protected())
+
+	protected.Get("/collections", a.getCollectionsHandler)
+	protected.Post("/collections", a.createCollectionHandler)
+	protected.Get("/collections/:collectionId", a.getCollectionHandler)
+	protected.Put("/collections/:collectionId", a.updateCollectionHandler)
+	protected.Delete("/collections/:collectionId", a.deleteCollectionHandler)
+
+	protected.Get("/collections/:collectionId/galleries", a.getGalleriesHandler)
+	protected.Get("/collections/:collectionId/galleryCount", a.getGalleryCountHandler)
+	protected.Post("/collections/:collectionId/galleries", a.createGalleryHandler)
+	//protected.Post("/:collectionId/galleries/batch")
+	//protected.Delete("/:collectionId/galleries/batch")
+	protected.Get("/galleries/:galleryId", a.getGalleryHandler)
+	protected.Put("/galleries/:galleryId", a.updateGalleryHandler)
+	protected.Delete("/galleries/:galleryId", a.deleteGalleryHandler)
+
+	protected.Post("/galleries/:galleryId/sharing/share", a.shareGalleryHandler)
+	protected.Put("/galleries/:galleryId/sharing/reschedule", a.rescheduleGallerySharingHandler)
+	protected.Put("/galleries/:galleryId/sharing/stop", a.stopSharingGalleryHandler)
+
+	protected.Get("/galleries/:galleryId/photos", a.getPhotosHandler)
+	protected.Post("/galleries/:galleryId/photos", a.uploadPhotosHandler)
+	//protected.Delete("/galleries/:galleryId/photos")
+	//protected.Get("/photos/:photoId")
+	protected.Put("/photos/:photoId/confirm", a.confirmPhotoUploadHandler)
+	protected.Delete("/photos/:photoId", a.deletePhotoHandler)
+
+	// user endpoints to browse and handle client orders
+	protected.Get("/orders", a.getOrdersHandler)
+	protected.Get("/orders/:orderId", a.getOrderHandler)
+	protected.Put("/orders/:orderId", a.updateOrderHandler)
+	protected.Delete("/orders/:orderId", a.deleteOrderHandler)
+
+}
+
+func (a *api) Server() *fiber.App {
+	app := fiber.New()
+	middleware.FiberMiddleware(app)
+	a.Routes(app)
+	app.Get("/swagger/*", swagger.HandlerDefault)
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendString("Healthy!")
+	})
+
+	return app
+}

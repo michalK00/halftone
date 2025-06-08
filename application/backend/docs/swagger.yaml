@@ -1,0 +1,1177 @@
+definitions:
+  api.createCollectionRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  api.createCollectionResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  api.createGalleryRequest:
+    properties:
+      name:
+        example: Example Gallery
+        type: string
+    type: object
+  api.createGalleryResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  api.createOrderRequest:
+    properties:
+      clientEmail:
+        example: client@example.com
+        type: string
+      comment:
+        example: Please print all photos in 10x15cm format
+        type: string
+      photoIds:
+        example:
+        - '["671442a11fd0c5eb46b5a3fa"]'
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - clientEmail
+    - photoIds
+    type: object
+  api.createOrderResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  api.getPhotoResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      originalFilename:
+        type: string
+      status:
+        $ref: '#/definitions/domain.PhotoStatus'
+      updatedAt:
+        type: string
+      url:
+        type: string
+    type: object
+  api.photoUploadRequest:
+    properties:
+      originalFilename:
+        type: string
+    type: object
+  api.photoUploadResponse:
+    properties:
+      id:
+        type: string
+      originalFilename:
+        type: string
+      presignedPostRequest:
+        $ref: '#/definitions/s3.PresignedPostRequest'
+    type: object
+  api.rescheduleGallerySharingRequest:
+    properties:
+      sharingExpiry:
+        description: 'example: "2024-12-31T23:59:59Z"'
+        type: string
+    type: object
+  api.shareGalleryRequest:
+    properties:
+      sharingExpiry:
+        description: 'example: "2024-12-31T23:59:59Z"'
+        type: string
+    type: object
+  api.shareGalleryResponse:
+    properties:
+      accessToken:
+        type: string
+      galleryId:
+        type: string
+      shareUrl:
+        type: string
+      sharingExpiry:
+        type: string
+    type: object
+  api.updateCollectionRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  api.updateGalleryRequest:
+    properties:
+      name:
+        example: Example Gallery
+        type: string
+    type: object
+  api.updateOrderRequest:
+    properties:
+      comment:
+        example: Updated comment
+        type: string
+      status:
+        example: completed
+        type: string
+    type: object
+  domain.CollectionDB:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  domain.GalleryDB:
+    properties:
+      collectionId:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      photoOptions:
+        $ref: '#/definitions/domain.PhotoOptions'
+      sharing:
+        $ref: '#/definitions/domain.Sharing'
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  domain.OrderDB:
+    properties:
+      clientEmail:
+        type: string
+      comment:
+        type: string
+      createdAt:
+        type: string
+      galleryId:
+        type: string
+      id:
+        type: string
+      photos:
+        items:
+          $ref: '#/definitions/domain.OrderPhoto'
+        type: array
+      status:
+        $ref: '#/definitions/domain.OrderStatus'
+      updatedAt:
+        type: string
+    type: object
+  domain.OrderPhoto:
+    properties:
+      photoId:
+        type: string
+    type: object
+  domain.OrderStatus:
+    enum:
+    - pending
+    - completed
+    type: string
+    x-enum-varnames:
+    - OrderStatusPending
+    - OrderStatusCompleted
+  domain.PhotoDB:
+    properties:
+      collectionId:
+        type: string
+      createdAt:
+        type: string
+      galleryId:
+        type: string
+      id:
+        type: string
+      objectKey:
+        type: string
+      originalFilename:
+        type: string
+      status:
+        $ref: '#/definitions/domain.PhotoStatus'
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  domain.PhotoOptions:
+    properties:
+      downsize:
+        type: boolean
+      watermark:
+        type: boolean
+    type: object
+  domain.PhotoStatus:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - Pending
+    - Uploaded
+    - Shared
+    - PendingDeletion
+  domain.Sharing:
+    properties:
+      accessToken:
+        type: string
+      sharingEnabled:
+        type: boolean
+      sharingExpiryDate:
+        type: string
+      sharingUrl:
+        type: string
+    type: object
+  fiber.Map:
+    additionalProperties: true
+    type: object
+  s3.PresignedPostRequest:
+    properties:
+      url:
+        description: Represents the Base URL to make a request to
+        type: string
+      values:
+        additionalProperties:
+          type: string
+        description: |-
+          Values is a key-value map of values to be sent as FormData
+          these values are not encoded
+        type: object
+    type: object
+info:
+  contact:
+    name: Michał Klemens
+  title: Halftone
+  version: "0.1"
+paths:
+  /api/v1/client/galleries/{galleryId}:
+    get:
+      consumes:
+      - application/json
+      description: Gets gallery information for clients with valid access token
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GalleryDB'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery information (client access)
+      tags:
+      - client
+    post:
+      consumes:
+      - application/json
+      description: Creates a new order for a gallery with valid access token
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.createOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.createOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Create order (client access)
+      tags:
+      - client
+  /api/v1/client/galleries/{galleryId}/photos:
+    get:
+      consumes:
+      - application/json
+      description: Gets all photos in a gallery for clients with valid access token
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.PhotoDB'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery photos (client access)
+      tags:
+      - client
+  /api/v1/client/galleries/{galleryId}/photos/{photoId}:
+    get:
+      consumes:
+      - application/json
+      description: Gets a specific photo from a gallery for clients with valid access
+        token
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Photo ID
+        in: path
+        name: photoId
+        required: true
+        type: string
+      - description: Access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PhotoDB'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get specific photo (client access)
+      tags:
+      - client
+  /api/v1/collections:
+    get:
+      consumes:
+      - '*/*'
+      description: Gets all collections
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.CollectionDB'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get collections
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Creates one collection
+      parameters:
+      - description: Collection to create
+        in: body
+        name: collections
+        required: true
+        schema:
+          $ref: '#/definitions/api.createCollectionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.createCollectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Create collection
+      tags:
+      - collections
+  /api/v1/collections/{collectionId}:
+    delete:
+      consumes:
+      - '*/*'
+      description: Deletes specific collection
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete collection
+      tags:
+      - collections
+    get:
+      consumes:
+      - '*/*'
+      description: Gets specific collection
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.CollectionDB'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get collection
+      tags:
+      - collections
+    put:
+      consumes:
+      - '*/*'
+      description: Updates specific collection
+      parameters:
+      - description: Collection update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateCollectionRequest'
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.CollectionDB'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Update collection
+      tags:
+      - collections
+  /api/v1/collections/{collectionId}/galleries:
+    get:
+      consumes:
+      - '*/*'
+      description: gets all galleries of a collection with collectionId.
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.GalleryDB'
+            type: array
+      summary: Get all galleries of a collection.
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Creates one gallery in collection with collectionId
+      parameters:
+      - description: Gallery to create
+        in: body
+        name: galleries
+        required: true
+        schema:
+          $ref: '#/definitions/api.createGalleryRequest'
+      - description: Collection ID
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.createGalleryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Create one gallery
+      tags:
+      - collections
+  /api/v1/collections/{collectionId}/galleryCount:
+    get:
+      consumes:
+      - application/json
+      description: Returns the total number of galleries in a specific collection
+      parameters:
+      - description: Collection ID (MongoDB ObjectID hex string)
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Gallery count
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Collection not found or invalid ID format
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery count for a collection
+      tags:
+      - collections
+  /api/v1/galleries/{galleryId}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a specific gallery
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete gallery
+      tags:
+      - galleries
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific gallery by its ID
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GalleryDB'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery
+      tags:
+      - galleries
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing gallery's information
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Gallery update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateGalleryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Update gallery
+      tags:
+      - galleries
+  /api/v1/galleries/{galleryId}/photos:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all photos from a specific gallery, including their signed
+        URLs
+      parameters:
+      - description: Gallery ID (MongoDB ObjectID)
+        format: objectid
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.getPhotoResponse'
+        "404":
+          description: Gallery not found or invalid ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error while retrieving photos
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get gallery photos
+      tags:
+      - photos
+    post:
+      consumes:
+      - application/json
+      description: Creates new photo entries in a gallery and returns pre-signed URLs
+        for uploading the actual photo files
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Photo upload requests
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/api.photoUploadRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created photo entries with upload URLs
+          schema:
+            items:
+              $ref: '#/definitions/api.photoUploadResponse'
+            type: array
+        "400":
+          description: Invalid request body or gallery ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Gallery not found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Upload photos to a gallery
+      tags:
+      - photos
+  /api/v1/galleries/{galleryId}/sharing/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Updates the expiry date for a shared gallery and disables sharing
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Reschedule sharing request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.rescheduleGallerySharingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sharing successfully rescheduled
+          schema:
+            $ref: '#/definitions/api.shareGalleryResponse'
+        "404":
+          description: Gallery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Sharing already inactive
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reschedule gallery sharing expiry
+      tags:
+      - gallery sharing
+  /api/v1/galleries/{galleryId}/sharing/share:
+    post:
+      consumes:
+      - application/json
+      description: Create a shareable link for a gallery with an expiration date
+      parameters:
+      - description: Gallery ID
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      - description: Share Gallery Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.shareGalleryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.shareGalleryResponse'
+        "400":
+          description: Invalid request body or expiry date
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Gallery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Sharing already active
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Share Gallery
+      tags:
+      - gallery sharing
+  /api/v1/galleries/{galleryId}/sharing/stop:
+    put:
+      consumes:
+      - application/json
+      description: Immediately stops sharing a gallery and updates sharing options
+      parameters:
+      - description: Gallery ID
+        format: objectId
+        in: path
+        name: galleryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Gallery with updated sharing status
+          schema:
+            $ref: '#/definitions/domain.GalleryDB'
+        "404":
+          description: Gallery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Sharing already inactive
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Stop gallery sharing
+      tags:
+      - gallery sharing
+  /api/v1/orders:
+    get:
+      consumes:
+      - application/json
+      description: Gets all orders for galleries owned by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.OrderDB'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get all orders
+      tags:
+      - orders
+  /api/v1/orders/{orderId}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an order
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete order
+      tags:
+      - orders
+    get:
+      consumes:
+      - application/json
+      description: Gets a specific order if it belongs to a gallery owned by the user
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.OrderDB'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Get order by ID
+      tags:
+      - orders
+    put:
+      consumes:
+      - application/json
+      description: Updates an order's status or comment
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: string
+      - description: Order update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.OrderDB'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Update order
+      tags:
+      - orders
+  /api/v1/photos/{photoId}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a given photo
+      parameters:
+      - description: Photo ID (MongoDB ObjectID)
+        format: objectid
+        in: path
+        name: photoId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Photo successfully deleted
+        "404":
+          description: Photo not found or invalid ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error while deleting photo
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Delete photo
+      tags:
+      - photos
+  /api/v1/photos/{photoId}/confirm:
+    put:
+      consumes:
+      - application/json
+      description: Confirms that a photo has been successfully uploaded by updating
+        its status
+      parameters:
+      - description: Photo ID (MongoDB ObjectID)
+        format: objectid
+        in: path
+        name: photoId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PhotoDB'
+        "404":
+          description: Photo not found or invalid ID
+          schema:
+            $ref: '#/definitions/fiber.Map'
+        "500":
+          description: Server error while confirming upload
+          schema:
+            $ref: '#/definitions/fiber.Map'
+      summary: Confirm photo upload
+      tags:
+      - photos
+  /api/v1/qr:
+    get:
+      consumes:
+      - application/json
+      description: Generates a QR code image in PNG format from a provided URL
+      parameters:
+      - description: URL to encode in QR code
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: QR code image in PNG format
+          schema:
+            type: file
+        "400":
+          description: Invalid or missing URL parameter
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error during QR generation
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate QR code image from URL
+      tags:
+      - QR
+swagger: "2.0"

@@ -1,0 +1,44 @@
+# TODO
+services:
+  api:
+    image: halftone-api
+    build: ./backend
+    container_name: halftone-api
+    ports:
+      - "8080:8080"
+#    environment:
+#      AWS_SECRET_ACCESS_KEY: /run/secrets/secrets
+#      AWS_APP_CLIENT_SECRET: /run/secrets/secrets
+    env_file:
+      - "./backend/.env"
+    depends_on:
+      - mongodb
+      - redis
+#    secrets:
+#      - api-secrets
+  client:
+    image: halftone-client:latest
+    build: ./client
+    container_name: halftone-client
+    ports:
+      - "80:80"
+    env_file:
+      - "./backend/.env"
+
+
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+  redis-data:
+
+secrets:
+  api-secrets:
+      file: ./secrets.txt
+
