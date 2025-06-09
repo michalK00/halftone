@@ -175,7 +175,7 @@ jobs:
           echo "Created appspec.yaml:"
           cat appspec.yaml
           
-          APPSPEC_CONTENT=$(cat appspec.yaml | base64 -w 0)
+          APPSPEC_CONTENT=$(cat appspec.yaml)
           
           DEPLOYMENT_ID=$(aws deploy create-deployment \
             --application-name "$CODEDEPLOY_APP" \
@@ -193,7 +193,7 @@ jobs:
 
   deploy-frontend:
     needs: [changes, deploy-infrastructure]
-    # if: steps.changes.outputs.frontend == 'true'
+    if: steps.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
