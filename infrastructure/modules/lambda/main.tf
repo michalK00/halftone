@@ -88,6 +88,10 @@ resource "aws_iam_role_policy" "lambda_s3_policy" {
 }
 
 resource "null_resource" "lambda_build" {
+  # triggers = {
+  #   source_hash = filebase64sha256("${var.source_dir}/main.go")
+  # }
+
   provisioner "local-exec" {
     command     = var.build_command
     working_dir = var.source_dir
