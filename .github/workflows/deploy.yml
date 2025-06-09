@@ -186,7 +186,7 @@ jobs:
 
   deploy-frontend:
     needs: [changes, deploy-infrastructure]
-    if: steps.changes.outputs.frontend == 'true'
+    if: changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
