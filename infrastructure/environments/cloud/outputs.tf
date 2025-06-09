@@ -55,3 +55,24 @@ output "application_urls" {
     api    = "https://${module.ecs.alb_dns_name}/api"
   }
 }
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = module.ecs.ecs_cluster_name
+}
+
+output "codedeploy_app_name" {
+  description = "CodeDeploy application name"
+  value       = module.ecs.codedeploy_app_name
+}
+
+output "codedeploy_deployment_group_name" {
+  description = "CodeDeploy deployment group name"
+  value = module.ecs.codedeploy_deployment_group_name
+}
+
+output "task_definition_family" {
+  description = "ECS task definition family"
+  value = module.ecs.task_definition_family
+}
+
