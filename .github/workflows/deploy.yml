@@ -16,7 +16,6 @@ jobs:
     outputs:
       backend: ${{ steps.changes.outputs.backend }}
       frontend: ${{ steps.changes.outputs.frontend }}
-      lambda: ${{ steps.changes.outputs.lambda }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v2
@@ -27,8 +26,6 @@ jobs:
               - 'application/backend/**'
             frontend:
               - 'application/client/**'
-            lambdas:
-              - 'application/lambda/**'
             infrastructure:
               - 'infrastructure/**'
 
@@ -152,27 +149,45 @@ jobs:
           DEPLOYMENT_GROUP: ${{ needs.deploy-infrastructure.outputs.codedeploy_deployment_group }}
           TASK_DEFINITION_ARN: ${{ steps.task-def.outputs.task_definition_arn }}
         run: |
-          cat > appspec.yaml << EOF
-          version: 0.0
-          Resources:
-            - TargetService:
-                Type: AWS::ECS::Service
-                Properties:
-                  TaskDefinition: "$TASK_DEFINITION_ARN"
-                  LoadBalancerInfo:
-                    ContainerName: "api"
-                    ContainerPort: 8080
+          APPSPEC_CONTENT='{
+            "version": "0.0",
+              "Resources": [
+                {
+                  "TargetService": {
+                    "Type": "AWS::ECS::Service",
+                    "Properties": {
+                      "TaskDefinition": "'$TASK_DEFINITION_ARN'",
+                      "LoadBalancerInfo": {
+                        "ContainerName": "api",
+                        "ContainerPort": 8080
+                      }
+                    }
+                  }
+                }
+              ]
+            }'
+            
+          echo "AppSpec content:"
+          echo "$APPSPEC_CONTENT" | jq .
+          
+          cat > deployment.json << EOF
+          {
+            "applicationName": "$CODEDEPLOY_APP",
+            "deploymentGroupName": "$DEPLOYMENT_GROUP",
+            "revision": {
+              "revisionType": "AppSpecContent",
+              "appSpecContent": {
+                "content": $(echo "$APPSPEC_CONTENT" | jq -c .)
+              }
+            }
+          }
           EOF
           
-          echo "Created appspec.yaml:"
-          cat appspec.yaml
-          
-          APPSPEC_CONTENT=$(cat appspec.yaml)
+          echo "Deployment configuration:"
+          cat deployment.json | jq .
           
           DEPLOYMENT_ID=$(aws deploy create-deployment \
-            --application-name "$CODEDEPLOY_APP" \
-            --deployment-group-name "$DEPLOYMENT_GROUP" \
-            --revision "{\"revisionType\":\"AppSpecContent\",\"appSpecContent\":{\"content\":\"$APPSPEC_CONTENT\"}}" \
+            --cli-input-json file://deployment.json \
             --query 'deploymentId' \
             --output text)
           
