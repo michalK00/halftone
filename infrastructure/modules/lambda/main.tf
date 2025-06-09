@@ -5,7 +5,6 @@ locals {
   })
 }
 
-# CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = 14
@@ -13,7 +12,6 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   tags = local.common_tags
 }
 
-# IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
   name = "${var.function_name}-role"
 
@@ -33,7 +31,6 @@ resource "aws_iam_role" "lambda_role" {
   tags = local.common_tags
 }
 
-# IAM Policy for Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${var.function_name}-policy"
   role = aws_iam_role.lambda_role.id
@@ -109,7 +106,6 @@ data "archive_file" "lambda_zip" {
   depends_on = [null_resource.lambda_build]
 }
 
-# Lambda Function
 resource "aws_lambda_function" "photo_processor" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
@@ -132,7 +128,6 @@ resource "aws_lambda_event_source_mapping" "sqs_trigger" {
   enabled          = true
 }
 
-# CloudWatch Alarms
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   alarm_name          = "${var.function_name}-errors"
   comparison_operator = "GreaterThanThreshold"

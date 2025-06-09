@@ -8,7 +8,6 @@ variable "project_name" {
   type        = string
 }
 
-# SNS Configuration
 variable "sns_topic_name" {
   description = "Name of the SNS topic for email notifications"
   type        = string
@@ -24,7 +23,6 @@ variable "sns_display_name" {
   type        = string
 }
 
-# KMS Configuration
 variable "enable_kms_encryption" {
   description = "Enable KMS encryption for SNS"
   type        = bool

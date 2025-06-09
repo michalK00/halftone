@@ -13,7 +13,6 @@ variable "aws_sns_topic_arn" {
     type        = string
 }
 
-# SQS Configuration
 variable "sqs_queue_name" {
   description = "Name of the SQS queue for Lambda triggers"
   type        = string
@@ -49,7 +48,6 @@ variable "receive_wait_time_seconds" {
   default     = 0
 }
 
-# Dead Letter Queue Configuration
 variable "enable_dlq" {
   description = "Enable Dead Letter Queue"
   type        = bool

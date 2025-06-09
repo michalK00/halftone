@@ -36,7 +36,6 @@ resource "aws_sns_topic" "email_notifications" {
   })
 }
 
-# SNS Topic Policy
 resource "aws_sns_topic_policy" "email_notifications" {
   arn    = aws_sns_topic.email_notifications.arn
   policy = data.aws_iam_policy_document.sns_topic_policy.json
@@ -48,7 +47,6 @@ resource "aws_sns_topic_subscription" "email_notifications" {
   protocol  = "email"
   endpoint  = var.email_subscriber
 
-  # Email subscriptions need to be confirmed manually
   confirmation_timeout_in_minutes = 5
 }
 

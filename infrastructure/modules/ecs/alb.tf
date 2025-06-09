@@ -53,7 +53,6 @@ resource "aws_lb_target_group" "client" {
   }
 }
 
-# ALB Listener
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
@@ -82,7 +81,6 @@ resource "aws_lb_listener" "http" {
     }
   }
 }
-# Listener Rules
 resource "aws_lb_listener_rule" "api_https" {
   listener_arn = aws_lb_listener.https.arn
   priority     = 100

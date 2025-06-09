@@ -23,20 +23,6 @@ output "user_pool_client_id" {
   value       = module.auth.user_pool_client_id
 }
 
-# IAM Outputs (sensitive)
-output "developer_access_key_id" {
-  description = "Access key ID for developer user"
-  value       = module.security.developer_access_key_id
-  sensitive   = true
-}
-
-output "developer_secret_access_key" {
-  description = "Secret access key for developer user"
-  value       = module.security.developer_secret_access_key
-  sensitive   = true
-}
-
-# Future ECS Role ARNs
 output "ecs_task_execution_role_arn" {
   description = "ARN of the ECS task execution role"
   value       = module.security.ecs_task_execution_role_arn
@@ -47,7 +33,6 @@ output "ecs_task_role_arn" {
   value       = module.security.ecs_task_role_arn
 }
 
-# Database preparation outputs
 output "database_security_group_id" {
   description = "ID of the database security group"
   value       = module.networking.database_security_group_id

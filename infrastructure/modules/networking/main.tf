@@ -8,7 +8,6 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Internet Gateway - Free
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -17,7 +16,6 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Elastic IPs for NAT Gateways
 resource "aws_eip" "nat" {
   count  = length(var.availability_zones)
   domain = "vpc"
@@ -41,7 +39,6 @@ resource "aws_nat_gateway" "main" {
   depends_on = [aws_internet_gateway.main]
 }
 
-# Public Subnets
 resource "aws_subnet" "public" {
   count                   = length(var.availability_zones)
   vpc_id                  = aws_vpc.main.id
