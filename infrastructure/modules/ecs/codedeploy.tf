@@ -8,11 +8,11 @@ resource "aws_codedeploy_app" "api" {
   }
 }
 
-resource "aws_codedeploy_deployment_group" "api_with_alarms" {
+resource "aws_codedeploy_deployment_group" "api" {
   app_name               = aws_codedeploy_app.api.name
-  deployment_group_name  = "${var.environment}-api-deployment-group-with-alarms"
+  deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
+  deployment_group_name  = "${var.environment}-api-deployment-group"
   service_role_arn      = aws_iam_role.codedeploy.arn
-  deployment_config_name = "CodeDeployDefault.ECSAllAtOnceBlueGreen"
 
   deployment_style {
     deployment_type = "BLUE_GREEN"
