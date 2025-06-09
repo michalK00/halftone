@@ -35,7 +35,6 @@ variable "photos_bucket_arn" {
     type        = string
 }
 
-# Source code for the Lambda function
 variable "source_dir" {
   description = "Directory containing the Lambda source code"
   type        = string

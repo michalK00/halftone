@@ -8,7 +8,6 @@ locals {
   })
 }
 
-# Dead Letter Queue (created first as it's referenced by main queue)
 resource "aws_sqs_queue" "lambda_triggers_dlq" {
 
   name = local.dlq_name
@@ -34,7 +33,6 @@ resource "aws_sqs_queue" "lambda_triggers" {
   receive_wait_time_seconds = var.receive_wait_time_seconds
   visibility_timeout_seconds = var.visibility_timeout_seconds
 
-  # Dead Letter Queue Configuration
   redrive_policy = var.enable_dlq ? jsonencode({
     deadLetterTargetArn = aws_sqs_queue.lambda_triggers_dlq.arn
     maxReceiveCount     = var.max_receive_count
@@ -54,7 +52,6 @@ resource "aws_sqs_queue_policy" "lambda_triggers" {
   policy    = data.aws_iam_policy_document.sqs_queue_policy.json
 }
 
-# CloudWatch Alarms for Monitoring
 resource "aws_cloudwatch_metric_alarm" "sqs_dlq_messages" {
   alarm_name          = "${local.dlq_name}-messages-alarm"
   comparison_operator = "GreaterThanThreshold"

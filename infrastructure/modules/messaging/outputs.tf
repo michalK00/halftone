@@ -1,4 +1,3 @@
-# SQS Outputs
 output "sqs_queue_arn" {
   description = "ARN of the SQS queue for Lambda triggers"
   value       = aws_sqs_queue.lambda_triggers.arn
@@ -19,7 +18,6 @@ output "sqs_queue_id" {
   value       = aws_sqs_queue.lambda_triggers.id
 }
 
-# Dead Letter Queue Outputs
 output "sqs_dlq_arn" {
   description = "ARN of the SQS dead letter queue"
   value       = var.enable_dlq ? aws_sqs_queue.lambda_triggers_dlq.arn : null
@@ -35,8 +33,6 @@ output "sqs_dlq_name" {
   value       = var.enable_dlq ? aws_sqs_queue.lambda_triggers_dlq.name : null
 }
 
-
-# CloudWatch Alarm ARNs
 output "cloudwatch_alarm_arns" {
   description = "ARNs of CloudWatch alarms created for monitoring"
   value = {
@@ -45,7 +41,6 @@ output "cloudwatch_alarm_arns" {
   }
 }
 
-# All resource information for reference
 output "messaging_resources" {
   description = "Complete information about messaging resources"
   value = {

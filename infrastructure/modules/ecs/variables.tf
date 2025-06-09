@@ -33,7 +33,6 @@ variable "ecs_tasks_security_group_id" {
   type        = string
 }
 
-# EC2 Configuration
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
@@ -46,7 +45,6 @@ variable "instance_count" {
   default     = 1
 }
 
-# Container Images
 variable "api_image" {
   description = "API container image URL"
   type        = string
@@ -69,7 +67,6 @@ variable "client_image_tag" {
   default     = "latest"
 }
 
-# Service Configuration
 variable "api_desired_count" {
   description = "Desired number of API tasks"
   type        = number
@@ -82,7 +79,6 @@ variable "frontend_desired_count" {
   default     = 1
 }
 
-# App Configuration
 variable "cognito_user_pool_id" {
   description = "Cognito User Pool ID"
   type        = string

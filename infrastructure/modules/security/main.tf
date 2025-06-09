@@ -1,16 +1,3 @@
-resource "aws_iam_user" "developer" {
-  name = "${var.project_name}-${var.environment}-developer"
-
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-developer"
-    Environment = var.environment
-  }
-}
-
-resource "aws_iam_access_key" "developer" {
-  user = aws_iam_user.developer.name
-}
-
 resource "aws_iam_policy" "s3_access" {
   name        = "${var.project_name}-${var.environment}-s3-access"
   description = "Policy for accessing S3 buckets"
@@ -59,17 +46,6 @@ resource "aws_iam_policy" "cognito_access" {
   })
 }
 
-resource "aws_iam_user_policy_attachment" "developer_s3" {
-  user       = aws_iam_user.developer.name
-  policy_arn = aws_iam_policy.s3_access.arn
-}
-
-resource "aws_iam_user_policy_attachment" "developer_cognito" {
-  user       = aws_iam_user.developer.name
-  policy_arn = aws_iam_policy.cognito_access.arn
-}
-
-# Future ECS task execution role (prepare for later)
 resource "aws_iam_role" "ecs_task_execution" {
   name = "${var.project_name}-${var.environment}-ecs-task-execution"
 
@@ -90,13 +66,11 @@ resource "aws_iam_role" "ecs_task_execution" {
   }
 }
 
-# Attach AWS managed policy for ECS task execution
 resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   role       = aws_iam_role.ecs_task_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Future ECS task role (for application permissions)
 resource "aws_iam_role" "ecs_task" {
   name = "${var.project_name}-${var.environment}-ecs-task"
 
@@ -117,7 +91,6 @@ resource "aws_iam_role" "ecs_task" {
   }
 }
 
-# Attach S3 and Cognito policies to ECS task role
 resource "aws_iam_role_policy_attachment" "ecs_task_s3" {
   role       = aws_iam_role.ecs_task.name
   policy_arn = aws_iam_policy.s3_access.arn

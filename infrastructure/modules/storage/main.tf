@@ -35,17 +35,7 @@ resource "aws_s3_bucket_cors_configuration" "photos" {
     max_age_seconds = 3000
   }
 }
-# TODO add bucket notification
-# resource "aws_s3_bucket_notification" "photos_notification" {
-#   bucket = aws_s3_bucket.photos.bucket
-#
-#   queue {
-#     events = ["s3:ObjectCreated:*"]
-#     queue_arn = ""
-#   }
-# }
 
-# S3 bucket for application logs
 resource "aws_s3_bucket" "logs" {
   bucket = "${var.project_name}-${var.environment}-logs"
 
@@ -55,7 +45,6 @@ resource "aws_s3_bucket" "logs" {
   }
 }
 
-# Lifecycle for logs to reduce storage costs
 resource "aws_s3_bucket_lifecycle_configuration" "logs" {
   bucket = aws_s3_bucket.logs.id
 

@@ -1,5 +1,3 @@
-# environments /dev/main
-
 terraform {
   required_version = ">= 1.0"
 
@@ -46,7 +44,6 @@ module "storage" {
   allowed_origins = ["*"] # Allow all origins since there is no domain
 }
 
-# Authentication
 module "auth" {
   source = "../../modules/auth"
 
@@ -62,7 +59,6 @@ module "ecr" {
 }
 
 
-# Security
 module "security" {
   source = "../../modules/security"
 
@@ -78,7 +74,6 @@ module "database" {
 
   environment            = var.environment
   project_name           = var.project_name
-  vpc_id                 = module.networking.vpc_id
   subnet_ids             = module.networking.private_subnet_ids
   app_security_group_ids = [module.networking.ecs_tasks_security_group_id, module.networking.database_security_group_id]
 
@@ -89,7 +84,6 @@ module "database" {
   instance_type = "db.t3.medium"
 }
 
-# MongoDB URI Secret
 resource "aws_secretsmanager_secret" "mongodb_uri" {
   name = "${var.environment}-db-uri"
 
@@ -143,7 +137,6 @@ module "messaging" {
   sqs_queue_name      = "photo-uploads-queue"
 }
 
-# ECS Module
 module "ecs" {
   source = "../../modules/ecs"
 
@@ -155,47 +148,27 @@ module "ecs" {
   alb_security_group_id       = module.networking.alb_security_group_id
   ecs_tasks_security_group_id = module.networking.ecs_tasks_security_group_id
 
-  # Container configuration
   api_image        = module.ecr.api_repository_url
   api_image_tag    = var.api_image_tag
   client_image     = module.ecr.client_repository_url
   client_image_tag = var.client_image_tag
 
-  # Cognito
   cognito_user_pool_id          = module.auth.user_pool_id
   cognito_app_client_id         = module.auth.user_pool_client_id
   cognito_app_client_secret_arn = module.auth.client_secret_arn
 
-  # S3
   s3_name = module.storage.photos_bucket_name
   s3_uri  = "s3://${module.storage.photos_bucket_name}"
 
-  # MongoDB
   mongodb_uri_arn = aws_secretsmanager_secret.mongodb_uri.arn
   mongodb_database_name = var.mongodb_database_name
 
-  # Service configuration
   api_desired_count      = var.api_desired_count
   frontend_desired_count = var.frontend_desired_count
 
-  # SQS
   sqs_queue_name = module.messaging.sqs_queue_name
   sqs_queue_url  = module.messaging.sqs_queue_url
   sqs_queue_arn  = module.messaging.sqs_queue_arn
-}
-
-# Outputs
-output "alb_dns_name" {
-  description = "DNS name of the load balancer"
-  value       = module.ecs.alb_dns_name
-}
-
-output "application_urls" {
-  description = "Application URLs"
-  value = {
-    client = "https://${module.ecs.alb_dns_name}"
-    api    = "https://${module.ecs.alb_dns_name}/api"
-  }
 }
 
 output "ecr_repositories" {

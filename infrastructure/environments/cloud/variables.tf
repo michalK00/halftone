@@ -28,7 +28,6 @@ variable "availability_zones" {
   default     = ["eu-north-1a", "eu-north-1b"]
 }
 
-# Container versions
 variable "api_image_tag" {
   description = "API image tag"
   type        = string
@@ -47,7 +46,6 @@ variable "admin_image_tag" {
   default     = "latest"
 }
 
-# Service counts
 variable "api_desired_count" {
   description = "API task count"
   type        = number
@@ -60,7 +58,6 @@ variable "frontend_desired_count" {
   default     = 1
 }
 
-# Database
 variable "docdb_master_username" {
   description = "DocumentDB username"
   type        = string
