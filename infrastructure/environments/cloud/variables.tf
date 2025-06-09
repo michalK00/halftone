@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "cloud"
+  default     = "prod"
 }
 
 variable "project_name" {
