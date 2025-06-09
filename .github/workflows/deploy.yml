@@ -55,6 +55,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
+          terraform_wrapper: false
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -64,8 +65,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-      - id: apply
-        name: Terraform Apply
+      - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
           TF_VAR_docdb_master_username: ${{ secrets.DOCDB_MASTER_USERNAME }}
@@ -74,10 +74,10 @@ jobs:
       - name: Get Terraform Outputs
         id: terraform-output
         run: |
-          echo "codedeploy_app_name=$({ steps.apply.outputs.codedeploy_app_name })" >> $GITHUB_OUTPUT
-          echo "codedeploy_deployment_group=$({ steps.apply.outputs.codedeploy_deployment_group_name })" >> $GITHUB_OUTPUT
-          echo "ecs_cluster_name=$({ steps.apply.outputs.ecs_cluster_name })" >> $GITHUB_OUTPUT
-          echo "task_definition_family=$({ steps.apply.outputs.task_definition_family })" >> $GITHUB_OUTPUT
+          echo "codedeploy_app_name=$(terraform output -raw codedeploy_app_name)" >> $GITHUB_OUTPUT
+          echo "codedeploy_deployment_group=$(terraform output -raw codedeploy_deployment_group_name)" >> $GITHUB_OUTPUT
+          echo "ecs_cluster_name=$(terraform output -raw ecs_cluster_name)" >> $GITHUB_OUTPUT
+          echo "task_definition_family=$(terraform output -raw task_definition_family)" >> $GITHUB_OUTPUT
 
   deploy-backend:
     needs: [changes, deploy-infrastructure]
