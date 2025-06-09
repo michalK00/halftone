@@ -21,7 +21,7 @@ resource "aws_codedeploy_deployment_group" "api_with_alarms" {
 
   auto_rollback_configuration {
     enabled = true
-    events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM", "DEPLOYMENT_STOP_ON_INSTANCE_FAILURE"]
+    events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
   }
 
   alarm_configuration {
@@ -43,7 +43,7 @@ resource "aws_codedeploy_deployment_group" "api_with_alarms" {
     }
 
     green_fleet_provisioning_option {
-      action = "COPY_AUTO_SCALING_GROUP"
+      action = "DISCOVER_EXISTING"
     }
   }
 
@@ -53,10 +53,19 @@ resource "aws_codedeploy_deployment_group" "api_with_alarms" {
   }
 
   load_balancer_info {
-    target_group_info {
-      name = aws_lb_target_group.api.name
+    target_group_pair_info {
+      prod_traffic_route {
+        listener_arns = [aws_lb_listener.https.arn]
+      }
+      target_group {
+        name = aws_lb_target_group.api.name
+      }
+      target_group {
+        name = aws_lb_target_group.api_green.name
+      }
     }
   }
+
 
   tags = {
     Name        = "${var.environment}-api-deployment-group-with-alarms"
