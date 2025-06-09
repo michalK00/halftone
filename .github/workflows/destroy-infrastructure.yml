@@ -1,0 +1,93 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type "DESTROY" to confirm'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: eu-north-1
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    outputs:
+      validated: ${{ steps.validate.outputs.validated }}
+    steps:
+      - name: Validate confirmation
+        id: validate
+        run: |
+          if [ "${{ github.event.inputs.confirmation }}" != "DESTROY" ]; then
+            echo "❌ Confirmation failed. You must type 'DESTROY' exactly." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✅ Validation passed" >> $GITHUB_STEP_SUMMARY
+          echo "validated=true" >> $GITHUB_OUTPUT
+
+  destroy-infrastructure:
+    needs: validate-inputs
+    if: needs.validate-inputs.outputs.validated == 'true'
+    runs-on: ubuntu-latest
+    environment: destruction
+    defaults:
+      run:
+        working-directory: ./infrastructure/environments/cloud
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log destruction attempt
+        run: |
+          echo "🔥 **INFRASTRUCTURE DESTRUCTION**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Initiated by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Check current state
+        id: check-state
+        continue-on-error: true
+        run: |
+          echo "## Current Infrastructure State" >> $GITHUB_STEP_SUMMARY
+          terraform show -no-color >> state.txt
+          if [ -s state.txt ]; then
+            echo "Infrastructure exists and will be destroyed." >> $GITHUB_STEP_SUMMARY
+            echo "has_resources=true" >> $GITHUB_OUTPUT
+          else
+            echo "No infrastructure found in current state." >> $GITHUB_STEP_SUMMARY
+            echo "has_resources=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Terraform Destroy
+        if: steps.check-state.outputs.has_resources == 'true'
+        run: |
+          echo "🔥 Starting infrastructure destruction..." >> $GITHUB_STEP_SUMMARY
+          terraform destroy -auto-approve
+          echo "✅ Infrastructure destruction completed!" >> $GITHUB_STEP_SUMMARY
+        env:
+          TF_VAR_docdb_master_username: ${{ secrets.DOCDB_MASTER_USERNAME }}
+          TF_VAR_docdb_master_password: ${{ secrets.DOCDB_MASTER_PASSWORD }}
+
+      - name: Verify destruction
+        run: |
+          echo "## Verification" >> $GITHUB_STEP_SUMMARY
+          terraform show -no-color > final_state.txt
+          if [ ! -s final_state.txt ] || grep -q "No state" final_state.txt; then
+            echo "✅ Destruction verified - no resources remain" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Some resources may still exist - manual cleanup may be required" >> $GITHUB_STEP_SUMMARY
+          fi

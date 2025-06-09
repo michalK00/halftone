@@ -3,6 +3,13 @@ name: Deploy with CodeDeploy
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      destroy_infrastructure:
+        description: 'Destroy infrastructure (requires confirmation)'
+        required: false
+        default: false
+        type: boolean
 
 env:
   AWS_REGION: eu-north-1
