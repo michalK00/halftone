@@ -78,7 +78,6 @@ module "database" {
 
   environment            = var.environment
   project_name           = var.project_name
-  vpc_id                 = module.networking.vpc_id
   subnet_ids             = module.networking.private_subnet_ids
   app_security_group_ids = [module.networking.ecs_tasks_security_group_id, module.networking.database_security_group_id]
 
