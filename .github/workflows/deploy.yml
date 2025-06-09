@@ -82,7 +82,8 @@ jobs:
           echo "task_definition_family=$(terraform output -raw task_definition_family)" >> $GITHUB_OUTPUT
 
   deploy-backend:
-    needs: [changes, deploy-infrastructure]
+    needs: [ changes, deploy-infrastructure ]
+    # if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
@@ -111,8 +112,11 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REPOSITORY:latest .
+          # Use commit SHA for traceability
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REPOSITORY:latest .
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REPOSITORY:latest
 
       - name: Create new task definition revision
@@ -120,8 +124,16 @@ jobs:
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
           IMAGE_TAG: ${{ github.sha }}
-          TASK_FAMILY: ${{ needs.deploy-infrastructure.outputs.task_definition_family || format('{0}-api', env.ENVIRONMENT) }}
+          TASK_FAMILY: ${{ needs.deploy-infrastructure.outputs.task_definition_family }}
         run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          
+          # Verify task family exists
+          if ! aws ecs describe-task-definition --task-definition $TASK_FAMILY >/dev/null 2>&1; then
+            echo "Task definition family $TASK_FAMILY not found!"
+            exit 1
+          fi
+          
           # Get current task definition
           TASK_DEFINITION=$(aws ecs describe-task-definition \
             --task-definition $TASK_FAMILY \
@@ -129,7 +141,7 @@ jobs:
             --output json)
           
           # Update image URI in task definition
-          NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "$ECR_REPOSITORY:latest" \
+          NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "$ECR_REPOSITORY:$IMAGE_TAG" \
             '.containerDefinitions[0].image = $IMAGE | 
              del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)')
           
@@ -140,12 +152,12 @@ jobs:
             --output text)
           
           echo "revision=$NEW_REVISION" >> $GITHUB_OUTPUT
-          echo "task_definition_arn=arn:aws:ecs:${{ env.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:task-definition/$TASK_FAMILY:$NEW_REVISION" >> $GITHUB_OUTPUT
+          echo "task_definition_arn=arn:aws:ecs:${{ env.AWS_REGION }}:${AWS_ACCOUNT_ID}:task-definition/$TASK_FAMILY:$NEW_REVISION" >> $GITHUB_OUTPUT
 
       - name: Create CodeDeploy deployment
         env:
-          CODEDEPLOY_APP: ${{ needs.deploy-infrastructure.outputs.codedeploy_app_name || format('{0}-api-codedeploy', env.ENVIRONMENT) }}
-          DEPLOYMENT_GROUP: ${{ needs.deploy-infrastructure.outputs.codedeploy_deployment_group || format('{0}-api-deployment-group', env.ENVIRONMENT) }}
+          CODEDEPLOY_APP: ${{ needs.deploy-infrastructure.outputs.codedeploy_app_name }}
+          DEPLOYMENT_GROUP: ${{ needs.deploy-infrastructure.outputs.codedeploy_deployment_group }}
           TASK_DEFINITION_ARN: ${{ steps.task-def.outputs.task_definition_arn }}
         run: |
           cat > appspec.yaml << EOF
@@ -158,12 +170,6 @@ jobs:
                   LoadBalancerInfo:
                     ContainerName: "api"
                     ContainerPort: 8080
-          Hooks:
-            - BeforeInstall: "BeforeInstall"
-            - AfterInstall: "AfterInstall"
-            - AfterAllowTestTraffic: "AfterAllowTestTraffic"
-            - BeforeAllowTraffic: "BeforeAllowTraffic"
-            - AfterAllowTraffic: "AfterAllowTraffic"
           EOF
           
           echo "Created appspec.yaml:"
@@ -184,11 +190,10 @@ jobs:
           aws deploy wait deployment-successful --deployment-id $DEPLOYMENT_ID
           
           echo "Deployment completed successfully!"
-          
-          aws deploy get-deployment --deployment-id $DEPLOYMENT_ID --query 'deploymentInfo.status' --output text
 
   deploy-frontend:
     needs: [changes, deploy-infrastructure]
+    # if: steps.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
@@ -229,9 +234,11 @@ jobs:
       - name: Build and push frontend Docker image
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REPOSITORY:latest .
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REPOSITORY:latest .
           docker push $ECR_REPOSITORY:latest
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Update ECS frontend service
         run: |
