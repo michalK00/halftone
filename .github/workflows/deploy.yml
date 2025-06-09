@@ -61,6 +61,9 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        env:
+          TF_VAR_docdb_master_username: ${{ secrets.DOCDB_MASTER_USERNAME }}
+          TF_VAR_docdb_master_password: ${{ secrets.DOCDB_MASTER_PASSWORD }}
 
       - name: Get Terraform Outputs
         id: terraform-output
