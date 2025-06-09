@@ -24,14 +24,6 @@ resource "aws_codedeploy_deployment_group" "api" {
     events  = ["DEPLOYMENT_FAILURE"]
   }
 
-  alarm_configuration {
-    alarms = [
-      aws_cloudwatch_metric_alarm.api_high_error_rate.alarm_name,
-      aws_cloudwatch_metric_alarm.api_low_healthy_hosts.alarm_name
-    ]
-    enabled = true
-  }
-
   blue_green_deployment_config {
     terminate_blue_instances_on_deployment_success {
       action                         = "TERMINATE"
