@@ -14,6 +14,8 @@ on:
 env:
   AWS_REGION: eu-north-1
   ENVIRONMENT: production
+  ECR_FRONTEND_REPOSITORY_NAME: halftone-client
+  ECR_BACKEND_REPOSITORY_NAME: halftone-api
 
 jobs:
   changes:
@@ -103,15 +105,14 @@ jobs:
       - name: Get ECR repository URI
         id: ecr-repo
         run: |
-          REPO_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query 'repositories[0].repositoryUri' --output text)
+          REPO_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_BACKEND_REPOSITORY_NAME }} --query 'repositories[0].repositoryUri' --output text)
           echo "repository_uri=$REPO_URI" >> $GITHUB_OUTPUT
 
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REPOSITORY/halftone-api:latest .
+          docker build -t $ECR_REPOSITORY:latest .
           docker push $ECR_REPOSITORY:latest
 
       - name: Create new task definition revision
@@ -128,7 +129,7 @@ jobs:
             --output json)
           
           # Update image URI in task definition
-          NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "$ECR_REPOSITORY/halftone-api:latest" \
+          NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "$ECR_REPOSITORY:latest" \
             '.containerDefinitions[0].image = $IMAGE | 
              del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)')
           
@@ -220,16 +221,15 @@ jobs:
       - name: Get frontend ECR repository URI
         id: ecr-repo
         run: |
-          REPO_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_FRONTEND_REPOSITORY_NAME }} --query 'repositories[0].repositoryUri' --output text)
+          REPO_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_FRONTEND_REPOSITORY_NAME }} --query 'repositories[0].repositoryUri' --output text)
           echo "repository_uri=$REPO_URI" >> $GITHUB_OUTPUT
 
       - name: Build and push frontend Docker image
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REPOSITORY/halftone-client:latest .
-          docker push $ECR_REPOSITORY/halftone-client:latest
+          docker build -t $ECR_REPOSITORY:latest .
+          docker push $ECR_REPOSITORY:latest
 
       - name: Update ECS frontend service
         run: |
