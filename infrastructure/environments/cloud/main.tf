@@ -171,19 +171,6 @@ module "ecs" {
   sqs_queue_arn  = module.messaging.sqs_queue_arn
 }
 
-output "alb_dns_name" {
-  description = "DNS name of the load balancer"
-  value       = module.ecs.alb_dns_name
-}
-
-output "application_urls" {
-  description = "Application URLs"
-  value = {
-    client = "https://${module.ecs.alb_dns_name}"
-    api    = "https://${module.ecs.alb_dns_name}/api"
-  }
-}
-
 output "ecr_repositories" {
   description = "ECR repository URLs"
   value = {

@@ -42,3 +42,16 @@ output "db_subnet_group_name" {
   description = "Name of the DB subnet group"
   value       = module.networking.db_subnet_group_name
 }
+
+output "alb_dns_name" {
+  description = "DNS name of the load balancer"
+  value       = module.ecs.alb_dns_name
+}
+
+output "application_urls" {
+  description = "Application URLs"
+  value = {
+    client = "https://${module.ecs.alb_dns_name}"
+    api    = "https://${module.ecs.alb_dns_name}/api"
+  }
+}
