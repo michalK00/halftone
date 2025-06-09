@@ -25,6 +25,16 @@ provider "aws" {
   }
 }
 
+
+terraform {
+  backend "s3" {
+    bucket         = "halftone-terraform-state-bucket"
+    key            = "terraform.tfstate"
+    region         = "eu-north-1"
+    encrypt        = true
+  }
+}
+
 data "aws_caller_identity" "current" {}
 
 

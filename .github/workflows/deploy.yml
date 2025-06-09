@@ -58,7 +58,12 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-
+      - name: Import existing resources
+        run: |
+          echo "Importing existing resources..."
+          terraform import module.ecr.aws_ecr_repository.api halftone-api
+          terraform import module.ecr.aws_ecr_repository.client halftone-client
+          terraform import module.storage.aws_s3_bucket.photos halftone-cloud-photos
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
@@ -235,39 +240,3 @@ jobs:
             --cluster ${{ env.ENVIRONMENT }}-cluster \
             --service ${{ env.ENVIRONMENT }}-client \
             --force-new-deployment
-
-  deploy-lambdas:
-    needs: [changes, deploy-infrastructure]
-    if: needs.changes.outputs.lambdas == 'true'
-    runs-on: ubuntu-latest
-    environment: production
-    strategy:
-      matrix:
-        lambda: [image-processing]
-    defaults:
-      run:
-        working-directory: ./application/lambda/${{ matrix.lambda }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Build Lambda
-        run: |
-          GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
-          zip lambda.zip bootstrap
-
-      - name: Deploy Lambda
-        run: |
-          aws lambda update-function-code \
-            --function-name ${{ matrix.lambda }} \
-            --zip-file fileb://lambda.zip
