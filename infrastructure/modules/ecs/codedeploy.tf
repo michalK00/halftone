@@ -27,7 +27,7 @@ resource "aws_codedeploy_deployment_group" "api" {
   blue_green_deployment_config {
     terminate_blue_instances_on_deployment_success {
       action                         = "TERMINATE"
-      termination_wait_time_in_minutes = 5
+      termination_wait_time_in_minutes = 1
     }
 
     deployment_ready_option {

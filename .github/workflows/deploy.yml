@@ -73,6 +73,7 @@ jobs:
 
   deploy-backend:
     needs: [ changes, deploy-infrastructure ]
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
