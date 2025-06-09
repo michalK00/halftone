@@ -149,42 +149,28 @@ jobs:
           DEPLOYMENT_GROUP: ${{ needs.deploy-infrastructure.outputs.codedeploy_deployment_group }}
           TASK_DEFINITION_ARN: ${{ steps.task-def.outputs.task_definition_arn }}
         run: |
-          APPSPEC_CONTENT='{
-            "version": "0.0",
-              "Resources": [
-                {
-                  "TargetService": {
-                    "Type": "AWS::ECS::Service",
-                    "Properties": {
-                      "TaskDefinition": "'$TASK_DEFINITION_ARN'",
-                      "LoadBalancerInfo": {
-                        "ContainerName": "api",
-                        "ContainerPort": 8080
-                      }
-                    }
-                  }
-                }
-              ]
-            }'
-            
-          echo "AppSpec content:"
-          echo "$APPSPEC_CONTENT" | jq .
+          APPSPEC_JSON='{"version":"0.0","Resources":[{"TargetService":{"Type":"AWS::ECS::Service","Properties":{"TaskDefinition":"'$TASK_DEFINITION_ARN'","LoadBalancerInfo":{"ContainerName":"api","ContainerPort":8080}}}}]}'
           
-          cat > deployment.json << EOF
-          {
-            "applicationName": "$CODEDEPLOY_APP",
-            "deploymentGroupName": "$DEPLOYMENT_GROUP",
-            "revision": {
-              "revisionType": "AppSpecContent",
-              "appSpecContent": {
-                "content": $(echo "$APPSPEC_CONTENT" | jq -c .)
+          echo "AppSpec JSON content:"
+          echo "$APPSPEC_JSON" | jq .
+          
+          jq -n \
+            --arg app "$CODEDEPLOY_APP" \
+            --arg group "$DEPLOYMENT_GROUP" \
+            --arg content "$APPSPEC_JSON" \
+            '{
+              applicationName: $app,
+              deploymentGroupName: $group,
+              revision: {
+                revisionType: "AppSpecContent",
+                appSpecContent: {
+                  content: $content
+                }
               }
-            }
-          }
-          EOF
+            }' > deployment.json
           
           echo "Deployment configuration:"
-          cat deployment.json | jq .
+          cat deployment.json
           
           DEPLOYMENT_ID=$(aws deploy create-deployment \
             --cli-input-json file://deployment.json \
