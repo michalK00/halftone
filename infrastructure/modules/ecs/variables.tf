@@ -39,12 +39,6 @@ variable "instance_type" {
   default     = "t3.small"
 }
 
-variable "instance_count" {
-  description = "Number of EC2 instances"
-  type        = number
-  default     = 1
-}
-
 variable "api_image" {
   description = "API container image URL"
   type        = string
@@ -129,4 +123,20 @@ variable "sqs_queue_url" {
 variable "sqs_queue_arn" {
   description = "ARN of the SQS queue for Lambda triggers"
   type        = string
+}
+
+variable "desired_capacity" {
+  description = "Desired capacity for ECS cluster"
+  type        = number
+  default = 2
+}
+variable "max_size" {
+  description = "Maximum size for ECS cluster"
+  type        = number
+  default = 2
+}
+variable "min_size" {
+  description = "Minimum size for ECS cluster"
+  type        = number
+  default = 4
 }
