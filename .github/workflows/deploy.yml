@@ -81,7 +81,6 @@ jobs:
 
   deploy-backend:
     needs: [changes, deploy-infrastructure]
-    if: always() && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.infrastructure == 'true')
     runs-on: ubuntu-latest
     environment: production
     defaults:
@@ -187,7 +186,6 @@ jobs:
 
   deploy-frontend:
     needs: [changes, deploy-infrastructure]
-    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
