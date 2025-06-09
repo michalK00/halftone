@@ -169,10 +169,12 @@ jobs:
           echo "Created appspec.yaml:"
           cat appspec.yaml
           
+          APPSPEC_CONTENT=$(cat appspec.yaml | base64 -w 0)
+          
           DEPLOYMENT_ID=$(aws deploy create-deployment \
-            --application-name $CODEDEPLOY_APP \
-            --deployment-group-name $DEPLOYMENT_GROUP \
-            --revision revisionType=AppSpecContent,appSpecContent="{\"content\":\"$(cat appspec.yaml | base64 -w 0)\"}" \
+            --application-name "$CODEDEPLOY_APP" \
+            --deployment-group-name "$DEPLOYMENT_GROUP" \
+            --revision "{\"revisionType\":\"AppSpecContent\",\"appSpecContent\":{\"content\":\"$APPSPEC_CONTENT\"}}" \
             --query 'deploymentId' \
             --output text)
           
