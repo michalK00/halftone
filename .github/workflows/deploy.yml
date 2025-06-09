@@ -15,7 +15,6 @@ jobs:
       backend: ${{ steps.changes.outputs.backend }}
       frontend: ${{ steps.changes.outputs.frontend }}
       lambda: ${{ steps.changes.outputs.lambda }}
-      infrastructure: ${{ steps.changes.outputs.infrastructure }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v2
@@ -33,12 +32,11 @@ jobs:
 
   deploy-infrastructure:
     needs: changes
-    if: needs.changes.outputs.infrastructure == 'true'
     runs-on: ubuntu-latest
     environment: production
     defaults:
       run:
-        working-directory: ./infrastructure/environment/cloud
+        working-directory: ./infrastructure/environments/cloud
     outputs:
       codedeploy_app_name: ${{ steps.terraform-output.outputs.codedeploy_app_name }}
       codedeploy_deployment_group: ${{ steps.terraform-output.outputs.codedeploy_deployment_group }}
@@ -67,7 +65,7 @@ jobs:
       - name: Get Terraform Outputs
         id: terraform-output
         run: |
-          echo "application_urls=$(terraform output -raw application_urls.client)" >> $GITHUB_OUTPUT
+          echo "application_url=$(terraform output -raw application_urls.client)" >> $GITHUB_OUTPUT
           echo "codedeploy_app_name=$(terraform output -raw codedeploy_app_name)" >> $GITHUB_OUTPUT
           echo "codedeploy_deployment_group=$(terraform output -raw codedeploy_deployment_group_name)" >> $GITHUB_OUTPUT
           echo "ecs_cluster_name=$(terraform output -raw ecs_cluster_name)" >> $GITHUB_OUTPUT
@@ -180,7 +178,7 @@ jobs:
           aws deploy get-deployment --deployment-id $DEPLOYMENT_ID --query 'deploymentInfo.status' --output text
 
   deploy-frontend:
-    needs: changes
+    needs: [changes, deploy-infrastructure]
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     environment: production
@@ -236,7 +234,7 @@ jobs:
             --force-new-deployment
 
   deploy-lambdas:
-    needs: changes
+    needs: [changes, deploy-infrastructure]
     if: needs.changes.outputs.lambdas == 'true'
     runs-on: ubuntu-latest
     environment: production
