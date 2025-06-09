@@ -58,12 +58,6 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-      - name: Import existing resources
-        run: |
-          echo "Importing existing resources..."
-          terraform import module.ecr.aws_ecr_repository.api halftone-api
-          terraform import module.ecr.aws_ecr_repository.client halftone-client
-          terraform import module.storage.aws_s3_bucket.photos halftone-cloud-photos
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
