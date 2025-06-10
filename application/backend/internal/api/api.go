@@ -4,9 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/michalK00/halftone/internal/domain"
+	"github.com/michalK00/halftone/internal/fcm"
 	"github.com/michalK00/halftone/internal/middleware"
 	"github.com/michalK00/halftone/internal/repository"
 	"go.mongodb.org/mongo-driver/mongo"
+	"os"
 )
 
 type api struct {
@@ -15,6 +17,7 @@ type api struct {
 	photoRepo      domain.PhotoRepository
 	orderRepo      domain.OrderRepository
 	jobRepo        domain.JobRepository
+	fcmService     fcm.Service
 }
 
 func NewApi(db *mongo.Database) *api {
@@ -23,6 +26,10 @@ func NewApi(db *mongo.Database) *api {
 	photoRepo := repository.NewMongoPhoto(db)
 	orderRepo := repository.NewMongoOrder(db)
 	jobRepo := repository.NewMongoJob(db)
+	fcmService, err := fcm.NewService(os.Getenv("FCM_PROJECT_ID"), []byte(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")))
+	if err != nil {
+		panic("Failed to initialize FCM service: " + err.Error())
+	}
 
 	return &api{
 		collectionRepo: collectionRepo,
@@ -30,6 +37,7 @@ func NewApi(db *mongo.Database) *api {
 		photoRepo:      photoRepo,
 		orderRepo:      orderRepo,
 		jobRepo:        jobRepo,
+		fcmService:     *fcmService,
 	}
 }
 
@@ -44,6 +52,10 @@ func (a *api) Routes(app *fiber.App) {
 
 	public := apiPrefix.Group("/api/v1")
 	public.Get("/qr", a.generateQrHandler)
+
+	push := apiPrefix.Group("/push")
+	push.Post("/subscribe", a.SubscribeToPush)
+	push.Post("/send", a.SendPushMessage)
 
 	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
 	client := apiPrefix.Group("/api/v1/client/galleries/:galleryId", middleware.AuthenticateClient(a.galleryRepo))

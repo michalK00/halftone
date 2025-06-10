@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import pushService from "@/services/pushNotificationService";
 
 const SignInPage = () => {
     const [email, setEmail] = useState("");
@@ -29,6 +30,16 @@ const SignInPage = () => {
                 description: "You have been successfully signed in",
                 variant: "default",
             });
+
+            if (pushService.isSupported()) {
+                try {
+                    await pushService.requestPermission(email);
+                    console.log('Push notifications registered successfully');
+                } catch (pushError) {
+                    console.warn('Failed to register for push notifications:', pushError);
+                }
+            }
+
             navigate("/collections");
         } catch (err: any) {
             console.error("Sign in error:", err);
@@ -72,7 +83,7 @@ const SignInPage = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                                            />
+                            />
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">

@@ -179,6 +179,9 @@ module "ecs" {
   sqs_queue_name = module.messaging.sqs_queue_name
   sqs_queue_url  = module.messaging.sqs_queue_url
   sqs_queue_arn  = module.messaging.sqs_queue_arn
+
+  fcm_project_id = var.fcm_project_id
+  google_application_credentials = var.google_application_credentials
 }
 
 output "ecr_repositories" {

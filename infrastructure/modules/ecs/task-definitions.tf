@@ -72,6 +72,14 @@ resource "aws_ecs_task_definition" "api" {
       {
         name  = "AWS_SQS_QUEUE_URL"
         value = var.sqs_queue_url
+      },
+      {
+        name  = "FCM_PROJECT_ID"
+        value = var.fcm_project_id
+      },
+      {
+        name  = "GOOGLE_APPLICATION_CREDENTIALS"
+        value = var.google_application_credentials
       }
     ]
 

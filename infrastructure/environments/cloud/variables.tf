@@ -87,3 +87,15 @@ variable "lambda_source_dir" {
   type        = string
   default     = "../../../application/lambda/image-processing"
 }
+
+variable "google_application_credentials" {
+  description = "Google application credentials for FCM"
+  type        = string
+  sensitive = true
+}
+
+variable "fcm_project_id" {
+  description = "FCM project ID for push notifications"
+  type        = string
+  sensitive = true
+}

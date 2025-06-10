@@ -130,13 +130,27 @@ variable "desired_capacity" {
   type        = number
   default = 2
 }
+
 variable "max_size" {
   description = "Maximum size for ECS cluster"
   type        = number
   default = 4
 }
+
 variable "min_size" {
   description = "Minimum size for ECS cluster"
   type        = number
   default = 2
+}
+
+variable "fcm_project_id" {
+  description = "FCM project ID for push notifications"
+  type        = string
+  sensitive = true
+}
+
+variable "google_application_credentials" {
+  description = "Google application credentials for FCM"
+  type        = string
+  sensitive = true
 }
