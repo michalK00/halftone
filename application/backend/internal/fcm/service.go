@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"golang.org/x/oauth2/google"
 	"net/http"
 	"os"
@@ -31,9 +32,7 @@ type Service struct {
 }
 
 type SubscriptionRequest struct {
-	Token          string            `json:"token"`
-	UserID         string            `json:"userId"`
-	UserAttributes map[string]string `json:"userAttributes,omitempty"`
+	Token string `json:"token"`
 }
 
 type SendMessageRequest struct {
@@ -91,10 +90,11 @@ func NewService(projectID string, credentialsJSON []byte) (*Service, error) {
 	}, nil
 }
 
-func (s *Service) Subscribe(req *SubscriptionRequest) error {
-	userTokens[req.UserID] = req.Token
+func (s *Service) Subscribe(ctx *fiber.Ctx, req *SubscriptionRequest) error {
+	userId := ctx.Locals("userId").(string)
+	userTokens[userId] = req.Token
 
-	fmt.Printf("Successfully registered user %s with token %s\n", req.UserID, req.Token[:20]+"...")
+	fmt.Printf("Successfully registered user %s with token %s\n", userId, req.Token[:20]+"...")
 	return nil
 }
 

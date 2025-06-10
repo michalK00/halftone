@@ -7,33 +7,33 @@ import (
 	"github.com/michalK00/halftone/internal/fcm"
 )
 
-func (a *api) SubscribeToPush(c *fiber.Ctx) error {
+func (a *api) SubscribeToPush(ctx *fiber.Ctx) error {
 	var req fcm.SubscriptionRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := ctx.BodyParser(&req); err != nil {
 		log.Printf("Error parsing subscription request: %v", err)
-		return c.Status(400).JSON(fiber.Map{
+		return ctx.Status(400).JSON(fiber.Map{
 			"success": false,
 			"error":   "Invalid request body",
 		})
 	}
 
-	if req.Token == "" || req.UserID == "" {
-		return c.Status(400).JSON(fiber.Map{
+	if req.Token == "" {
+		return ctx.Status(400).JSON(fiber.Map{
 			"success": false,
 			"error":   "Token and UserID are required",
 		})
 	}
 
 	// Subscribe user
-	if err := a.fcmService.Subscribe(&req); err != nil {
-		log.Printf("Error subscribing user %s: %v", req.UserID, err)
-		return c.Status(500).JSON(fiber.Map{
+	if err := a.fcmService.Subscribe(ctx, &req); err != nil {
+		log.Printf("Error subscribing user %s: %v", ctx.Locals("userId"), err)
+		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
 			"error":   "Failed to subscribe to push notifications",
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	return ctx.JSON(fiber.Map{
 		"success": true,
 		"message": "Successfully subscribed to push notifications",
 	})

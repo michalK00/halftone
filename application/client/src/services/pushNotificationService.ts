@@ -14,8 +14,6 @@ interface FirebaseConfig {
 
 interface SubscriptionRequest {
     token: string;
-    userId: string;
-    userAttributes?: Record<string, string>;
 }
 
 const firebaseConfig: FirebaseConfig = {
@@ -44,7 +42,7 @@ class PushNotificationService {
         return 'serviceWorker' in navigator && 'PushManager' in window;
     }
 
-    async requestPermission(userId: string): Promise<string | null> {
+    async requestPermission(): Promise<string | null> {
         try {
             const permission = await Notification.requestPermission();
 
@@ -59,7 +57,7 @@ class PushNotificationService {
 
                 if (token) {
                     this.currentToken = token;
-                    await this.registerWithBackend(token, userId);
+                    await this.registerWithBackend(token);
                     return token;
                 }
             }
@@ -70,18 +68,15 @@ class PushNotificationService {
         }
     }
 
-    private async registerWithBackend(token: string, userId: string): Promise<void> {
+    private async registerWithBackend(token: string): Promise<void> {
         const request: SubscriptionRequest = {
-            token,
-            userId,
-            userAttributes: {
-                registeredAt: new Date().toISOString(),
-            }
+            token
         };
 
-        const response = await api.post('/api/v1/push/subscribe', JSON.stringify(request));
-
-        if (!response.status || response.status !== 200) {
+        try {
+            const response = await api.post('/api/v1/push/subscribe', JSON.stringify(request));
+            return response.data;
+        } catch (error) {
             throw new Error('Failed to register token with backend');
         }
     }

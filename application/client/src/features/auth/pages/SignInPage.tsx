@@ -33,7 +33,7 @@ const SignInPage = () => {
 
             if (pushService.isSupported()) {
                 try {
-                    await pushService.requestPermission(email);
+                    await pushService.requestPermission();
                     console.log('Push notifications registered successfully');
                 } catch (pushError) {
                     console.warn('Failed to register for push notifications:', pushError);

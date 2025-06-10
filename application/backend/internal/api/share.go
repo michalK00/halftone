@@ -76,7 +76,7 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 			Title: "Gallery Shared",
 			Body:  fmt.Sprintf("Gallery %s has been shared successfully.", gallery.Name),
 		},
-		UserIDs: []string{ctx.Locals("username").(string)},
+		UserIDs: []string{ctx.Locals("userId").(string)},
 	}
 
 	err = a.fcmService.SendMessage(msgReq)
