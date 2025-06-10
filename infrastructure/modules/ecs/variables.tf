@@ -148,9 +148,3 @@ variable "fcm_project_id" {
   type        = string
   sensitive = true
 }
-
-variable "google_application_credentials" {
-  description = "Google application credentials for FCM"
-  type        = string
-  sensitive = true
-}
