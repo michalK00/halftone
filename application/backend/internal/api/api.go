@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/michalK00/halftone/internal/domain"
@@ -28,11 +29,11 @@ func NewApi(db *mongo.Database) *api {
 	jobRepo := repository.NewMongoJob(db)
 	jsonCredentials, err := fcm.GetCredentialsJSON()
 	if err != nil {
-		panic("Failed to get Firebase credentials: " + err.Error())
+		fmt.Println("Error reading Firebase credentials:", err)
 	}
 	fcmService, err := fcm.NewService(os.Getenv("FCM_PROJECT_ID"), jsonCredentials)
 	if err != nil {
-		panic("Failed to initialize FCM service: " + err.Error())
+		fmt.Println("Error initializing FCM service:", err)
 	}
 
 	return &api{
