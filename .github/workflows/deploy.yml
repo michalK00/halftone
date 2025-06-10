@@ -101,7 +101,7 @@ jobs:
           echo "repository_uri=$REPO_URI" >> $GITHUB_OUTPUT
       - name: Create Firebase service account file
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' > firebase-service-account.json
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}' > firebase-service-account.json
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
