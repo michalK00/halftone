@@ -70,7 +70,7 @@ func (a *api) SendPushMessage(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := a.fcmService.SendMessage(c.Context(), &req); err != nil {
+	if err := a.fcmService.SendMessage(&req); err != nil {
 		log.Printf("Error sending push message: %v", err)
 		return c.Status(500).JSON(fiber.Map{
 			"success": false,
