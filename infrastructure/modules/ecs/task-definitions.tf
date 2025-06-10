@@ -84,13 +84,13 @@ resource "aws_ecs_task_definition" "api" {
         name      = "MONGODB_URI"
         valueFrom = var.mongodb_uri_arn
       }] : [],
-      var.fcm_project_id != "" ? [{
+        var.fcm_project_id != "" ? [{
         name  = "FCM_PROJECT_ID"
-        value = var.fcm_project_id
+        valueFrom = var.fcm_project_id
       }] : [],
-      var.google_application_credentials != "" ? [{
-          name      = "GOOGLE_APPLICATION_CREDENTIALS"
-          valueFrom = var.google_application_credentials
+        var.google_application_credentials != "" ? [{
+        name      = "GOOGLE_APPLICATION_CREDENTIALS"
+        valueFrom = var.google_application_credentials
       }] : [],
     ])
 
