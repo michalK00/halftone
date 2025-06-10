@@ -3,13 +3,13 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDvgVZNmJpawxPchhGJjmcvhqeodfXpaTo",
-    authDomain: "halftone-63e5a.firebaseapp.com",
-    projectId: "halftone-63e5a",
-    storageBucket: "halftone-63e5a.firebasestorage.app",
-    messagingSenderId: "430276000092",
-    appId: "1:430276000092:web:c69cc5976610b79ab7e999",
-    measurementId: "G-F8NED80L3D"
+    apiKey: "AIzaSyCAgCjC_lepDLSDjbpsIyYCzjM21OtudXY",
+    authDomain: "halftone-f9f6b.firebaseapp.com",
+    projectId: "halftone-f9f6b",
+    storageBucket: "halftone-f9f6b.firebasestorage.app",
+    messagingSenderId: "943968764365",
+    appId: "1:943968764365:web:3f73c823d36301a6a70484",
+    measurementId: "G-Y0CCNQP7HK"
 };
 
 firebase.initializeApp(firebaseConfig);
