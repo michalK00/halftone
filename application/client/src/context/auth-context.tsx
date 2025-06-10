@@ -4,32 +4,32 @@ import api from "@/lib/api.ts"
 
 const authApi = {
     signIn: async (email: string, password: string) => {
-        const response = await api.post("/auth/signin", { email, password });
+        const response = await api.post("/api/v1/auth/signin", { email, password });
         return response.data;
     },
 
     signUp: async (userData: {  email: string; password: string }) => {
-        const response = await api.post("/auth/signup", userData);
+        const response = await api.post("/api/v1/auth/signup", userData);
         return response.data;
     },
 
     verifyAccount: async (email: string, code: string) => {
-        const response = await api.post("/auth/verify", { email, code });
+        const response = await api.post("/api/v1/auth/verify", { email, code });
         return response.data;
     },
 
     resendCode: async (username: string) => {
-        const response = await api.post("/auth/resend-verification", { username });
+        const response = await api.post("/api/v1/auth/resend-verification", { username });
         return response.data;
     },
 
     forgotPassword: async (username: string) => {
-        const response = await api.post("/auth/forgot-password", { username });
+        const response = await api.post("/api/v1/auth/forgot-password", { username });
         return response.data;
     },
 
     resetPassword: async (username: string, code: string, newPassword: string) => {
-        const response = await api.post("/auth/reset-password", {
+        const response = await api.post("/api/v1/auth/reset-password", {
             username,
             code,
             newPassword
@@ -41,7 +41,7 @@ const authApi = {
         const refreshToken = localStorage.getItem("refreshToken");
         if (!refreshToken) throw new Error("No refresh token available");
 
-        const response = await api.post("/auth/refresh-token", { refresh_token: refreshToken });
+        const response = await api.post("/api/v1/auth/refresh-token", { refresh_token: refreshToken });
         return response.data;
     },
 };
