@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import {api} from "@/api";
 
 interface FirebaseConfig {
     apiKey: string;
@@ -78,13 +79,9 @@ class PushNotificationService {
             }
         };
 
-        const response = await fetch('/api/v1/push/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(request),
-        });
+        const response = await api.post('/api/v1/push/subscribe', JSON.stringify(request));
 
-        if (!response.ok) {
+        if (!response.status || response.status !== 200) {
             throw new Error('Failed to register token with backend');
         }
     }
