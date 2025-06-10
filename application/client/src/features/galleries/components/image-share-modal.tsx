@@ -165,7 +165,7 @@ function ImageShareModal({
                                 <CardContent className="p-4 space-y-4">
                                     <div className="flex justify-center bg-white rounded-lg p-2">
                                         <img
-                                            src={`${import.meta.env.VITE_API_BACKEND_URL}/api/v1/qr?url=${sharingUrl}`}
+                                            src={`https://prod-alb-1747799725.eu-north-1.elb.amazonaws.com/api/v1/qr?url=${sharingUrl}`}
                                             alt="QR Code"
                                             className="w-48 h-48 object-contain"
                                         />

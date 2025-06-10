@@ -38,7 +38,7 @@ export default function GalleryPage() {
     });
 
     function createSharingUrl(galleryPath: string) {
-        return `${import.meta.env.VITE_API_BACKEND_URL}/client${galleryPath}`;
+        return `https://prod-alb-1747799725.eu-north-1.elb.amazonaws.com/client${galleryPath}`;
     }
 
     const renderContent = () => {

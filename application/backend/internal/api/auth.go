@@ -10,7 +10,6 @@ func (a *api) SignUp(c *fiber.Ctx) error {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
-
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid input",
