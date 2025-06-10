@@ -73,6 +73,10 @@ resource "aws_ecs_task_definition" "api" {
         name  = "AWS_SQS_QUEUE_URL"
         value = var.sqs_queue_url
       },
+      {
+        name = "FCM_PROJECT_ID"
+        value = var.fcm_project_id
+      }
     ]
 
     secrets = flatten([
@@ -83,10 +87,6 @@ resource "aws_ecs_task_definition" "api" {
         var.mongodb_uri_arn != "" ? [{
         name      = "MONGODB_URI"
         valueFrom = var.mongodb_uri_arn
-      }] : [],
-        var.fcm_project_id != "" ? [{
-        name  = "FCM_PROJECT_ID"
-        valueFrom = var.fcm_project_id
       }] : [],
     ])
 
