@@ -4,7 +4,6 @@ import api from "@/lib/api.ts"
 
 const authApi = {
     signIn: async (email: string, password: string) => {
-        console.log(import.meta.env.VITE_API_BACKEND_URL);
         const response = await api.post("/auth/signin", { email, password });
         return response.data;
     },

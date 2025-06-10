@@ -87,7 +87,7 @@ resource "aws_ecs_task_definition" "api" {
         var.mongodb_uri_arn != "" ? [{
         name      = "MONGODB_URI"
         valueFrom = var.mongodb_uri_arn
-      }] : [],
+      }] : []
     ])
 
     memoryReservation = 768
