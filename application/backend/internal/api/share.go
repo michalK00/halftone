@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/michalK00/halftone/internal/domain"
-	"github.com/michalK00/halftone/internal/fcm"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"os"
 	"time"
@@ -69,19 +68,6 @@ func (a *api) shareGalleryHandler(ctx *fiber.Ctx) error {
 	)
 	if err != nil {
 		return ServerError(ctx, err, "Failed to update gallery")
-	}
-
-	msgReq := &fcm.SendMessageRequest{
-		Message: &fcm.PushMessage{
-			Title: "Gallery Shared",
-			Body:  fmt.Sprintf("Gallery %s has been shared successfully.", gallery.Name),
-		},
-		UserIDs: []string{ctx.Locals("userId").(string)},
-	}
-
-	err = a.fcmService.SendMessage(msgReq)
-	if err != nil {
-		fmt.Printf("Failed to send push notification: %v\n", err)
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(shareGalleryResponse{

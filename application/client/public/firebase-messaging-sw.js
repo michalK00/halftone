@@ -1,4 +1,3 @@
-// public/firebase-messaging-sw.js
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
@@ -16,16 +15,26 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification?.title || 'New Notification';
+    console.log('Received background message:', payload);
+
+    // Handle both notification and data-only messages
+    const title = payload.notification?.title || payload.data?.title || 'New Notification';
+    const body = payload.notification?.body || payload.data?.body || 'You have a new message';
+
     const notificationOptions = {
-        body: payload.notification?.body || 'You have a new message',
-        icon: '/icon-192x192.png',
+        body: body,
+        icon: payload.notification?.icon || '/icon-192x192.png',
+        badge: '/badge-72x72.png', // Optional
+        tag: payload.data?.tag || 'default', // Prevents duplicate notifications
         data: {
             url: payload.data?.url || '/',
-        }
+            clickAction: payload.data?.click_action || payload.fcm_options?.link || '/'
+        },
+        requireInteraction: false,
+        silent: false
     };
 
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    return self.registration.showNotification(title, notificationOptions);
 });
 
 self.addEventListener('notificationclick', (event) => {

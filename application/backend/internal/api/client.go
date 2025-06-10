@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/michalK00/halftone/internal/aws"
 	"github.com/michalK00/halftone/internal/domain"
+	"github.com/michalK00/halftone/internal/fcm"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -94,6 +95,25 @@ func (a *api) clientCreateOrderHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ServerError(ctx, err, "Failed to create order")
 	}
+
+	gallery, err := a.galleryRepo.GetGalleryByID(ctx.Context(), galleryId)
+	if err != nil {
+		return ServerError(ctx, err, "Failed to fetch gallery")
+	}
+
+	msgReq := &fcm.SendMessageRequest{
+		Message: &fcm.PushMessage{
+			Title: "New order",
+			Body:  fmt.Sprintf("You have 1 new order"),
+		},
+		UserIDs: []string{gallery.UserId},
+	}
+
+	err = a.fcmService.SendMessage(msgReq)
+	if err != nil {
+		fmt.Printf("Failed to send push notification: %v\n", err)
+	}
+
 	return ctx.Status(fiber.StatusCreated).JSON(createOrderResponse{
 		ID: orderId,
 	})
