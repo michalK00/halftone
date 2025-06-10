@@ -17,7 +17,6 @@ interface SubscriptionRequest {
     userAttributes?: Record<string, string>;
 }
 
-// Firebase configuration
 const firebaseConfig: FirebaseConfig = {
     apiKey: "AIzaSyCAgCjC_lepDLSDjbpsIyYCzjM21OtudXY",
     authDomain: "halftone-f9f6b.firebaseapp.com",
@@ -70,7 +69,6 @@ class PushNotificationService {
         }
     }
 
-    // Register token with backend
     private async registerWithBackend(token: string, userId: string): Promise<void> {
         const request: SubscriptionRequest = {
             token,

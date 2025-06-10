@@ -40,12 +40,6 @@ variable "client_image_tag" {
   default     = "latest"
 }
 
-variable "admin_image_tag" {
-  description = "Admin image tag"
-  type        = string
-  default     = "latest"
-}
-
 variable "api_desired_count" {
   description = "API task count"
   type        = number
