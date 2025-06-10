@@ -78,7 +78,7 @@ class PushNotificationService {
             }
         };
 
-        const response = await fetch('/api/push/subscribe', {
+        const response = await fetch('/api/v1/push/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(request),

@@ -56,10 +56,6 @@ func (a *api) Routes(app *fiber.App) {
 	public := app.Group("/api/v1")
 	public.Get("/qr", a.generateQrHandler)
 
-	push := app.Group("/push")
-	push.Post("/subscribe", a.SubscribeToPush)
-	push.Post("/send", a.SendPushMessage)
-
 	//client endpoints protected by middleware that checks if an access token was sent and if it matches the one stored in the accessed db
 	client := app.Group("/api/v1/client/galleries/:galleryId", middleware.AuthenticateClient(a.galleryRepo))
 	client.Get("", a.clientGetGalleryHandler)
@@ -68,6 +64,9 @@ func (a *api) Routes(app *fiber.App) {
 	client.Get("/photos/:photoId", a.clientGetPhotoHandler)
 
 	protected := app.Group("/api/v1", middleware.Protected())
+
+	protected.Post("/push/subscribe", a.SubscribeToPush)
+	protected.Post("/push/send", a.SendPushMessage)
 
 	protected.Get("/collections", a.getCollectionsHandler)
 	protected.Post("/collections", a.createCollectionHandler)
