@@ -17,6 +17,9 @@ WORKDIR /app
 
 COPY --from=build /app/halftone /app/halftone
 
+RUN --mount=type=secret,id=firebase_service_account,target=/tmp/firebase-service-account.json \
+    cp /tmp/firebase-service-account.json /app/firebase-service-account.json
+
 EXPOSE 8080
 
 ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /opt/global-bundle.pem

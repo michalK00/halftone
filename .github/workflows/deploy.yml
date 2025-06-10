@@ -63,7 +63,6 @@ jobs:
           TF_VAR_docdb_master_username: ${{ secrets.DOCDB_MASTER_USERNAME }}
           TF_VAR_docdb_master_password: ${{ secrets.DOCDB_MASTER_PASSWORD }}
           TF_VAR_fcm_project_id: ${{ secrets.FCM_PROJECT_ID }}
-          TF_VAR_google_application_credentials: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
       - name: Get Terraform Outputs
         id: terraform-output
@@ -100,16 +99,21 @@ jobs:
         run: |
           REPO_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_BACKEND_REPOSITORY_NAME }} --query 'repositories[0].repositoryUri' --output text)
           echo "repository_uri=$REPO_URI" >> $GITHUB_OUTPUT
-
+      - name: Create Firebase service account file
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' > firebase-service-account.json
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REPOSITORY: ${{ steps.ecr-repo.outputs.repository_uri }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Use commit SHA for traceability
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REPOSITORY:latest .
-          docker push $ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REPOSITORY:latest
+          docker buildx build \
+            --platform linux/amd64 \
+            --secret id=firebase_service_account,src=./firebase-service-account.json \
+            -t $ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REPOSITORY:latest \
+            --push \
+            .
 
       - name: Create new task definition revision
         id: task-def

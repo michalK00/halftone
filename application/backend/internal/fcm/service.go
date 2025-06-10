@@ -7,7 +7,23 @@ import (
 	"fmt"
 	"golang.org/x/oauth2/google"
 	"net/http"
+	"os"
 )
+
+func GetCredentialsJSON() ([]byte, error) {
+	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if credentialsPath == "" {
+		credentialsPath = "/app/firebase-service-account.json" // Default Docker path
+	}
+	if _, err := os.Stat(credentialsPath); err != nil {
+		return nil, fmt.Errorf("credentials file not found at %s: %w", credentialsPath, err)
+	}
+	credentialsJSON, err := os.ReadFile(credentialsPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Firebase credentials: %w", err)
+	}
+	return credentialsJSON, nil
+}
 
 type Service struct {
 	projectID string

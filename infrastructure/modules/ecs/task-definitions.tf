@@ -88,10 +88,6 @@ resource "aws_ecs_task_definition" "api" {
         name  = "FCM_PROJECT_ID"
         valueFrom = var.fcm_project_id
       }] : [],
-        var.google_application_credentials != "" ? [{
-        name      = "GOOGLE_APPLICATION_CREDENTIALS"
-        valueFrom = var.google_application_credentials
-      }] : [],
     ])
 
     memoryReservation = 768

@@ -26,7 +26,11 @@ func NewApi(db *mongo.Database) *api {
 	photoRepo := repository.NewMongoPhoto(db)
 	orderRepo := repository.NewMongoOrder(db)
 	jobRepo := repository.NewMongoJob(db)
-	fcmService, err := fcm.NewService(os.Getenv("FCM_PROJECT_ID"), []byte(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")))
+	jsonCredentials, err := fcm.GetCredentialsJSON()
+	if err != nil {
+		panic("Failed to get Firebase credentials: " + err.Error())
+	}
+	fcmService, err := fcm.NewService(os.Getenv("FCM_PROJECT_ID"), jsonCredentials)
 	if err != nil {
 		panic("Failed to initialize FCM service: " + err.Error())
 	}
