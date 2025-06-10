@@ -155,10 +155,15 @@ func (a *api) clientGetGalleryPhotosHandler(ctx *fiber.Ctx) error {
 		if err != nil {
 			return ServerError(ctx, err, "Failed to get url")
 		}
+		thumbnailUrl, err := aws.GetObjectUrl(photo.ThumbnailObjectKey)
+		if err != nil {
+			thumbnailUrl = ""
+		}
 		clientPhotos[index] = clientPhotoResponse{
 			ID:               photo.ID,
 			OriginalFilename: photo.OriginalFilename,
 			Url:              url,
+			ThumbnailUrl:     thumbnailUrl,
 		}
 	}
 
