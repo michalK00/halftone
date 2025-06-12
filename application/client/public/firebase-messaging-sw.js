@@ -17,7 +17,6 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('Received background message:', payload);
 
-    // Handle both notification and data-only messages
     const title = payload.notification?.title || payload.data?.title || 'New Notification';
     const body = payload.notification?.body || payload.data?.body || 'You have a new message';
 
